@@ -14,5 +14,8 @@ q = Query.build_from_paddocks(
 
 get_outputs(
     q,
-    skip_sam=False
+    skip_sam=True,
+    paddocks_filepath=paddocks_fp
 )
+
+# note: if skip_sam = True in get_output(), must specify paddocks_filepath. This is so that users can re-run get_outputs with different paddocks for the same query.
