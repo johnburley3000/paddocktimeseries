@@ -59,9 +59,11 @@ dependencies = [
   "shapely",
   "statsmodels",
   "tensorflow",
+  "tabulate",
   "torch",
   "typing_extensions",
   "xarray",
+  "zarr",
 ]
 
 [project.optional-dependencies]

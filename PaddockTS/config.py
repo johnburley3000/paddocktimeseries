@@ -34,11 +34,13 @@ class Config:
             ]
         )
 
-_out = expanduser('~/Documents/PaddockTS-Outputs')
-_tmp = expanduser('~/Downloads/PaddockTS-Tmp')
-_default = Config(_out, _tmp)
+_out = os.getenv("PADDOCKTS_OUTDIR", expanduser('~/Documents/PaddockTS-Outputs'))
+_tmp = os.getenv("PADDOCKTS_TMPDIR", expanduser('~/Downloads/PaddockTS-Tmp'))
+_email = os.getenv("PADDOCKTS_EMAIL") # default None
+_tern_api_key = os.getenv("PADDOCKTS_TERN_KEY") # default None
+_default = Config(_out, _tmp, email=_email, tern_api_key=_tern_api_key)
 
-confpath = os.path.expanduser('~/.config/PaddockTS.json')
+confpath = os.getenv("PADDOCKTS_CONFIG", os.path.expanduser('~/.config/PaddockTS.json'))
 config = Config(**load(open(confpath))) if exists(confpath) else _default
 
 

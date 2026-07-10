@@ -123,7 +123,7 @@ def sentinel2_video_with_paddocks(query: Query, paddocks_filepath: str | None = 
         result = subprocess.run([
             'ffmpeg', '-y', '-framerate', str(fps),
             '-i', f'{tmpdir}/frame_%04d.png',
-            '-c:v', 'libopenh264', '-pix_fmt', 'yuv420p',
+            '-c:v', 'libx264', '-pix_fmt', 'yuv420p',
             out_path,
         ], capture_output=True, text=True)
         if result.returncode != 0:
