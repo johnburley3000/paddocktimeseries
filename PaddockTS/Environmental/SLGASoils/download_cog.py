@@ -15,7 +15,7 @@ def download_cog(
     
     api_key = load_tern_api_key(api_key) if api_key is None else api_key
     _setup_tern_auth(api_key)
-    url = get_cog_url(attribute, depth)
+    url = get_cog_url(attribute, depth, api_key)
     
     try:
         with rasterio.open(f'/vsicurl/{url}') as src:
