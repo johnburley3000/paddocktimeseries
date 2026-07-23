@@ -13,6 +13,7 @@ import xarray as xr
 import rioxarray
 from rasterio.features import rasterize
 from PaddockTS.query import Query
+from PaddockTS.paths import Paths
 from .fractional_cover_video import _to_rgb
 
 
@@ -20,16 +21,16 @@ def fractional_cover_paddocks_video(query: Query, paddocks_filepath: str | None 
     """Encode a fractional-cover video with paddock outlines + labels.
 
     Args:
-        query: The :class:`PaddockTS.query.Query`. Output is written to
+        query: The :class:`borevitz_lab.query.Query`. Output is written to
             ``{query.out_dir}/{paddocks_stem}_fractional_cover_paddocks.mp4``.
         paddocks_filepath: Path to the paddocks file. If ``None``, uses
             SAM paddocks from ``{query.tmp_dir}/{query.stub}_sam_paddocks.gpkg``.
         ds_fractional_cover: Optional in-memory fractional cover dataset.
             If ``None``, opens (or generates, then opens)
-            ``query.fractional_cover_path``.
+            ``Paths(query).fractional_cover``.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset, used only
             to read the rasterisation transform. If ``None``, opens
-            ``query.sentinel2_path``.
+            the pysentinel2 cube.
         fps: Frames per second. Default 4.
         min_size: Minimum dimension of the output video in pixels.
 
@@ -46,16 +47,16 @@ def fractional_cover_paddocks_video(query: Query, paddocks_filepath: str | None 
 
     # Default to SAM paddocks if no filepath provided
     if paddocks_filepath is None:
-        paddocks_filepath = query.sam_paddocks_path
+        paddocks_filepath = Paths(query).sam_paddocks
 
     out_stem = Path(paddocks_filepath).stem
     paddocks = load_user_paddocks(paddocks_filepath)
 
     if ds_fractional_cover is None:
-        if not os.path.exists(query.fractional_cover_path):
+        if not os.path.exists(Paths(query).fractional_cover):
             from PaddockTS.FractionalCover.compute_fractional_cover import compute_fractional_cover
             compute_fractional_cover(query)
-        ds = xr.open_zarr(query.fractional_cover_path, chunks=None, decode_coords="all")
+        ds = xr.open_zarr(Paths(query).fractional_cover, chunks=None, decode_coords="all")
     else:
         ds = ds_fractional_cover
     n_times = ds.sizes['time']
@@ -67,11 +68,8 @@ def fractional_cover_paddocks_video(query: Query, paddocks_filepath: str | None 
 
     # rasterize boundaries once
     if ds_sentinel2 is None:
-        from PaddockTS.Sentinel2.check_if_valid_clean_zarr_exists import check_if_valid_clean_zarr_exists
-        if not check_if_valid_clean_zarr_exists(query.sentinel2_clean_path):
-            from PaddockTS.Sentinel2.clean_sentinel2 import clean_sentinel2
-            clean_sentinel2(query)
-        s2 = xr.open_zarr(query.sentinel2_clean_path, chunks=None, decode_coords="all")
+        from pysentinel2.cube import Cube
+        s2 = Cube(config=query.config).get_ds_query(query, clean=True)
     else:
         s2 = ds_sentinel2
 
@@ -150,7 +148,7 @@ def test():
     from os.path import exists
     from PaddockTS.utils import get_example_query
     query = get_example_query()
-    if not exists(query.fractional_cover_path):
+    if not exists(Paths(query).fractional_cover):
         from PaddockTS.FractionalCover.compute_fractional_cover import compute_fractional_cover
         compute_fractional_cover(query)
     fractional_cover_paddocks_video(query)

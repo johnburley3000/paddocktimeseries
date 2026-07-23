@@ -36,6 +36,7 @@ import matplotlib.pyplot as plt
 from rasterio.features import rasterize
 
 from PaddockTS.query import Query
+from PaddockTS.paths import Paths
 
 
 # --- thumbnail prep --------------------------------------------------------
@@ -55,11 +56,8 @@ def _to_rgb(ds, time_idx):
 def _resolve_ds(query: Query, ds_sentinel2):
     if ds_sentinel2 is not None:
         return ds_sentinel2
-    from PaddockTS.Sentinel2.check_if_valid_clean_zarr_exists import check_if_valid_clean_zarr_exists
-    if not check_if_valid_clean_zarr_exists(query.sentinel2_clean_path):
-        from PaddockTS.Sentinel2.clean_sentinel2 import clean_sentinel2
-        clean_sentinel2(query)
-    return xr.open_zarr(query.sentinel2_clean_path, chunks=None, decode_coords='all')
+    from pysentinel2.cube import Cube
+    return Cube(config=query.config).get_ds_query(query, clean=True)
 
 
 def _prepare_thumbnails(query: Query, paddocks_filepath: str,
@@ -266,7 +264,7 @@ def iter_calendar_figures(query: Query, paddocks_filepath: str | None = None,
     consuming each Figure.
     """
     if paddocks_filepath is None:
-        paddocks_filepath = query.sam_paddocks_path
+        paddocks_filepath = Paths(query).sam_paddocks
 
     ds_sentinel2 = _resolve_ds(query, ds_sentinel2)
     paddocks_sorted, paddock_ids, years_data = _prepare_thumbnails(
@@ -304,12 +302,12 @@ def calendar_plot(query: Query, ds_sentinel2: xr.Dataset | None = None,
     vector.
 
     Args:
-        query: The :class:`PaddockTS.query.Query`.
+        query: The :class:`borevitz_lab.query.Query`.
         ds_sentinel2: Optional in-memory cleaned Sentinel-2 dataset. If
             ``None``, opened (or downloaded + cleaned) from
-            ``query.sentinel2_clean_path``.
+            the pysentinel2 cube (cloud-masked, on read).
         paddocks_filepath: Path to the paddocks file. If ``None``,
-            defaults to ``query.sam_paddocks_path``.
+            defaults to ``Paths(query).sam_paddocks``.
         thumb_size: Edge length of each thumbnail in pixels (input
             resolution; matplotlib resizes for display). Default 64.
         max_paddocks_per_page: Maximum paddocks per page. Default 20.
@@ -320,7 +318,7 @@ def calendar_plot(query: Query, ds_sentinel2: xr.Dataset | None = None,
         list[str]: Paths of the generated PNGs (one per year × page).
     """
     if paddocks_filepath is None:
-        paddocks_filepath = query.sam_paddocks_path
+        paddocks_filepath = Paths(query).sam_paddocks
 
     out_stem = Path(paddocks_filepath).stem
     os.makedirs(query.out_dir, exist_ok=True)

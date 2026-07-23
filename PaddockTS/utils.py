@@ -1,7 +1,18 @@
 from PaddockTS.query import Query
 from datetime import date
+from os.path import exists
 from urllib import request
 from urllib.error import URLError
+
+
+def check_if_valid_zarr_exists(zarr_path: str) -> bool:
+    """Return True iff a successfully-written zarr is on disk at ``zarr_path``.
+
+    The ``_SUCCESS`` marker inside the store is written only after the
+    zarr write completes, so a kill mid-write leaves the cache invalid.
+    """
+    return exists(zarr_path) and exists(f'{zarr_path}/_SUCCESS')
+
 
 def test_internet(s):
     try:

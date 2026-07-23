@@ -27,11 +27,18 @@ running the full pipeline, and the layout of the outputs on disk.
 A single environment file installs the geospatial native stack (GDAL,
 PROJ, GEOS), the ML stack (PyTorch, TensorFlow), and PaddockTS itself.
 
+PaddockTS depends on the shared
+[`borevitz-lab`](https://github.com/thestochasticman/borevitz_lab)
+core package (the `Query` / `Config` primitives) — clone it alongside
+and install it first.
+
 ```bash
+git clone https://github.com/thestochasticman/borevitz_lab.git
 git clone https://github.com/thestochasticman/paddock-ts-local.git
 cd paddock-ts-local
-conda env create -f paddock-ts-env.yml
-conda activate paddockts
+conda env update -n borevitz_lab -f environment.yml
+conda activate borevitz_lab
+pip install -e ../borevitz_lab
 pip install -e .
 ```
 
@@ -41,6 +48,7 @@ If you already have GDAL, PROJ, GEOS, and (optionally) CUDA installed
 system-wide:
 
 ```bash
+pip install -e ../borevitz_lab
 pip install -e .
 ```
 
@@ -53,18 +61,18 @@ python -c "from PaddockTS.query import Query; print(Query.__module__)"
 
 ## Configure
 
-PaddockTS reads optional configuration from `~/.config/PaddockTS.json`.
+PaddockTS reads optional configuration from `~/.config/BorevitzLab.json`.
 Defaults are sensible for a single-user laptop, so this step is
 optional — only the SILO and SLGA stages require credentials.
 
 | Setting | Default | Required for |
 |---|---|---|
-| `out_dir` | `~/Documents/PaddockTS-Outputs` | final outputs |
-| `tmp_dir` | `~/Downloads/PaddockTS-Tmp` | intermediates + caches |
+| `out_dir` | `~/Documents/BorevitzLab-Outputs` | final outputs |
+| `tmp_dir` | `~/Downloads/BorevitzLab-Tmp` | intermediates + caches |
 | `email` | unset | SILO climate stage |
 | `tern_api_key` | unset | SLGA soils stage |
 
-Example `~/.config/PaddockTS.json`:
+Example `~/.config/BorevitzLab.json`:
 
 ```json
 {
@@ -74,6 +82,10 @@ Example `~/.config/PaddockTS.json`:
   "tern_api_key": "<your-tern-key>"
 }
 ```
+
+Settings can also come from environment variables
+(`BOREVITZ_LAB_OUTDIR`, `BOREVITZ_LAB_TMPDIR`, `BOREVITZ_LAB_EMAIL`,
+`BOREVITZ_LAB_TERN_KEY`).
 
 - **SILO email** is registered with the upstream service; any working
   address is fine.

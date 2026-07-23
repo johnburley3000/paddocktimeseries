@@ -59,12 +59,12 @@ def _run_env_steps(query, statuses, times, log, concurrent, update_callback=None
         try:
             with redirect_stdout(log):
                 if i == 0:
-                    from PaddockTS.Environmental.TerrainTiles.download_terrain_tiles import download_terrain
-                    download_terrain(query)
+                    from pycopdem.store import Store as _DemStore
+                    _DemStore(config=query.config).fill_query(query)
 
                 elif i == 1:
-                    from PaddockTS.Environmental.OzWALD.download_ozwald_daily import download_ozwald_daily
-                    download_ozwald_daily(query)
+                    from pyozwald.store import Store as _OzStore
+                    _OzStore(config=query.config).fill_query(query, cadence='daily')
 
                 elif i == 2:
                     if not query.config.email:
@@ -73,8 +73,8 @@ def _run_env_steps(query, statuses, times, log, concurrent, update_callback=None
                         if update_callback:
                             update_callback()
                         continue
-                    from PaddockTS.Environmental.SILO.download_silo import download_silo
-                    download_silo(query)
+                    from pysilo.store import Store as _SiloStore
+                    _SiloStore(config=query.config).fill_query(query)
 
                 elif i == 3:
                     if not query.config.tern_api_key:
@@ -83,8 +83,8 @@ def _run_env_steps(query, statuses, times, log, concurrent, update_callback=None
                         if update_callback:
                             update_callback()
                         continue
-                    from PaddockTS.Environmental.SLGASoils.download_slgasoils import download_slga_soils
-                    download_slga_soils(query)
+                    from pyslga.store import Store as _SlgaStore
+                    _SlgaStore(config=query.config).fill_query(query)
 
                 elif i == 4:
                     from PaddockTS.Environmental.daesim_forcing import daesim_forcing
@@ -109,9 +109,6 @@ def _run_env_steps(query, statuses, times, log, concurrent, update_callback=None
                         statuses[i] = 'waiting'
                         if update_callback:
                             update_callback()
-                        from PaddockTS.Sentinel2.check_if_valid_clean_zarr_exists import check_if_valid_clean_zarr_exists
-                        while not check_if_valid_clean_zarr_exists(query.sentinel2_clean_path):
-                            time.sleep(1)
                         statuses[i] = 'running'
                         if update_callback:
                             update_callback()

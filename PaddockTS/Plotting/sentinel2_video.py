@@ -28,10 +28,10 @@ def sentinel2_video(query: Query, ds_sentinel2=None, fps: int = 4, min_size: int
     """Encode the Sentinel-2 cube as a true-colour H.264 video.
 
     Args:
-        query: The :class:`PaddockTS.query.Query`. Output is written to
+        query: The :class:`borevitz_lab.query.Query`. Output is written to
             ``{query.out_dir}/{query.stub}_sentinel2.mp4``.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset. If ``None``,
-            ``query.sentinel2_path`` is opened (or downloaded first).
+            the cloud-masked window is read from the pysentinel2 cube.
         fps: Frames per second. Default 4.
         min_size: Minimum dimension (height or width) of the output
             video, in pixels. Smaller cubes are upscaled with
@@ -46,11 +46,8 @@ def sentinel2_video(query: Query, ds_sentinel2=None, fps: int = 4, min_size: int
             exit code.
     """
     if ds_sentinel2 is None:
-        from PaddockTS.Sentinel2.check_if_valid_clean_zarr_exists import check_if_valid_clean_zarr_exists
-        if not check_if_valid_clean_zarr_exists(query.sentinel2_clean_path):
-            from PaddockTS.Sentinel2.clean_sentinel2 import clean_sentinel2
-            clean_sentinel2(query)
-        ds = xr.open_zarr(query.sentinel2_clean_path, chunks=None, decode_coords="all")
+        from pysentinel2.cube import Cube
+        ds = Cube(config=query.config).get_ds_query(query, clean=True)
     else:
         ds = ds_sentinel2
     n_times = ds.sizes['time']

@@ -51,7 +51,7 @@ get_outputs(query)
 
 This kicks off both pipelines (Sentinel-2 → PaddockTS and Environmental)
 in parallel and renders a live two-column status dashboard. Outputs
-land under `~/Documents/PaddockTS-Outputs/<stub>/` (configurable). The
+land under `~/Documents/BorevitzLab-Outputs/<stub>/` (configurable). The
 next `get_outputs(query)` for the same `Query` is a no-op — every
 stage finds its cached output and skips.
 

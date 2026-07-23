@@ -39,6 +39,7 @@ jobs:
           python -m pip install --upgrade pip
           # Install only the docs extras + the package itself (no heavy
           # geospatial deps needed for mkdocstrings to import signatures).
+          pip install git+https://github.com/thestochasticman/borevitz_lab.git
           pip install -e .[docs]
 
       - name: Build site

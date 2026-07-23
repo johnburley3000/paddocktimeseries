@@ -53,13 +53,15 @@ def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=
        ``{paddocks_filepath stem}_timeseries.zarr``.
 
     Args:
-        query: The :class:`PaddockTS.query.Query`.
-        ds_sentinel2: Optional in-memory Sentinel-2 dataset. If ``None``,
-            ``query.sentinel2_path`` is opened (or downloaded first).
+        query: The :class:`borevitz_lab.query.Query`.
+        ds_sentinel2: Optional in-memory Sentinel-2 dataset (with the five
+            indices already added, or they will be computed). If ``None``,
+            the cloud-masked window with indices comes from the
+            pysentinel2 cube.
         paddocks_filepath: Path to a GeoPackage (.gpkg) containing paddock
             polygons (must include a ``paddock`` column for IDs). If
-            ``None``, defaults to ``{query.tmp_dir}/{query.stub}_sam_paddocks.gpkg``
-            (loaded or generated via :func:`PaddockTS.PaddockSegmentation.get_paddocks`).
+            ``None``, defaults to ``Paths(query).sam_paddocks`` (loaded or
+            generated via :func:`PaddockTS.PaddockSegmentation.get_paddocks`).
         crs: Equal-area CRS to write onto the dataset for
             georeferencing the rasterised mask. Defaults to EPSG:6933
             (WGS84 / NSIDC EASE-Grid 2.0 Global).
@@ -77,20 +79,18 @@ def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=
     from os.path import exists
     from pathlib import Path
     import geopandas as gpd
-    from PaddockTS.Sentinel2.check_if_valid_clean_zarr_exists import check_if_valid_clean_zarr_exists
+    from pysentinel2.derive import INDICES, add_indices
 
     if ds_sentinel2 is None:
-        if not check_if_valid_clean_zarr_exists(query.sentinel2_clean_path):
-            from PaddockTS.Sentinel2.clean_sentinel2 import clean_sentinel2
-            clean_sentinel2(query)
-        ds_sentinel2 = xr.open_zarr(query.sentinel2_clean_path, chunks=None, decode_coords='all')
-
-    # Compute vegetation indices (NDVI, CFI, NIRv, NDTI, CAI)
-    from PaddockTS.SpectralIndices.indices import compute_indices
-    ds_sentinel2 = compute_indices(query, ds_sentinel2=ds_sentinel2)
+        from pysentinel2.cube import Cube
+        ds_sentinel2 = Cube(config=query.config).get_ds_query(
+            query, indices=tuple(INDICES))
+    elif not set(INDICES) <= set(ds_sentinel2.data_vars):
+        ds_sentinel2 = add_indices(ds_sentinel2, tuple(INDICES))
 
     if paddocks_filepath is None:
-        paddocks_filepath = query.sam_paddocks_path
+        from PaddockTS.paths import Paths
+        paddocks_filepath = Paths(query).sam_paddocks
         if not exists(paddocks_filepath):
             from PaddockTS.PaddockSegmentation.get_paddocks import get_paddocks
             get_paddocks(query)

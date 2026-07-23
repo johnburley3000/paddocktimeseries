@@ -48,7 +48,7 @@ q = Query(
 
 path = download_terrain(q)
 print(path)
-# ~/Downloads/PaddockTS-Tmp/aoi/<bbox_hash>/terrain.tif
+# ~/Downloads/BorevitzLab-Tmp/aoi/<bbox_hash>/terrain.tif
 ```
 
 Use with [`terrain_tiles_plot`](plotting.md#terrain-plot) to render
@@ -132,13 +132,13 @@ centre of `query.bbox`, requests every available variable, and writes
 a tidy CSV.
 
 **Requires** an email address registered with SILO via
-`~/.config/PaddockTS.json` (`"email": "..."`) or passed explicitly:
+`~/.config/BorevitzLab.json` (`"email": "..."`) or passed explicitly:
 
 ```python
 from PaddockTS.Environmental.SILO.download_silo import download_silo
 
 df = download_silo(q, email="you@example.org")
-# or, if email is set in ~/.config/PaddockTS.json:
+# or, if email is set in ~/.config/BorevitzLab.json:
 df = download_silo(q)
 
 print(df.columns.tolist())
@@ -164,7 +164,7 @@ silt, pH, bulk density, etc.) at standard depths.
 `download_slga_soils` fetches the cross-product of `vars × depths`,
 clipped to `query.bbox`, with a matching quick-look PNG per layer.
 
-**Requires** a TERN API key configured at `~/.config/PaddockTS.json`
+**Requires** a TERN API key configured at `~/.config/BorevitzLab.json`
 (`"tern_api_key": "..."`). Generate one at
 <https://account.tern.org.au/authenticated_user/apikeys>.
 

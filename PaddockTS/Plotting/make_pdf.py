@@ -9,6 +9,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from PIL import Image
 
 from PaddockTS.query import Query
+from PaddockTS.paths import Paths
 
 
 _A4_LONG = 11.69
@@ -112,7 +113,7 @@ def make_pdf(query: Query, paddocks_filepath: str | None = None,
     """Generate a PDF report combining all plots for a query.
 
     Args:
-        query: The :class:`PaddockTS.query.Query`.
+        query: The :class:`borevitz_lab.query.Query`.
         paddocks_filepath: Optional path to the user-provided paddocks file.
             If provided, includes user paddock calendar and phenology plots
             in the report.
@@ -169,7 +170,7 @@ def make_pdf(query: Query, paddocks_filepath: str | None = None,
             if 'Calendar' in section_title:
                 from PaddockTS.Plotting.calendar_plot import iter_calendar_figures
                 cal_paddocks = (paddocks_filepath if requires_user
-                                else query.sam_paddocks_path)
+                                else Paths(query).sam_paddocks)
                 if not exists(cal_paddocks):
                     continue
                 cal_label_col = label_col if requires_user else None

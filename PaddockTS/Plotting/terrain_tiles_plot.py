@@ -46,7 +46,7 @@ def terrain_tiles_plot(query: Query, ds_sentinel2=None, sigma: int = 10):
     """Plot a 2 × 2 panel of elevation, flow accumulation, aspect, and slope.
 
     Args:
-        query: The :class:`PaddockTS.query.Query`. Output is written to
+        query: The :class:`borevitz_lab.query.Query`. Output is written to
             ``{query.out_dir}/{query.stub}_topography.png``.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset, used as the
             spatial reference grid that the terrain tiles are
@@ -62,7 +62,17 @@ def terrain_tiles_plot(query: Query, ds_sentinel2=None, sigma: int = 10):
     """
     makedirs(query.out_dir, exist_ok=True)
 
-    terrain_path = query.terrain_path
+    # Elevation window from the machine-wide pycopdem store, materialised to
+    # a temp GeoTIFF so the pysheds flow-analysis chain (which reads rasters)
+    # is unchanged.
+    import rioxarray  # noqa: F401 — registers the .rio accessor
+    from pycopdem.store import Store as _DemStore
+    _dem_ds = _DemStore(config=query.config).get_ds_query(query)
+    _dem_tmpdir = tempfile.mkdtemp()
+    terrain_path = os.path.join(_dem_tmpdir, 'terrain.tif')
+    _dem_da = _dem_ds['elevation']
+    _dem_da = _dem_da.rio.write_crs('EPSG:4326').rio.set_spatial_dims(x_dim='lon', y_dim='lat')
+    _dem_da.rio.to_raster(terrain_path)
 
     with rasterio.open(terrain_path) as src:
         dem_raw = src.read(1)
@@ -100,11 +110,8 @@ def terrain_tiles_plot(query: Query, ds_sentinel2=None, sigma: int = 10):
 
     # Load sentinel2 as the reference grid
     if ds_sentinel2 is None:
-        from PaddockTS.Sentinel2.check_if_valid_clean_zarr_exists import check_if_valid_clean_zarr_exists
-        if not check_if_valid_clean_zarr_exists(query.sentinel2_clean_path):
-            from PaddockTS.Sentinel2.clean_sentinel2 import clean_sentinel2
-            clean_sentinel2(query)
-        ds_ref = xr.open_zarr(query.sentinel2_clean_path, chunks=None, decode_coords='all').isel(time=0)
+        from pysentinel2.cube import Cube
+        ds_ref = Cube(config=query.config).get_ds_query(query, clean=True).isel(time=0)
     else:
         ds_ref = ds_sentinel2.isel(time=0) if 'time' in ds_sentinel2.dims else ds_sentinel2
 

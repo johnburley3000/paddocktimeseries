@@ -4,16 +4,14 @@ A valid cache requires both the zarr directory and a ``_SUCCESS`` marker
 file *inside* it (written by :func:`compute_fractional_cover` only after
 the zarr write completes). Without the marker the zarr is treated as a
 partial / interrupted write and recomputed.
-
-Mirrors :func:`PaddockTS.Sentinel2.check_if_valid_zarr_exists`.
 """
 
-from PaddockTS.Sentinel2.check_if_valid_zarr_exists import check_if_valid_zarr_exists
+from os.path import exists
 
 
 def check_if_valid_fractional_cover_exists(fractional_cover_path: str) -> bool:
     """Return True iff a successfully-written fractional-cover zarr is on disk."""
-    return check_if_valid_zarr_exists(fractional_cover_path)
+    return exists(fractional_cover_path) and exists(f'{fractional_cover_path}/_SUCCESS')
 
 
 def test_no_zarr_no_marker():
@@ -25,7 +23,7 @@ def test_no_zarr_no_marker():
 def test_zarr_without_marker():
     import tempfile, os
     with tempfile.TemporaryDirectory() as tmpdir:
-        zarr_path = f'{tmpdir}/fc.zarr'
+        zarr_path = f'{tmpdir}/data.zarr'
         os.makedirs(zarr_path)
         return check_if_valid_fractional_cover_exists(zarr_path) is False
 
@@ -33,7 +31,7 @@ def test_zarr_without_marker():
 def test_zarr_with_marker():
     import tempfile, os
     with tempfile.TemporaryDirectory() as tmpdir:
-        zarr_path = f'{tmpdir}/fc.zarr'
+        zarr_path = f'{tmpdir}/data.zarr'
         os.makedirs(zarr_path)
         open(f'{zarr_path}/_SUCCESS', 'w').close()
         return check_if_valid_fractional_cover_exists(zarr_path) is True

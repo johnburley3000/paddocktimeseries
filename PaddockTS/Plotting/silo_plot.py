@@ -7,7 +7,6 @@ pressure). All variables are plotted as daily time-series.
 
 from matplotlib import pyplot as plt
 from PaddockTS.query import Query
-from PaddockTS.Environmental.SILO.download_silo import get_filename
 from os import makedirs
 import pandas as pd
 
@@ -44,19 +43,18 @@ PLOT_GROUPS = {
 def silo_plot(query: Query, groups: dict = None):
     """Plot SILO climate variables grouped by theme.
 
-    Reads the cached SILO CSV (downloaded by
-    :func:`PaddockTS.Environmental.SILO.download_silo.download_silo`)
-    and writes one PNG per group to
+    Fetches the daily SILO series from the machine-wide ``pysilo`` store
+    (downloading only what's missing) and writes one PNG per group to
     ``{query.out_dir}/{query.stub}_silo_{group}.png``.
 
     Args:
-        query: The :class:`PaddockTS.query.Query`.
+        query: The :class:`borevitz_lab.query.Query`.
         groups: Optional override of the default grouping. If ``None``,
             uses :data:`PLOT_GROUPS` (temperature, rainfall, radiation,
             evapotranspiration, humidity).
     """
-    filename = get_filename(query)
-    df = pd.read_csv(filename, parse_dates=['YYYY-MM-DD'])
+    from pysilo.store import Store
+    df = Store(config=query.config).get_df_query(query)
     groups = groups or PLOT_GROUPS
     makedirs(query.out_dir, exist_ok=True)
 
@@ -69,14 +67,14 @@ def silo_plot(query: Query, groups: dict = None):
         kind = cfg.get('kind', 'line')
 
         if kind == 'bar':
-            monthly = df.set_index('YYYY-MM-DD')[cols].resample('ME').sum()
+            monthly = df.set_index('date')[cols].resample('ME').sum()
             monthly.plot(kind='bar', ax=ax, width=0.8)
             ticks = range(0, len(monthly), max(1, len(monthly) // 12))
             ax.set_xticks(list(ticks))
             ax.set_xticklabels([monthly.index[i].strftime('%Y-%m') for i in ticks], rotation=45, ha='right')
         else:
             for col in cols:
-                ax.plot(df['YYYY-MM-DD'], df[col], label=col, linewidth=0.5, alpha=0.8)
+                ax.plot(df['date'], df[col], label=col, linewidth=0.5, alpha=0.8)
             ax.legend()
 
         ax.set_ylabel(cfg['ylabel'])

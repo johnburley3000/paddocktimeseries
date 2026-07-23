@@ -232,25 +232,25 @@ def _run_env_steps(query: Query, statuses, times, errors=None):
         t0 = time.time()
         try:
             if i == 0:
-                from PaddockTS.Environmental.TerrainTiles.download_terrain_tiles import download_terrain
-                download_terrain(query)
+                from pycopdem.store import Store as _DemStore
+                _DemStore(config=query.config).fill_query(query)
             elif i == 1:
-                from PaddockTS.Environmental.OzWALD.download_ozwald_daily import download_ozwald_daily
-                download_ozwald_daily(query)
+                from pyozwald.store import Store as _OzStore
+                _OzStore(config=query.config).fill_query(query, cadence='daily')
             elif i == 2:
                 if not query.config.email:
                     statuses[i] = 'skipped'
                     times[i] = time.time() - t0
                     continue
-                from PaddockTS.Environmental.SILO.download_silo import download_silo
-                download_silo(query)
+                from pysilo.store import Store as _SiloStore
+                _SiloStore(config=query.config).fill_query(query)
             elif i == 3:
                 if not query.config.tern_api_key:
                     statuses[i] = 'skipped'
                     times[i] = time.time() - t0
                     continue
-                from PaddockTS.Environmental.SLGASoils.download_slgasoils import download_slga_soils
-                download_slga_soils(query)
+                from pyslga.store import Store as _SlgaStore
+                _SlgaStore(config=query.config).fill_query(query)
             elif i == 4:
                 from PaddockTS.Plotting.ozwald_plot import ozwald_daily_plot
                 ozwald_daily_plot(query)
@@ -262,16 +262,10 @@ def _run_env_steps(query: Query, statuses, times, errors=None):
                 from PaddockTS.Plotting.silo_plot import silo_plot
                 silo_plot(query)
             elif i == 6:
-                statuses[i] = 'waiting'
-                from PaddockTS.Sentinel2.check_if_valid_clean_zarr_exists import check_if_valid_clean_zarr_exists
-                while not check_if_valid_clean_zarr_exists(query.sentinel2_clean_path):
-                    if errors:
-                        raise RuntimeError(
-                            'Sentinel-2 worker failed before sentinel2_clean.zarr was produced; '
-                            'cannot run terrain plot.'
-                        )
-                    time.sleep(1)
-                statuses[i] = 'running'
+                # The terrain plot reprojects onto the Sentinel-2 grid; it
+                # reads that grid from the pysentinel2 cube itself (filling
+                # only what's missing — the S2 worker has usually populated
+                # it already, and the chunk ledger makes concurrent reads safe).
                 from PaddockTS.Plotting.terrain_tiles_plot import terrain_tiles_plot
                 terrain_tiles_plot(query)
             statuses[i] = 'done'
@@ -310,12 +304,12 @@ _S2_STEP_DEPS = {
 
 def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False, label_col=None):
     import xarray as xr
-    from PaddockTS.Sentinel2.check_if_valid_zarr_exists import check_if_valid_zarr_exists
+    from PaddockTS.paths import Paths
     from PaddockTS.PaddockSegmentation.check_if_valid_paddocks_exists import check_if_valid_paddocks_exists
 
     ds_sentinel2 = None
     ds_fractional_cover = None
-    gpkg_path = query.sam_paddocks_path
+    gpkg_path = Paths(query).sam_paddocks
 
     # SAM-based datasets
     ds_paddockTS = None
@@ -355,16 +349,13 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
 
         try:
             if i == 0:
-                if not check_if_valid_zarr_exists(query.sentinel2_path):
-                    from PaddockTS.Sentinel2.download_sentinel2 import download_sentinel2
-                    ds_sentinel2 = download_sentinel2(query)
-                else:
-                    ds_sentinel2 = xr.open_zarr(query.sentinel2_path, chunks=None, decode_coords="all")
-                from PaddockTS.Sentinel2.clean_sentinel2 import clean_sentinel2
-                ds_sentinel2 = clean_sentinel2(query, ds_sentinel2=ds_sentinel2)
+                # Cloud-masked window from the machine-wide pysentinel2 cube
+                # (downloads only the missing day x chunk cells).
+                from pysentinel2.cube import Cube
+                ds_sentinel2 = Cube(config=query.config).get_ds_query(query, clean=True)
             elif i == 1:
-                from PaddockTS.SpectralIndices.indices import compute_indices
-                ds_sentinel2 = compute_indices(query, ds_sentinel2=ds_sentinel2)
+                from pysentinel2.derive import add_indices, INDICES
+                ds_sentinel2 = add_indices(ds_sentinel2, tuple(INDICES))
             elif i == 2:
                 from PaddockTS.FractionalCover.compute_fractional_cover import compute_fractional_cover
                 ds_fractional_cover = compute_fractional_cover(query, ds_sentinel2=ds_sentinel2)
@@ -567,13 +558,16 @@ def get_outputs(query: Query, reload: bool = False, show_log: bool = False,
       plots (SAM and user variants), and a final PDF report.
 
     Args:
-        query: The :class:`PaddockTS.query.Query` to run the pipeline for.
-        reload: If ``True``, delete this query's cached artifacts under
-            ``query.query_dir`` (Sentinel-2, indices, fractional cover,
-            SAM paddocks), the terrain DEM at ``query.terrain_path``,
-            and the per-stub ``query.tmp_dir`` / ``query.out_dir``
-            directories before starting. Forces every step to re-run.
-            Default ``False``.
+        query: The :class:`borevitz_lab.query.Query` to run the pipeline for.
+        reload: If ``True``, delete PaddockTS's own cached artifacts —
+            the region x time cache (:class:`PaddockTS.paths.Paths`:
+            fractional cover, presegmentation, SAM masks/paddocks), the
+            per-stub time-series zarrs in ``query.tmp_dir``, and the final
+            outputs in ``query.out_dir`` — before starting. The shared,
+            machine-wide data stores (Sentinel-2, terrain, climate, soils)
+            are NOT touched: they dedup across every query, so re-fetching
+            national data for one reload would be wasteful and would
+            surprise other queries. Default ``False``.
         show_log: If ``True``, render a tail-of-log panel below the
             status tables. Useful for debugging stuck steps; turns off
             by default to keep the dashboard compact.
@@ -613,23 +607,21 @@ def get_outputs(query: Query, reload: bool = False, show_log: bool = False,
         raise ValueError("skip_sam=True requires a valid paddocks_filepath")
 
     if reload:
-        # Per-(bbox, time) caches: S2 raw + clean, indices, fractional cover,
-        # presegmentation tif, SAM masks, and the SAM paddocks gpkg. These
-        # all live under query_dir (= {tmp_dir}/aoi/{bbox_hash}/{time_hash})
-        # which is shared only by Queries with identical (bbox, start, end).
-        if exists(query.query_dir):
-            shutil.rmtree(query.query_dir)
-        # Terrain DEM is per-bbox, time-invariant. Remove the file + marker
-        # but leave aoi_dir intact so unrelated time-range queries with the
-        # same bbox aren't surprised.
-        for path in (query.terrain_path, f'{query.terrain_path}._SUCCESS'):
-            if exists(path):
-                os.remove(path)
+        from PaddockTS.paths import Paths
+        # PaddockTS's own region x time cache: fractional cover,
+        # presegmentation tif, SAM masks, and the SAM paddocks gpkg.
+        # Shared only by Queries with identical (bbox, start, end).
+        cache_dir = Paths(query).cache_dir
+        if exists(cache_dir):
+            shutil.rmtree(cache_dir)
         # Per-stub time-series zarrs + final outputs.
         if exists(query.tmp_dir):
             shutil.rmtree(query.tmp_dir)
         if exists(query.out_dir):
             shutil.rmtree(query.out_dir)
+        # NOTE: the shared data stores (pysentinel2 / pycopdem / pysilo /
+        # pyozwald / pyslga) are deliberately left alone — they dedup across
+        # every query and are not this query's to evict.
 
     env_statuses = ['pending'] * len(ENV_STEPS)
     env_times = [None] * len(ENV_STEPS)

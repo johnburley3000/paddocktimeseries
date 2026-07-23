@@ -20,13 +20,14 @@ import pandas as pd
 import xarray as xr
 
 from PaddockTS.query import Query
+from PaddockTS.paths import Paths
 
 
 def phenology_plot(query: Query, phenology_results: dict[int, pd.DataFrame] | None = None, ds_yearly: dict[int, xr.Dataset] | None = None, ds_paddockTS: xr.Dataset | None = None, variable: str = 'NDVI', paddocks_filepath: str | None = None, max_paddocks_per_page: int = 8, label_col: str | None = None) -> list[str]:
     """Plot per-paddock × per-year phenology curves with SoS / PoS / EoS markers.
 
     Args:
-        query: The :class:`PaddockTS.query.Query`. Output is written to
+        query: The :class:`borevitz_lab.query.Query`. Output is written to
             ``{query.out_dir}/{paddocks_stem}_phenology.png``.
         phenology_results: Optional ``{year: DataFrame}`` from
             :func:`PaddockTS.Phenology.estimate_phenology`. If ``None``,
@@ -65,7 +66,7 @@ def phenology_plot(query: Query, phenology_results: dict[int, pd.DataFrame] | No
     # Build paddock label mapping
     if label_col is not None:
         from PaddockTS.utils import load_user_paddocks
-        label_filepath = paddocks_filepath if paddocks_filepath else query.sam_paddocks_path
+        label_filepath = paddocks_filepath if paddocks_filepath else Paths(query).sam_paddocks
         gdf = load_user_paddocks(label_filepath)
         paddock_labels = dict(zip(gdf['paddock'].astype(str), gdf[label_col].astype(str)))
     else:

@@ -37,19 +37,24 @@ classifiers = [
 ]
 dependencies = [
   "attrs",
+  # Shared core + the machine-wide data stores PaddockTS consumes.
+  "borevitz-lab",
+  "pysentinel2",
+  "pysilo",
+  "pyozwald",
+  "pycopdem",
+  "pyslga",
   "cvxpy",
   "dask",
-  "datacube",
+  "datacube",  # vendored phenolopy imports datacube.utils.geometry
   "geopandas",
   "matplotlib",
   "netcdf4",
   "numpy",
-  "odc-stac",
   "opencv-python",
   "pandas",
   "pillow",
   "pysheds",
-  "pystac-client",
   "rasterio",
   "requests",
   "rich",

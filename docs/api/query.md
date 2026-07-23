@@ -8,7 +8,7 @@ input and output paths from it.
 The `Config` controls global behavior — where outputs go, where caches
 live, and credentials for the SILO and SLGA stages. A `Config` is
 attached to every `Query` (defaulting to the one loaded from
-`~/.config/PaddockTS.json`, or built-in defaults if that file is
+`~/.config/BorevitzLab.json`, or built-in defaults if that file is
 absent).
 
 ---
@@ -78,9 +78,9 @@ q = Query(
 )
 
 print(q.sentinel2_path)
-# ~/Downloads/PaddockTS-Tmp/aoi/<bbox_hash>/<time_hash>/sentinel2.zarr
+# ~/Downloads/BorevitzLab-Tmp/aoi/<bbox_hash>/<time_hash>/sentinel2.zarr
 print(q.out_dir)
-# ~/Documents/PaddockTS-Outputs/my_first_run
+# ~/Documents/BorevitzLab-Outputs/my_first_run
 ```
 
 ### From a centre point + buffer in km
@@ -117,9 +117,9 @@ compatibility.
 
 ## Custom config
 
-The default `Config` reads from `~/.config/PaddockTS.json` if present,
-otherwise uses `~/Documents/PaddockTS-Outputs` and
-`~/Downloads/PaddockTS-Tmp`. Override per-Query by passing a `Config`
+The default `Config` reads from `~/.config/BorevitzLab.json` if present,
+otherwise uses `~/Documents/BorevitzLab-Outputs` and
+`~/Downloads/BorevitzLab-Tmp`. Override per-Query by passing a `Config`
 explicitly:
 
 ```python
@@ -146,10 +146,18 @@ q = Query(
 
 ## `Query` reference
 
+The generic core (`bbox`, dates, `stub`, cache directories, registry,
+alternate constructors) lives in the shared
+[`borevitz-lab`](https://github.com/thestochasticman/borevitz_lab)
+package; `PaddockTS.query.Query` subclasses it to add the
+Sentinel-2 / SAM output paths.
+
 ::: PaddockTS.query
+    options:
+      inherited_members: true
 
 ---
 
 ## `Config` reference
 
-::: PaddockTS.config
+::: borevitz_lab.config

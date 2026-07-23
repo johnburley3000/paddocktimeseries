@@ -32,12 +32,12 @@ def make_smoothed_paddock_time_series(query, ds_paddockTS=None, paddocks_filepat
        ``{paddocks_filepath stem}_timeseries_smoothed.zarr``.
 
     Args:
-        query: The :class:`PaddockTS.query.Query`.
+        query: The :class:`borevitz_lab.query.Query`.
         ds_paddockTS: Optional in-memory paddockTS dataset. If ``None``,
             opens (or generates, then opens) the cached timeseries zarr.
         paddocks_filepath: Path to the paddocks GeoPackage. Used to derive
             the timeseries zarr path. If ``None``, defaults to
-            ``{query.tmp_dir}/{query.stub}_sam_paddocks.gpkg``.
+            ``Paths(query).sam_paddocks``.
         days: Resampling cadence in days. Default 10.
         window_length: Savitzky-Golay window size in number of resampled
             samples. Coerced to the next odd integer if even and clipped
@@ -55,10 +55,11 @@ def make_smoothed_paddock_time_series(query, ds_paddockTS=None, paddocks_filepat
     from datetime import datetime
     from os import makedirs
     from pathlib import Path
-    from PaddockTS.Sentinel2.check_if_valid_zarr_exists import check_if_valid_zarr_exists
+    from PaddockTS.utils import check_if_valid_zarr_exists
 
     if paddocks_filepath is None:
-        paddocks_filepath = query.sam_paddocks_path
+        from PaddockTS.paths import Paths
+        paddocks_filepath = Paths(query).sam_paddocks
 
     paddocks_path = Path(paddocks_filepath)
     timeseries_zarr = f'{query.tmp_dir}/{paddocks_path.stem}_timeseries.zarr'

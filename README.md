@@ -62,11 +62,18 @@ automatically detected and re-fetched on the next run.
 A single environment file installs the geospatial native stack (GDAL,
 PROJ, GEOS), the ML stack (PyTorch, TensorFlow), and PaddockTS itself.
 
+PaddockTS depends on the shared
+[`borevitz-lab`](https://github.com/thestochasticman/borevitz_lab)
+core package (the `Query` / `Config` primitives) — clone it alongside
+and install it first.
+
 ```bash
+git clone https://github.com/thestochasticman/borevitz_lab.git
 git clone https://github.com/thestochasticman/paddock-ts-local.git
 cd paddock-ts-local
-conda env create -f paddock-ts-env.yml
-conda activate paddockts
+conda env update -n borevitz_lab -f environment.yml
+conda activate borevitz_lab
+pip install -e ../borevitz_lab
 pip install -e .
 ```
 
@@ -76,6 +83,7 @@ If you already have GDAL, PROJ, GEOS, and (optionally) CUDA installed
 system-wide:
 
 ```bash
+pip install -e ../borevitz_lab
 pip install -e .
 ```
 
@@ -83,9 +91,9 @@ PaddockTS targets Python ≥ 3.11.
 
 ### Configure (optional)
 
-Default output and cache directories are `~/Documents/PaddockTS-Outputs`
-and `~/Downloads/PaddockTS-Tmp`. Override and add credentials by
-creating `~/.config/PaddockTS.json`:
+Default output and cache directories are `~/Documents/BorevitzLab-Outputs`
+and `~/Downloads/BorevitzLab-Tmp`. Override and add credentials by
+creating `~/.config/BorevitzLab.json`:
 
 ```json
 {
@@ -95,6 +103,10 @@ creating `~/.config/PaddockTS.json`:
   "tern_api_key": "<your-tern-key>"
 }
 ```
+
+Settings can also come from environment variables
+(`BOREVITZ_LAB_OUTDIR`, `BOREVITZ_LAB_TMPDIR`, `BOREVITZ_LAB_EMAIL`,
+`BOREVITZ_LAB_TERN_KEY`).
 
 **Credentials:**
 
@@ -146,7 +158,7 @@ This kicks off both pipelines (Sentinel-2 → PaddockTS and Environmental)
 in parallel and renders a live dashboard. The next `get_outputs(query)`
 on the same `Query` skips every cached step.
 
-Outputs land under `~/Documents/PaddockTS-Outputs/<stub>/`:
+Outputs land under `~/Documents/BorevitzLab-Outputs/<stub>/`:
 
 | File | What's in it |
 |---|---|

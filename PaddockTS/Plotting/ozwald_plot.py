@@ -7,8 +7,6 @@ vegetation index, etc.) and plotted as thin-line time-series.
 
 from matplotlib import pyplot as plt
 from PaddockTS.query import Query
-from PaddockTS.Environmental.OzWALD.download_ozwald_daily import get_filename as daily_filename
-from PaddockTS.Environmental.OzWALD.download_ozwald_8day import get_filename as eightday_filename
 from os import makedirs
 import pandas as pd
 
@@ -100,14 +98,15 @@ def ozwald_daily_plot(query: Query, groups: dict = None):
     ``{query.out_dir}/{query.stub}_ozwald_daily_{group}.png``.
 
     Args:
-        query: The :class:`PaddockTS.query.Query`.
+        query: The :class:`borevitz_lab.query.Query`.
         groups: Optional override of the default grouping. Maps a group
             name to ``{'vars': [...], 'ylabel': str, 'title': str,
             'kind': 'line'|'bar'}``. If ``None``, uses
             :data:`DAILY_GROUPS` (temperature, precipitation, wind,
             radiation).
     """
-    df = pd.read_csv(daily_filename(query), parse_dates=['time'])
+    from pyozwald.store import Store
+    df = Store(config=query.config).get_df_query(query, cadence='daily')
     _plot_groups(df, 'time', groups or DAILY_GROUPS, query, 'ozwald_daily')
 
 
@@ -120,12 +119,13 @@ def ozwald_8day_plot(query: Query, groups: dict = None):
     ``{query.out_dir}/{query.stub}_ozwald_8day_{group}.png``.
 
     Args:
-        query: The :class:`PaddockTS.query.Query`.
+        query: The :class:`borevitz_lab.query.Query`.
         groups: Optional override of the default grouping. If ``None``,
             uses :data:`EIGHTDAY_GROUPS` (vegetation index, fractional
             cover, LAI/GPP, soil water/runoff).
     """
-    df = pd.read_csv(eightday_filename(query), parse_dates=['time'])
+    from pyozwald.store import Store
+    df = Store(config=query.config).get_df_query(query, cadence='8day')
     _plot_groups(df, 'time', groups or EIGHTDAY_GROUPS, query, 'ozwald_8day')
 
 

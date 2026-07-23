@@ -8,3 +8,4 @@ site/
 .DS_Store
 gdalwmscache/
 terrain_tiles.xml
+.claude/settings.local.json

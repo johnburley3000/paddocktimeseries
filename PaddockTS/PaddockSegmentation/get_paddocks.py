@@ -28,6 +28,7 @@ from os import makedirs
 from os.path import exists
 from PaddockTS.query import Query
 from PaddockTS.config import config
+from PaddockTS.paths import Paths
 from PaddockTS.PaddockSegmentation._presegment import presegment
 from PaddockTS.PaddockSegmentation.check_if_valid_paddocks_exists import check_if_valid_paddocks_exists
 
@@ -46,14 +47,15 @@ def get_paddocks(
 ) -> gpd.GeoDataFrame:
     """End-to-end paddock segmentation: NDWI preseg → SAM masks → filtered polygons.
 
-    Caches each stage's output under ``query.tmp_dir`` so reruns reuse
-    work: ``{stub}_preseg.tif``, ``{stub}_sam_mask.tif``,
-    ``{stub}_sam_raw.gpkg``, and the final ``{stub}_sam_paddocks.gpkg``.
+    Caches each stage's output in the region x time cache
+    (:class:`PaddockTS.paths.Paths`): ``preseg.tif``, ``sam_mask.tif``,
+    ``sam_raw.gpkg``, and the final ``sam_paddocks.gpkg`` — so reruns
+    and other stubs over the same bbox x dates reuse the work.
 
     Args:
-        query: The :class:`PaddockTS.query.Query`.
+        query: The :class:`borevitz_lab.query.Query`.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset. If ``None``,
-            ``query.sentinel2_path`` is opened (or downloaded first).
+            the cloud-masked window is read from the pysentinel2 cube.
         min_area_ha: Minimum polygon area in hectares; smaller polygons
             are discarded as noise. Default 5 ha.
         max_area_ha: Maximum polygon area in hectares; larger polygons
@@ -70,12 +72,13 @@ def get_paddocks(
         geopandas.GeoDataFrame: One row per paddock, sorted by
         ``area_ha`` descending, with columns ``geometry``, ``area_ha``,
         ``compactness``, and a 1-based ``paddock`` integer ID. Also
-        written to ``{query.tmp_dir}/{query.stub}_sam_paddocks.gpkg``.
+        written to ``Paths(query).sam_paddocks``.
     """
+    paths = Paths(query)
     # Cache hit: return previously-segmented paddocks for this (bbox, time)
-    if check_if_valid_paddocks_exists(query.sam_paddocks_path):
-        _log(f"  Paddocks cache hit at {query.sam_paddocks_path}")
-        return gpd.read_file(query.sam_paddocks_path)
+    if check_if_valid_paddocks_exists(paths.sam_paddocks):
+        _log(f"  Paddocks cache hit at {paths.sam_paddocks}")
+        return gpd.read_file(paths.sam_paddocks)
 
     # 1. Presegmentation image
     _log("  Preseg: computing NDWI Fourier features...")
@@ -84,7 +87,7 @@ def get_paddocks(
     _log(f"  Preseg: done ({time.time() - t0:.1f}s)")
 
     # 2. SAMGeo segmentation
-    if not check_if_valid_paddocks_exists(query.sam_raw_path):
+    if not check_if_valid_paddocks_exists(paths.sam_raw):
         from samgeo import SamGeo
 
         gc.collect()
@@ -97,10 +100,10 @@ def get_paddocks(
 
         _log("  SAMGeo: generating masks...")
         t0 = time.time()
-        makedirs(os.path.dirname(query.sam_mask_path), exist_ok=True)
+        makedirs(os.path.dirname(paths.sam_mask), exist_ok=True)
         sam.generate(
             preseg_path,
-            query.sam_mask_path,
+            paths.sam_mask,
             batch=True,
             foreground=True,
             erosion_kernel=(3, 3),
@@ -108,12 +111,12 @@ def get_paddocks(
         )
         _log(f"  SAMGeo: masks generated ({time.time() - t0:.1f}s)")
         # _SUCCESS marker for the SAM mask TIFF
-        with open(f'{query.sam_mask_path}._SUCCESS', 'w') as f:
+        with open(f'{paths.sam_mask}._SUCCESS', 'w') as f:
             f.write(datetime.utcnow().isoformat() + 'Z')
 
-        sam.tiff_to_gpkg(query.sam_mask_path, query.sam_raw_path)
+        sam.tiff_to_gpkg(paths.sam_mask, paths.sam_raw)
         # _SUCCESS marker for the raw polygons GeoPackage
-        with open(f'{query.sam_raw_path}._SUCCESS', 'w') as f:
+        with open(f'{paths.sam_raw}._SUCCESS', 'w') as f:
             f.write(datetime.utcnow().isoformat() + 'Z')
         del sam
         gc.collect()
@@ -122,13 +125,13 @@ def get_paddocks(
 
     # 3. Filter polygons
     _log("  Filtering polygons...")
-    gdf = gpd.read_file(query.sam_raw_path)
+    gdf = gpd.read_file(paths.sam_raw)
     # SAM's tiff_to_gpkg sometimes drops CRS even when the source mask.tif
     # carries one; re-attach from the mask (or preseg) if needed so
     # estimate_utm_crs() doesn't blow up downstream.
     if gdf.crs is None:
         import rioxarray
-        for source in (query.sam_mask_path, query.preseg_path):
+        for source in (paths.sam_mask, paths.preseg):
             if exists(source):
                 src_crs = rioxarray.open_rasterio(source).rio.crs
                 if src_crs is not None:
@@ -148,13 +151,13 @@ def get_paddocks(
     paddocks = paddocks.sort_values("area_ha", ascending=False).reset_index(drop=True)
     paddocks["paddock"] = range(1, len(paddocks) + 1)
 
-    makedirs(os.path.dirname(query.sam_paddocks_path), exist_ok=True)
-    paddocks.to_file(query.sam_paddocks_path, driver="GPKG")
+    makedirs(os.path.dirname(paths.sam_paddocks), exist_ok=True)
+    paddocks.to_file(paths.sam_paddocks, driver="GPKG")
     # Touch ``<gpkg>._SUCCESS`` *after* the gpkg write completes; its presence
     # is what the next call uses as the cache-validity check.
-    with open(f'{query.sam_paddocks_path}._SUCCESS', 'w') as f:
+    with open(f'{paths.sam_paddocks}._SUCCESS', 'w') as f:
         f.write(datetime.utcnow().isoformat() + 'Z')
-    _log(f"  {len(paddocks)} paddocks saved to {query.sam_paddocks_path}")
+    _log(f"  {len(paddocks)} paddocks saved to {paths.sam_paddocks}")
 
     return paddocks
 
@@ -168,7 +171,8 @@ def test():
     query = get_example_query()
     paddocks = get_paddocks(query, device="cpu")
 
-    ds = xr.open_zarr(query.sentinel2_clean_path, chunks=None, decode_coords="all")
+    from pysentinel2.cube import Cube
+    ds = Cube(config=query.config).get_ds_query(query, clean=True)
     nir = ds["nbart_nir_1"].transpose("y", "x", "time").values.astype(np.float32)
     red = ds["nbart_red"].transpose("y", "x", "time").values.astype(np.float32)
     nir[nir == 0] = np.nan
@@ -179,7 +183,7 @@ def test():
     x, y = ds.x.values, ds.y.values
     extent = [x.min(), x.max(), y.min(), y.max()]
 
-    preseg = rioxarray.open_rasterio(f"{query.tmp_dir}/{query.stub}_preseg.tif")
+    preseg = rioxarray.open_rasterio(Paths(query).preseg)
 
     fig, axes = plt.subplots(1, 3, figsize=(18, 6))
 

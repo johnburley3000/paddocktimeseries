@@ -24,8 +24,8 @@ content-addressed cache means rerunning is instant.
 
 ## Prerequisites
 
-- PaddockTS installed (`pip install -e .` or `conda env create -f
-  paddock-ts-env.yml && conda activate paddockts && pip install -e .`).
+- PaddockTS installed (`pip install -e .` or `conda env update -n borevitz_lab -f
+  environment.yml && conda activate borevitz_lab && pip install -e .`).
 - Internet access — Sentinel-2 is downloaded on demand from Geoscience
   Australia's STAC.
 - **No** credentials needed for the Sentinel-2 chain. SILO needs an
@@ -38,10 +38,10 @@ content-addressed cache means rerunning is instant.
 Each notebook prints the relevant paths as it goes. By default:
 
 - **Outputs** (paddocks gpkg, time-series zarr, calendar PNGs, MP4
-  videos, PDF report) → `~/Documents/PaddockTS-Outputs/<stub>/`
+  videos, PDF report) → `~/Documents/BorevitzLab-Outputs/<stub>/`
 - **Caches** (raw + clean Sentinel-2 zarr, indices, fractional cover,
   presegmentation tif, SAM masks, terrain DEM, env CSVs) →
-  `~/Downloads/PaddockTS-Tmp/...`
+  `~/Downloads/BorevitzLab-Tmp/...`
 
-To redirect both, set `out_dir` / `tmp_dir` in `~/.config/PaddockTS.json`
+To redirect both, set `out_dir` / `tmp_dir` in `~/.config/BorevitzLab.json`
 before running. See [Getting Started → Configure](https://thestochasticman.github.io/paddock-ts-local/getting-started/#configure).

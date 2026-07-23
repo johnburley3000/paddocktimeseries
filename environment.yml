@@ -1,0 +1,45 @@
+# Augments (or creates) the shared borevitz_lab conda environment with
+# PaddockTS's full stack (geospatial natives, SAM/samgeo, PyTorch,
+# TensorFlow, ffmpeg):
+#
+#   conda env update -n borevitz_lab -f environment.yml
+#   conda activate borevitz_lab
+#   pip install -e ../borevitz_lab && pip install -e ../pysentinel2 && pip install -e .
+#
+# Never use --prune: the env is shared across lab repos.
+name: borevitz_lab
+channels:
+  - conda-forge
+  - pytorch
+  - nodefaults
+dependencies:
+  - python=3.11
+  - pip
+  - samgeo
+  - numpy
+  - xarray
+  - scipy
+  - scikit-learn
+  - rasterio
+  - rioxarray
+  - geopandas
+  - shapely
+  - dask
+  - matplotlib
+  - opencv
+  - attrs
+  - rich
+  - typing_extensions
+  - pystac-client
+  - odc-stac
+  - pytorch
+  - pandas
+  - pillow
+  - pysheds
+  - cvxpy
+  - ecos
+  - tensorflow
+  - datacube
+  - netcdf4
+  - statsmodels
+  - tabulate

@@ -12,6 +12,7 @@ import xarray as xr
 import rioxarray
 from rasterio.features import rasterize
 from PaddockTS.query import Query
+from PaddockTS.paths import Paths
 from .sentinel2_video import _to_rgb
 
 
@@ -19,12 +20,12 @@ def sentinel2_video_with_paddocks(query: Query, paddocks_filepath: str | None = 
     """Encode a true-colour Sentinel-2 video with paddock outlines + labels.
 
     Args:
-        query: The :class:`PaddockTS.query.Query`. Output is written to
+        query: The :class:`borevitz_lab.query.Query`. Output is written to
             ``{query.out_dir}/{paddocks_stem}_sentinel2_paddocks.mp4``.
         paddocks_filepath: Path to the paddocks file. If ``None``, uses
             SAM paddocks from ``{query.tmp_dir}/{query.stub}_sam_paddocks.gpkg``.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset. If ``None``,
-            ``query.sentinel2_path`` is opened (or downloaded first).
+            the cloud-masked window is read from the pysentinel2 cube.
         fps: Frames per second. Default 4.
         min_size: Minimum dimension (height or width) of the output
             video. See :func:`sentinel2_video` for sizing notes.
@@ -42,17 +43,14 @@ def sentinel2_video_with_paddocks(query: Query, paddocks_filepath: str | None = 
 
     # Default to SAM paddocks if no filepath provided
     if paddocks_filepath is None:
-        paddocks_filepath = query.sam_paddocks_path
+        paddocks_filepath = Paths(query).sam_paddocks
 
     out_stem = Path(paddocks_filepath).stem
     paddocks = load_user_paddocks(paddocks_filepath)
 
     if ds_sentinel2 is None:
-        from PaddockTS.Sentinel2.check_if_valid_clean_zarr_exists import check_if_valid_clean_zarr_exists
-        if not check_if_valid_clean_zarr_exists(query.sentinel2_clean_path):
-            from PaddockTS.Sentinel2.clean_sentinel2 import clean_sentinel2
-            clean_sentinel2(query)
-        ds = xr.open_zarr(query.sentinel2_clean_path, chunks=None, decode_coords='all')
+        from pysentinel2.cube import Cube
+        ds = Cube(config=query.config).get_ds_query(query, clean=True)
     else:
         ds = ds_sentinel2
     n_times = ds.sizes['time']
