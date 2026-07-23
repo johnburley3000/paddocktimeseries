@@ -1,10 +1,20 @@
-from PaddockTS.query import Query
-from PaddockTS.Environmental.SILO.download_silo import download_silo, get_filename as silo_filename
-from PaddockTS.Environmental.OzWALD.download_ozwald_daily import download_ozwald_daily, get_filename as ozwald_daily_filename
-from PaddockTS.Environmental.OzWALD.download_ozwald_8day import download_ozwald_8day, get_filename as ozwald_8day_filename
-from os.path import exists
+"""Assemble the DAESIM climate-forcing table from the lab's data stores.
+
+DAESIM (the lab's agro-ecosystem simulator) takes one tidy daily table:
+SILO radiation plus OzWALD daily meteorology and 8-day biophysical
+series (forward-filled to daily), renamed to DAESIM's vocabulary. All
+fetching goes through the machine-wide `pysilo` and `pyozwald` stores,
+so building a forcing table for an overlapping site or an extended
+season downloads only what's missing — usually nothing.
+"""
+from datetime import date
 from os import makedirs
+from os.path import exists
+
 import pandas as pd
+
+from borevitz_lab.config import Config, config as default_config
+from borevitz_lab.query import Query
 
 RENAME = {
     'Pg': 'Precipitation',
@@ -32,39 +42,49 @@ DAESIM_COLUMNS = [
     'SRAD',
 ]
 
+OZWALD_DAILY_VARS = ['Pg', 'Tmax', 'Tmin', 'Uavg', 'VPeff']
+OZWALD_8DAY_VARS = ['Ssoil', 'Qtot', 'LAI', 'GPP']
+
 get_filename = lambda q: f'{q.out_dir}/{q.stub}_DAESim_forcing.csv'
 
 
-def daesim_forcing(query: Query):
-    makedirs(query.out_dir, exist_ok=True)
-    filename = get_filename(query)
+def daesim_forcing_df(lat: float, lon: float, start: date, end: date,
+                      config: Config = default_config) -> pd.DataFrame:
+    """Build the DAESIM forcing table for a coordinate and date range.
 
-    if exists(filename):
-        print(f'  cached: {filename}')
-        return pd.read_csv(filename, parse_dates=['date'])
+    Query-agnostic — the data-assembly layer. Pipelines that speak
+    :class:`borevitz_lab.query.Query` use :func:`daesim_forcing`, which
+    adds stub-keyed CSV caching on top.
 
-    # Download if not already cached
-    df_silo = download_silo(query)
-    df_daily = download_ozwald_daily(query, variables=['Pg', 'Tmax', 'Tmin', 'Uavg', 'VPeff'])
-    df_8day = download_ozwald_8day(query, variables=['Ssoil', 'Qtot', 'LAI', 'GPP'])
+    Args:
+        lat: Latitude in decimal degrees (EPSG:4326).
+        lon: Longitude in decimal degrees.
+        start: Inclusive start date.
+        end: Inclusive end date.
+        config: Data root (and SILO email) — defaults to the loaded config.
+
+    Returns:
+        pandas.DataFrame: One row per day, ``date`` plus the ten DAESIM
+        forcing columns.
+    """
+    from pysilo.store import Store as SiloStore
+    from pyozwald.store import Store as OzWaldStore
+
+    silo = SiloStore(config=config).get_df(lat, lon, start, end)
+    ozwald = OzWaldStore(config=config)
+    daily = ozwald.get_df(lat, lon, start, end, cadence='daily',
+                          variables=OZWALD_DAILY_VARS)
+    eightday = ozwald.get_df(lat, lon, start, end, cadence='8day',
+                             variables=OZWALD_8DAY_VARS)
 
     # SILO: just need radiation, indexed by date
-    silo = df_silo[['YYYY-MM-DD', 'radiation']].copy()
-    silo.rename(columns={'YYYY-MM-DD': 'date'}, inplace=True)
-    silo['date'] = pd.to_datetime(silo['date'])
-    silo.set_index('date', inplace=True)
+    silo = silo[['date', 'radiation']].set_index('date')
 
     # OzWALD daily
-    daily = df_daily.copy()
-    daily['date'] = pd.to_datetime(daily['time'])
-    daily.set_index('date', inplace=True)
-    daily.drop(columns=['time'], inplace=True)
+    daily = daily.rename(columns={'time': 'date'}).set_index('date')
 
     # OzWALD 8-day: forward-fill to daily
-    eightday = df_8day.copy()
-    eightday['date'] = pd.to_datetime(eightday['time'])
-    eightday.set_index('date', inplace=True)
-    eightday.drop(columns=['time'], inplace=True)
+    eightday = eightday.rename(columns={'time': 'date'}).set_index('date')
     eightday = eightday.resample('D').ffill()
 
     # Merge on date
@@ -72,19 +92,55 @@ def daesim_forcing(query: Query):
     df.rename(columns=RENAME, inplace=True)
     df = df[DAESIM_COLUMNS]
     df.index.name = 'date'
-
-    df.to_csv(filename)
-    print(f'  saved: {filename} ({len(df)} days)')
     return df.reset_index()
 
 
+def daesim_forcing(query: Query) -> pd.DataFrame:
+    """DAESIM forcing for the centre of ``query.bbox``, cached as
+    ``{query.out_dir}/{query.stub}_DAESim_forcing.csv``.
+
+    The CSV cache makes the assembled *product* reproducible per stub;
+    the underlying observations are cached machine-wide by the stores
+    regardless, so even a cache miss here re-downloads nothing already
+    held locally.
+    """
+    makedirs(query.out_dir, exist_ok=True)
+    filename = get_filename(query)
+
+    if exists(filename):
+        print(f'  cached: {filename}')
+        return pd.read_csv(filename, parse_dates=['date'])
+
+    df = daesim_forcing_df(query.centre_lat, query.centre_lon,
+                           query.start, query.end, config=query.config)
+    df.to_csv(filename, index=False)
+    print(f'  saved: {filename} ({len(df)} days)')
+    return df
+
+
 def test():
-    from PaddockTS.utils import get_example_query
-    df = daesim_forcing(get_example_query())
-    print(df.head(10))
-    print(f'\nShape: {df.shape}')
-    print(f'Columns: {list(df.columns)}')
+    """Live: assemble a one-year forcing table and verify shape/columns."""
+    import tempfile
+    tmpdir = tempfile.mkdtemp(prefix='daesim_forcing_test_')
+    cfg = Config(out_dir=tmpdir, tmp_dir=tmpdir, email=default_config.email)
+    q = Query(
+        bbox=[148.36265, -33.52606, 148.38265, -33.50606],
+        start=date(2023, 1, 1), end=date(2023, 12, 31),
+        stub='daesim_forcing_test', config=cfg,
+    )
+    df = daesim_forcing(q)
+    print(df.head())
+    ok = (
+        list(df.columns) == ['date'] + DAESIM_COLUMNS
+        and len(df) == 365
+        and df['Precipitation'].notna().all()
+        and df['Soil moisture'].notna().sum() > 300  # 8-day ffilled to daily
+        and exists(get_filename(q))
+    )
+    # second call must come from the CSV cache
+    df2 = daesim_forcing(q)
+    return ok and len(df2) == len(df)
 
 
 if __name__ == '__main__':
-    test()
+    print(test())
