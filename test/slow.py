@@ -6,7 +6,7 @@ now comes from the machine-wide pysentinel2 cube (cloud-masked, with
 the five indices on read); everything downstream is unchanged.
 """
 from datetime import date
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 
 paddocks_fp = "artifacts/Milgadara_paddock-polygons_2024-12-17_12-45-58.json"
 

@@ -33,7 +33,7 @@ are computed **on read**, never stored.
 
 ```python
 from datetime import date
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from pycopdem.store import Store
 
 q = Query(

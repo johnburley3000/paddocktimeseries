@@ -9,7 +9,7 @@ downstream stages (yearly split, smoothing, phenology, plotting) consume.
 import warnings
 import numpy as np
 import xarray as xr
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 
 def _band_medians(band_array, paddock_pixel_idx):
     """Per-paddock NaN-aware median across pixels, for every timestep.

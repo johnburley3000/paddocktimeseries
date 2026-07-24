@@ -13,7 +13,7 @@
 # Needs the viewer extra:  pip install 'PaddockTS[viewer]'
 
 from datetime import date
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.viewer import serve
 
 

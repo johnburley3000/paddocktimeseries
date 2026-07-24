@@ -16,7 +16,7 @@ import cvxpy as cp
 import numpy as np
 import xarray as xr
 
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.Environmental.SMIPS import download_smips
 
 from .smips_downscale_config import SMIPSDownscaleConfig

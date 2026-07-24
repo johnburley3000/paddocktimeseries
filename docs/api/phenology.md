@@ -43,7 +43,7 @@ edit the call to change).
 
 ```python
 from datetime import date
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.Phenology.estimate_phenology import estimate_phenology
 
 q = Query(

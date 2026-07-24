@@ -35,7 +35,7 @@ import xarray as xr
 import matplotlib.pyplot as plt
 from rasterio.features import rasterize
 
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.paths import Paths
 
 

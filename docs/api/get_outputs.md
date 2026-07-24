@@ -18,7 +18,7 @@ terminal scrollback.
 
 ```python
 from datetime import date
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.get_outputs import get_outputs
 
 q = Query(
@@ -127,7 +127,7 @@ If your paddocks file already defines the area of interest, use
 `Query.build_from_paddocks` to take its envelope as the bbox:
 
 ```python
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 
 paddocks_fp = "/path/to/paddocks.gpkg"
 

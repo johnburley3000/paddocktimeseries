@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.paths import Paths
 
 

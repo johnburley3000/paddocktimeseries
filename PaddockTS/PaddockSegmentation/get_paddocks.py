@@ -26,8 +26,8 @@ import geopandas as gpd
 from datetime import datetime
 from os import makedirs
 from os.path import exists
-from PaddockTS.query import Query
-from PaddockTS.config import config
+from borevitz_lab.query import Query
+from borevitz_lab.config import config
 from PaddockTS.paths import Paths
 from PaddockTS.PaddockSegmentation._presegment import presegment
 from PaddockTS.PaddockSegmentation.check_if_valid_paddocks_exists import check_if_valid_paddocks_exists

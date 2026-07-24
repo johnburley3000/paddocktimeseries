@@ -1,5 +1,5 @@
 from datetime import date
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.get_outputs import get_outputs
 
 paddocks_fp = "artifacts/Milgadara_paddock-polygons_2024-12-17_12-45-58.json"

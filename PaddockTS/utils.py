@@ -1,4 +1,4 @@
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from datetime import date
 from os.path import exists
 from urllib import request

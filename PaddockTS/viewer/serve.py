@@ -25,7 +25,7 @@ def serve(target, *, port: int = 8501, headless: bool | None = None,
     """Launch the Streamlit viewer pointed at a query's output directory.
 
     Args:
-        target: a :class:`PaddockTS.query.Query` or a path to an output
+        target: a :class:`borevitz_lab.query.Query` or a path to an output
             directory.
         port: TCP port for the Streamlit server. Default ``8501``.
         headless: If ``None`` (default), auto-detect — headless when running

@@ -6,7 +6,7 @@ pressure). All variables are plotted as daily time-series.
 """
 
 from matplotlib import pyplot as plt
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from os import makedirs
 import pandas as pd
 

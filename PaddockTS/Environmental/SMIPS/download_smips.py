@@ -16,7 +16,7 @@ import requests
 import rioxarray
 import xarray as xr
 
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from .smips import SMIPS
 
 smips = SMIPS()
@@ -157,7 +157,7 @@ def test():
     q = get_example_query()
     # Use a shorter date range for testing
     from datetime import date
-    from PaddockTS.query import Query
+    from borevitz_lab.query import Query
     test_q = Query(
         bbox=q.bbox,
         start=date(2022, 1, 1),

@@ -8,7 +8,7 @@ from rich.live import Live
 from rich.table import Table
 from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn
 from rich.console import Console, Group
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 
 _console = Console(stderr=True)
 

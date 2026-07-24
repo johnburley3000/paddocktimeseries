@@ -12,7 +12,7 @@ import numpy as np
 import xarray as xr
 import rioxarray
 from rasterio.features import rasterize
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.paths import Paths
 from .fractional_cover_video import _to_rgb
 

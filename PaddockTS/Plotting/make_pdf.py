@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from PIL import Image
 
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.paths import Paths
 
 

@@ -27,7 +27,7 @@ marker).
 
 ```python
 from datetime import date
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.FractionalCover import compute_fractional_cover
 
 q = Query(

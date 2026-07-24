@@ -55,8 +55,8 @@ pip install -e .
 Confirm the install:
 
 ```bash
-python -c "from PaddockTS.query import Query; print(Query.__module__)"
-# -> PaddockTS.query
+python -c "from borevitz_lab.query import Query; print(Query.__module__)"
+# -> borevitz_lab.query
 ```
 
 ## Configure
@@ -100,8 +100,8 @@ to your `Query`:
 
 ```python
 from datetime import date
-from PaddockTS.config import Config
-from PaddockTS.query import Query
+from borevitz_lab.config import Config
+from borevitz_lab.query import Query
 
 cfg = Config(
     out_dir="/data/paddockts/outputs",
@@ -128,7 +128,7 @@ every stage. There are three ways to build one.
 
 ```python
 from datetime import date
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 
 query = Query(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],  # [W, S, E, N]

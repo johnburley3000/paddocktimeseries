@@ -1,5 +1,5 @@
 from datetime import date
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.get_outputs import get_outputs
 
 query = Query(

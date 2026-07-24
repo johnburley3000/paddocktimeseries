@@ -30,7 +30,7 @@ Three internal stages:
 
 ```python
 from datetime import date
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.PaddockSegmentation.get_paddocks import get_paddocks
 
 q = Query(

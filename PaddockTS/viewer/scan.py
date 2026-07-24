@@ -175,7 +175,7 @@ def scan_outputs(target) -> OutputSet:
     """Scan a query's output directory and return a categorised OutputSet.
 
     Args:
-        target: a :class:`PaddockTS.query.Query` (uses ``query.out_dir`` and
+        target: a :class:`borevitz_lab.query.Query` (uses ``query.out_dir`` and
             ``query.stub``) or a path-like pointing directly at an output
             directory.
 

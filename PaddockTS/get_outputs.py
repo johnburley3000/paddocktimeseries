@@ -28,7 +28,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 
 ENV_STEPS = [
     'Download terrain',
@@ -591,7 +591,7 @@ def get_outputs(query: Query, reload: bool = False, show_log: bool = False,
     Example:
         ```python
         from datetime import date
-        from PaddockTS.query import Query
+        from borevitz_lab.query import Query
         from PaddockTS.get_outputs import get_outputs
 
         q = Query(

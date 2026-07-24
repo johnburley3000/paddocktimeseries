@@ -31,7 +31,7 @@ from os import makedirs
 from os.path import exists
 from datetime import datetime
 from xarray import Dataset
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.paths import Paths
 from PaddockTS.FractionalCover.check_if_valid_fractional_cover_exists import check_if_valid_fractional_cover_exists
 
@@ -116,7 +116,7 @@ def compute_fractional_cover(query: Query, ds_sentinel2=None, model_n: int = 4, 
 def _temp_query():
     import tempfile
     from datetime import date
-    from PaddockTS.config import Config
+    from borevitz_lab.config import Config
     tmpdir = tempfile.mkdtemp(prefix='paddockts_fc_test_')
     cfg = Config(out_dir=tmpdir, tmp_dir=tmpdir)
     return Query(

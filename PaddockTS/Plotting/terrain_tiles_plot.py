@@ -23,7 +23,7 @@ import rasterio
 from rasterio.enums import Resampling
 from scipy.ndimage import gaussian_filter
 from PaddockTS.Environmental.TerrainTiles.utils import pysheds_accumulation, calculate_slope, calculate_twi
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from os import makedirs
 import tempfile
 import os

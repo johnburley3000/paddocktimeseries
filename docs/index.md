@@ -36,7 +36,7 @@ Given a `Query` (a bounding box + date range), PaddockTS produces:
 
 ```python
 from datetime import date
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.get_outputs import get_outputs
 
 query = Query(
@@ -64,7 +64,7 @@ a previous run, skip SAM segmentation and use them directly:
 
 ```python
 from datetime import date
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.get_outputs import get_outputs
 
 paddocks_fp = "/path/to/my_paddocks.gpkg"  # or .geojson / .shp

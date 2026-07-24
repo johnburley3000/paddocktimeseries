@@ -9,7 +9,7 @@ directory, then encoded to H.264 with ``ffmpeg`` (``libopenh264``).
 import cv2
 import numpy as np
 import xarray as xr
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 
 
 def _to_rgb(ds, time_idx):

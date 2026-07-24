@@ -67,7 +67,7 @@ flowchart TD
 
 ```python
 from datetime import date
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 
 q = Query(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],  # [W, S, E, N]
@@ -120,8 +120,8 @@ otherwise uses `~/Documents/BorevitzLab-Outputs` and
 explicitly:
 
 ```python
-from PaddockTS.config import Config
-from PaddockTS.query import Query
+from borevitz_lab.config import Config
+from borevitz_lab.query import Query
 
 cfg = Config(
     out_dir="/data/paddockts/outputs",
@@ -146,10 +146,10 @@ q = Query(
 The generic core (`bbox`, dates, `stub`, cache directories, registry,
 alternate constructors) lives in the shared
 [`borevitz-lab`](https://github.com/thestochasticman/borevitz_lab)
-package; `PaddockTS.query.Query` subclasses it to add the
+package; `borevitz_lab.query.Query` subclasses it to add the
 Sentinel-2 / SAM output paths.
 
-::: PaddockTS.query
+::: borevitz_lab.query
     options:
       inherited_members: true
 

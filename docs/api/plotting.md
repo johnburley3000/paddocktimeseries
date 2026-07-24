@@ -62,7 +62,7 @@ scaling to `min_size`.
 
 ```python
 from datetime import date
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.Plotting.sentinel2_video import sentinel2_video
 from PaddockTS.Plotting.sentinel2_paddocks_video import sentinel2_video_with_paddocks
 

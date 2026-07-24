@@ -42,7 +42,7 @@ decode_coords='all')`.
 
 ```python
 from datetime import date
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from pysentinel2.cube import Cube
 
 q = Query(

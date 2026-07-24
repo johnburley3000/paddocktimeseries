@@ -53,7 +53,7 @@ def estimate_phenology(query, ds_yearly=None, variable='NDVI', min_observations=
        attaches the peak count.
 
     Args:
-        query: The :class:`PaddockTS.query.Query`.
+        query: The :class:`borevitz_lab.query.Query`.
         ds_yearly: Optional ``{year: xarray.Dataset}`` mapping (typically
             from :func:`PaddockTS.Phenology.make_yearly_paddock_time_series`). If
             ``None``, built on demand. Each dataset must have a ``doy``

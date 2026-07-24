@@ -10,7 +10,7 @@ is pure green, and so on.
 import cv2
 import numpy as np
 import xarray as xr
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.paths import Paths
 
 

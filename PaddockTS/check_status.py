@@ -1,5 +1,5 @@
 from os.path import exists
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 
 def check_status(query: Query) -> bool:
     s = query.stub

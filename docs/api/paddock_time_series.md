@@ -25,7 +25,7 @@ central time-series dataset that phenology and plotting consume.
 
 ```python
 from datetime import date
-from PaddockTS.query import Query
+from borevitz_lab.query import Query
 from PaddockTS.Phenology.make_paddock_time_series import make_paddock_time_series
 
 q = Query(
