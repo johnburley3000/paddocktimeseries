@@ -35,40 +35,17 @@ classifiers = [
   "Topic :: Scientific/Engineering :: GIS",
   "Topic :: Scientific/Engineering :: Image Processing",
 ]
+# The scientific / geospatial / ML stack (GDAL, rasterio, samgeo, torch,
+# tensorflow, datacube, …) is provided by conda via environment.yml.
+# Only the lab packages are declared here so `pip install -e .` is fast
+# and doesn't re-resolve the native stack.
 dependencies = [
-  "attrs",
-  # Shared core + the machine-wide data stores PaddockTS consumes.
   "borevitz-lab",
   "pysentinel2",
   "pysilo",
   "pyozwald",
   "pycopdem",
   "pyslga",
-  "cvxpy",
-  "dask",
-  "datacube",  # vendored phenolopy imports datacube.utils.geometry
-  "geopandas",
-  "matplotlib",
-  "netcdf4",
-  "numpy",
-  "opencv-python",
-  "pandas",
-  "pillow",
-  "pysheds",
-  "rasterio",
-  "requests",
-  "rich",
-  "rioxarray",
-  "scipy",
-  "segment-geospatial",
-  "shapely",
-  "statsmodels",
-  "tensorflow",
-  "tabulate",
-  "torch",
-  "typing_extensions",
-  "xarray",
-  "zarr",
 ]
 
 [project.optional-dependencies]
