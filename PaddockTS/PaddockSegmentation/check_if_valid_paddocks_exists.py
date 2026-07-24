@@ -7,7 +7,6 @@ than an inside-the-store file because GeoPackages are single-file
 SQLite databases, not directories — so the zarr-style "marker inside
 the dir" convention doesn't apply.
 
-Mirrors :func:`PaddockTS.Sentinel2.check_if_valid_zarr_exists`.
 """
 
 from os.path import exists

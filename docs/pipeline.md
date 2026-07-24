@@ -77,8 +77,8 @@ stages, or no `paddocks_filepath` skips the user stages).
 
 | # | Stage | Module | Output |
 |---|---|---|---|
-| 1 | Download Sentinel-2 + clean | `Sentinel2.download_sentinel2` + `Sentinel2.clean_sentinel2` | `sentinel2.zarr`, `sentinel2_clean.zarr` |
-| 2 | Compute spectral indices | `SpectralIndices.indices.compute_indices` | `indices.zarr` |
+| 1 | Sentinel-2 window (clean) | `pysentinel2.cube.Cube` | in-memory (cube-backed) |
+| 2 | Spectral indices | `pysentinel2.derive` (on read) | in-memory |
 | 3 | Compute fractional cover | `FractionalCover.compute_fractional_cover` | `fractional_cover.zarr` |
 | 4 | Sentinel-2 video | `Plotting.sentinel2_video` | `{stub}_sentinel2.mp4` |
 | 5 | Segment paddocks (SAM) | `PaddockSegmentation.get_paddocks` | `sam_paddocks.gpkg` |
@@ -99,22 +99,21 @@ stages, or no `paddocks_filepath` skips the user stages).
 | 20 | Phenology plot (user) | `Plotting.phenology_plot` | `..._phenology_p01.png` |
 | 21 | PDF report | `Plotting.make_pdf` | `{stub}.pdf` |
 
-### Stage 1: Download Sentinel-2 + clean
+### Stage 1: Sentinel-2 window (via the pysentinel2 cube)
 
-Two sub-stages. `download_sentinel2` searches the DEA STAC catalog for
-overlapping `ga_s2am_ard_3` / `ga_s2bm_ard_3` scenes, loads the
-requested bands (including `oa_fmask`) via `odc.stac` on a Dask
-cluster, and writes the raw cube to `query.sentinel2_path`.
-`clean_sentinel2` then masks out fmask cloud/shadow pixels, drops
-scenes whose NaN fraction exceeds `max_nan_fraction` (default 0.5), and
-writes the result to `query.sentinel2_clean_path`.
+Sentinel-2 comes from the machine-wide
+[`pysentinel2`](https://github.com/thestochasticman/pysentinel2) cube:
+`Cube.get_ds_query(query, clean=True)` downloads only the (day × chunk)
+cells no previous query has fetched, then applies cloud masking **on
+read**. Cleaning dilates the fmask cloud/shadow (and snow) mask by
+`buffer_px` to catch cloud-edge halos, and gates frames on
+`max_cloud_fraction` (contamination over *valid* pixels) and
+`min_valid_fraction` (swath coverage) — per-frame `cloud_fraction` /
+`valid_fraction` land as coordinates on the returned dataset. See the
+pysentinel2 README's *Cleaning & masking* section for the full design.
 
-Both writes are guarded by `_SUCCESS` markers — a kill mid-write
-leaves the cache invalidated and the next call refetches cleanly.
-
-Failure modes specific to DEA's STAC are documented in
-[`diagnostics.md`](https://github.com/thestochasticman/paddock-ts-local/blob/main/diagnostics.md)
-at the repo root.
+Failure modes specific to DEA's STAC are documented in pysentinel2's
+[`diagnostics.md`](https://github.com/thestochasticman/pysentinel2/blob/main/diagnostics.md).
 
 ### Stage 5: Paddock segmentation (SAM)
 
@@ -125,7 +124,7 @@ Three internal steps:
    features. This collapses time into a representation that emphasises
    stable field boundaries and suppresses transient noise (clouds,
    shadows, seasonal greenness). Written as a GeoTIFF at
-   `query.preseg_path`.
+   `Paths(query).preseg`.
 2. **SAM mask generation** — feeds the presegmented image to
    [`segment-geospatial`](https://samgeo.gishub.org/) (default
    backbone: SAM ViT-H, ~2.4 GB checkpoint auto-downloaded to
@@ -138,7 +137,7 @@ Three internal steps:
    `min_compactness`, sorts by area descending, and assigns 1-based
    `paddock` IDs.
 
-The final filtered GeoPackage lives at `query.sam_paddocks_path`.
+The final filtered GeoPackage lives at `Paths(query).sam_paddocks`.
 
 ### Stages 11–14: Per-paddock time series
 

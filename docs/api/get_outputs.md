@@ -56,17 +56,18 @@ To wipe every cached artifact for this query and force a clean rebuild:
 get_outputs(q, reload=True)
 ```
 
-This deletes:
+This deletes PaddockTS's own artifacts only:
 
-- **`query.query_dir`** — per-(bbox, time) caches: Sentinel-2 raw +
-  clean zarrs, indices zarr, fractional cover zarr, presegmentation
-  tif, SAM mask + raw polygons + filtered paddocks gpkg.
-- **`query.terrain_path`** — the Copernicus DEM tile (per-bbox,
-  time-invariant). The wider `aoi_dir` is left alone so other queries
-  with the same bbox but a different time range aren't surprised.
+- **`Paths(query).cache_dir`** — the region × time cache: fractional
+  cover zarr, presegmentation tif, SAM mask + raw polygons + filtered
+  paddocks gpkg.
 - **`query.tmp_dir`** — per-stub time-series zarrs (paddockTS,
   yearly, smoothed).
 - **`query.out_dir`** — every final output (PNGs, MP4s, PDF report).
+
+The shared, machine-wide data stores (Sentinel-2, terrain, climate,
+soils) are **not** touched — they dedup across every query on the
+machine and are not one query's to evict.
 
 This is rarely needed — the per-stage `_SUCCESS` markers catch partial
 writes automatically. Use it when you've changed something the cache

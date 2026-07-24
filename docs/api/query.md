@@ -18,25 +18,26 @@ absent).
 - **Content addressing.** If you don't pass a `stub`, it's computed as
   `sha256(bbox + start + end)` so two queries with identical inputs
   share outputs on disk.
-- **AOI cache.** Bounding boxes are snapped to ~100 m precision
-  (3 decimal places) before hashing into `bbox_hash`. Two queries with
-  the same bbox but different date ranges share the AOI directory
-  (`{tmp_dir}/aoi/{bbox_hash}/`) — so the Sentinel-2 download for
-  jan-feb 2024 lives next to the one for mar-apr 2024.
+- **Region identity.** Bounding boxes are snapped to ~100 m precision
+  (3 decimal places) before hashing into `bbox_hash`, so near-identical
+  bboxes share one region identity. `bbox_hash` keys the registry and
+  the PaddockTS region × time cache; the data stores dedup at their own
+  finer granularity (grid chunks / points) regardless.
 - **Registry.** Every constructed `Query` is recorded in
   `{config.out_dir}/queries.json` under its `bbox_hash`. Reusing a
   `stub` for a different `(bbox, start, end)` raises `ValueError`.
-- **Per-query paths.** `query.sentinel2_path`,
-  `query.fractional_cover_path`, `query.sam_paddocks_path`,
-  `query.terrain_path` etc. are computed lazily from the stub and bbox
-  hash — see the auto-generated reference below.
+- **Derived paths live elsewhere.** `Query` carries no storage layout:
+  input data (Sentinel-2, climate, terrain, soils) is cached by the
+  machine-wide stores, and PaddockTS's own artifacts (fractional cover,
+  SAM paddocks, …) live on `PaddockTS.paths.Paths`, keyed by the
+  Query's identity hashes.
 
-The diagram below shows how the four inputs fan out into hashes and
-on-disk paths. Note the two distinct cache scopes: the **AOI cache**
-(`bbox_hash`) is shared by every time range over the same region, while
-the **time-scoped cache** (`bbox_hash/time_hash`) holds the Sentinel-2
-chain for one specific window. The human-readable `stub` only names the
-per-query scratch and final-output directories.
+The diagram below shows how the four inputs fan out. Input data never
+lives per-query: the machine-wide stores (pysentinel2, pysilo,
+pyozwald, pycopdem, pyslga) cache it once per machine at chunk/point
+granularity. `bbox_hash × time_hash` keys only PaddockTS's own derived
+artifacts, and the human-readable `stub` names the per-query scratch
+and final-output directories.
 
 ```mermaid
 flowchart TD
@@ -46,15 +47,13 @@ flowchart TD
   Q -->|"sha256(start+end)"| TH["<b>time_hash</b>"]
   Q -->|"verbatim"| ST["<b>stub</b>"]
 
-  BH --> AOI["{tmp_dir}/aoi/{bbox_hash}/<br/><i>AOI cache — shared across time ranges</i>"]
-  AOI --> TER["terrain.tif<br/><i>(time-invariant)</i>"]
+  Q -.->|"windows served on demand,<br/>cached machine-wide"| STORES["pysentinel2 · pysilo · pyozwald ·<br/>pycopdem · pyslga<br/><i>shared data stores</i>"]
 
-  AOI --> QD["…/{time_hash}/<br/><i>time-scoped cache</i>"]
+  BH --> QD["{tmp_dir}/paddockts/{bbox_hash}/{time_hash}/<br/><i>PaddockTS region × time cache</i>"]
   TH --> QD
-  QD --> S2["sentinel2.zarr<br/>sentinel2_clean.zarr<br/>indices.zarr<br/>fractional_cover.zarr"]
-  QD --> SAM["preseg.tif · sam_mask.tif<br/>sam_raw.gpkg · sam_paddocks.gpkg"]
+  QD --> ART["fractional_cover.zarr · preseg.tif<br/>sam_mask.tif · sam_raw.gpkg · sam_paddocks.gpkg"]
 
-  ST --> TMP["{tmp_dir}/{stub}/<br/><i>per-query intermediates</i>"]
+  ST --> TMP["{tmp_dir}/{stub}/<br/><i>per-query intermediates (time series)</i>"]
   ST --> OUT["{out_dir}/{stub}/<br/><i>final outputs + queries.json</i>"]
 
   classDef default color:#000;
@@ -77,8 +76,6 @@ q = Query(
     stub="my_first_run",
 )
 
-print(q.sentinel2_path)
-# ~/Downloads/BorevitzLab-Tmp/aoi/<bbox_hash>/<time_hash>/sentinel2.zarr
 print(q.out_dir)
 # ~/Documents/BorevitzLab-Outputs/my_first_run
 ```

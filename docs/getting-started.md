@@ -212,13 +212,12 @@ Every stage is a plain function. Call it directly when you want one
 output and don't need the dashboard:
 
 ```python
-from PaddockTS.Sentinel2.download_sentinel2 import download_sentinel2
-from PaddockTS.SpectralIndices.indices import compute_indices
+from pysentinel2.cube import Cube
 from PaddockTS.FractionalCover import compute_fractional_cover
 from PaddockTS.PaddockSegmentation.get_paddocks import get_paddocks
 
-ds = download_sentinel2(query)                      # raw S2 zarr
-ds = compute_indices(query, ds_sentinel2=ds)        # adds NDVI/CFI/...
+cube = Cube(config=query.config)
+ds = cube.get_ds_query(query, indices=('NDVI', 'CFI', 'NIRv', 'NDTI', 'CAI'))
 fc = compute_fractional_cover(query, ds_sentinel2=ds)  # bg / pv / npv
 paddocks = get_paddocks(query, ds_sentinel2=ds)     # GeoDataFrame
 ```

@@ -1,7 +1,6 @@
 """Topography figure: elevation, flow accumulation, aspect, and slope.
 
-Loads the Copernicus DEM tile downloaded by
-:mod:`PaddockTS.Environmental.TerrainTiles.download_terrain_tiles`,
+Loads the elevation window from the machine-wide pycopdem store,
 applies a Gaussian smoother before flow analysis (sharp DEMs cause flow
 algorithms to produce striped artefacts), and derives:
 
@@ -50,8 +49,8 @@ def terrain_tiles_plot(query: Query, ds_sentinel2=None, sigma: int = 10):
             ``{query.out_dir}/{query.stub}_topography.png``.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset, used as the
             spatial reference grid that the terrain tiles are
-            reprojected onto. If ``None``, ``query.sentinel2_path`` is
-            opened (or downloaded first).
+            reprojected onto. If ``None``, the cloud-masked window is
+            read from the pysentinel2 cube.
         sigma: Standard deviation of the Gaussian smoother applied to
             the DEM before flow analysis, in pixels. Larger values
             produce smoother, less-striped flow fields at the cost of
@@ -190,11 +189,7 @@ def terrain_tiles_plot(query: Query, ds_sentinel2=None, sigma: int = 10):
 
 def test():
     from PaddockTS.utils import get_example_query
-    from PaddockTS.Sentinel2.download_sentinel2 import download_sentinel2
-    from PaddockTS.Environmental.TerrainTiles.download_terrain_tiles import download_terrain
     q = get_example_query()
-    # download_sentinel2(q)
-    # download_terrain(q)
     terrain_tiles_plot(q)
 
 

@@ -91,12 +91,11 @@ AOI to confirm boundaries follow real field edges.
 
 ```python
 import numpy as np
-import xarray as xr
 import matplotlib.pyplot as plt
-from PaddockTS.SpectralIndices.indices import compute_ndvi
+from pysentinel2.cube import Cube
 
-ds = xr.open_zarr(q.sentinel2_clean_path, decode_coords="all")
-ndvi_median = np.nanmedian(compute_ndvi(ds), axis=2)
+ds = Cube(config=q.config).get_ds_query(q, indices=('NDVI',))
+ndvi_median = np.nanmedian(ds['NDVI'].values, axis=0)
 extent = [ds.x.min(), ds.x.max(), ds.y.min(), ds.y.max()]
 
 fig, ax = plt.subplots(figsize=(10, 10))

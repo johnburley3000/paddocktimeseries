@@ -1,20 +1,20 @@
-# Sentinel-2 download
+# Sentinel-2 (via pysentinel2)
 
-Two stages live here:
+Sentinel-2 lives in its own package now:
+[`pysentinel2`](https://github.com/thestochasticman/pysentinel2), a
+machine-wide self-filling datacube. PaddockTS consumes it directly:
 
-- `download_sentinel2` — fetches the **raw** Sentinel-2 ARD cube
-  (including the fmask quality band) from a STAC catalog and writes it
-  as Zarr v2 to `query.sentinel2_path`. The default STAC source is
-  Geoscience Australia's [Digital Earth Australia](https://explorer.dea.ga.gov.au/)
+- `Cube.get_ds_query(query)` — the **raw** ARD window (including the
+  fmask quality band), downloading only the (day × chunk) cells no
+  previous query has fetched. The default source is Geoscience
+  Australia's [Digital Earth Australia](https://explorer.dea.ga.gov.au/)
   ARD collection (`ga_s2am_ard_3` / `ga_s2bm_ard_3`).
-- `clean_sentinel2` — reads the raw cube, applies an fmask-based
-  clear-sky pixel mask (drops the fmask band itself in the process),
-  drops scenes whose NaN fraction exceeds `max_nan_fraction`, and
-  writes the cleaned cube as Zarr v2 to `query.sentinel2_clean_path`.
-
-Both writes are guarded by `_SUCCESS` markers — same query re-runs
-reuse the cached file; different bbox or different time range gets its
-own folder.
+- `Cube.get_ds_query(query, clean=True)` — the cloud-masked window,
+  computed on read (never stored): dilated cloud/shadow/snow masking
+  plus two frame gates, `max_cloud_fraction` (contamination over
+  *valid* pixels) and `min_valid_fraction` (swath coverage).
+- `Cube.get_ds_query(query, indices=('NDVI', ...))` — spectral indices
+  as on-read derivatives (implies `clean=True`).
 
 ---
 
@@ -43,7 +43,7 @@ decode_coords='all')`.
 ```python
 from datetime import date
 from PaddockTS.query import Query
-from PaddockTS.Sentinel2.download_sentinel2 import download_sentinel2
+from pysentinel2.cube import Cube
 
 q = Query(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],
@@ -52,7 +52,7 @@ q = Query(
     stub="s2_demo",
 )
 
-ds = download_sentinel2(q)
+ds = Cube(config=q.config).get_ds_query(q)
 print(ds)
 # <xarray.Dataset>
 # Dimensions:      (time: 19, y: 257, x: 197)
@@ -73,87 +73,48 @@ print(ds)
 ## Example: clean (mask clouds + drop bad scenes)
 
 ```python
-from PaddockTS.Sentinel2.clean_sentinel2 import clean_sentinel2
+from pysentinel2.cube import Cube
 
-ds_clean = clean_sentinel2(q, ds_sentinel2=ds, max_nan_fraction=0.5)
+cube = Cube(config=q.config)
+ds_clean = cube.get_ds_query(q, clean=True,
+                             max_cloud_fraction=0.5,   # ≤50% contamination of valid pixels
+                             min_valid_fraction=0.2)   # ≥20% of the window sensed
 
-print("scenes before:", ds.time.size)
 print("scenes after :", ds_clean.time.size)
 print("fmask present:", "oa_fmask" in ds_clean.data_vars)  # False
+print(ds_clean.cloud_fraction.values)   # why each surviving frame survived
 ```
 
-`max_nan_fraction=0.5` keeps scenes that are at least ~50% clear
-within the AOI. Lower to be more aggressive about discarding cloudy
-scenes; raise to keep more time points for sparse acquisitions.
+Lower `max_cloud_fraction` to discard cloudy scenes more aggressively;
+raise it to keep more time points for sparse acquisitions. A clear
+frame that only partially overlaps the AOI is not penalised for its
+swath margin — coverage is gated separately by `min_valid_fraction`.
 
 ---
 
 ## Customising the catalog / bands
 
-`download_sentinel2` accepts a `Sentinel2` config object (see
-`PaddockTS.Sentinel2.sentinel2.Sentinel2`) controlling STAC URL,
-collections, bands, CRS, resolution, and fmask values. The default —
-`defaultsentinel2` — targets DEA ARD, 10 m, EPSG:6933, fmask cloud=2 /
-shadow=3:
+`Cube` accepts a `Sentinel2` config object (see
+`pysentinel2.sentinel2.Sentinel2`) controlling STAC URL, collections,
+bands, CRS, resolution, cloud threshold and fmask class codes. The
+default — `defaultsentinel2` — targets DEA ARD, 10 m, EPSG:6933:
 
 ```python
-from PaddockTS.Sentinel2.sentinel2 import Sentinel2
+from pysentinel2.sentinel2 import Sentinel2
+from pysentinel2.cube import Cube
 
 custom = Sentinel2(
     bands=('oa_fmask', 'nbart_red', 'nbart_green', 'nbart_blue', 'nbart_nir_1'),
     resolution=20,
 )
-ds = download_sentinel2(q, sentinel2=custom)
+ds = Cube(config=q.config, sentinel2=custom).get_ds_query(q)
 ```
-
----
-
-## Streaming write
-
-`download_sentinel2` stages the dataset lazily via `odc.stac.load`
-(returns a Dask-backed `xarray.Dataset`) and writes it to Zarr with
-`ds.to_zarr(...)` while the Dask client is still alive. Chunks are
-fetched, written to disk, and released — **the full cube is never
-held in the driver process's memory**. Peak memory is roughly
-`num_workers × threads_per_worker × chunk_size`, independent of AOI
-size or year count.
-
-If you have a 50 km² AOI over 3 years and ~150 scenes, the old
-`client.compute(ds) → .result()` path would have peaked at the
-whole-cube footprint (multi-GB). The streaming write peaks at a few
-MB per chunk in flight.
-
-After the write completes, the function returns
-`xr.open_zarr(query.sentinel2_path, chunks=None, decode_coords='all')`
-— a stable eager reference to the persisted store, not the lazy Dask
-view (which would re-fetch from STAC the moment the client shut down).
-
-## Thread-env restoration
-
-Dask sets `OMP_NUM_THREADS=1` (and the MKL / OpenBLAS equivalents) on
-the parent process when its cluster spins up. Without restoration
-those values persist into later pipeline steps and would cripple the
-PyTorch threading in SAM segmentation. `download_sentinel2` snapshots
-the originals on entry and restores them in a `finally` block, so
-even a failed download leaves the env exactly as it found it.
-
-## Failure modes
-
-DEA's STAC fronting load-balancer can return a 504 on cold first
-request. `download_sentinel2` ships with a `urllib3.Retry` policy
-covering 408/429/502/503/504 with exponential backoff. See
-[`diagnostics.md`](https://github.com/thestochasticman/paddock-ts-local/blob/main/diagnostics.md)
-for the full reproduction and the open `RasterioIOError('Unsupported
-Authorization Type')` issue.
 
 ---
 
 ## Reference
 
-### `download_sentinel2`
-
-::: PaddockTS.Sentinel2.download_sentinel2.download_sentinel2
-
-### `clean_sentinel2`
-
-::: PaddockTS.Sentinel2.clean_sentinel2.clean_sentinel2
+Full API reference lives in the
+[`pysentinel2`](https://github.com/thestochasticman/pysentinel2)
+repository — see its README (*Cleaning & masking*, *Performance*) and
+module docstrings (`pysentinel2.cube`, `pysentinel2.derive`).
