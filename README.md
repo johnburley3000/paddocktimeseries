@@ -59,35 +59,48 @@ automatically detected and re-fetched on the next run.
 
 ### Conda (recommended)
 
-A single environment file installs the geospatial native stack (GDAL,
-PROJ, GEOS), the ML stack (PyTorch, TensorFlow), and PaddockTS itself.
-
-PaddockTS depends on the shared
-[`borevitz-lab`](https://github.com/thestochasticman/borevitz_lab)
-core package (the `Query` / `Config` primitives) — clone it alongside
-and install it first.
+One command pulls the whole ecosystem — the `borevitz-lab` core, the
+five data-store packages, PaddockTS itself, and the full native stack
+(GDAL/PROJ/GEOS, PyTorch, TensorFlow, Segment Anything) — from the lab
+channel plus conda-forge:
 
 ```bash
-git clone https://github.com/thestochasticman/borevitz_lab.git
-git clone https://github.com/thestochasticman/paddocktimeseries.git
-cd paddocktimeseries
-conda env update -n borevitz_lab -f environment.yml
-conda activate borevitz_lab
-pip install -e ../borevitz_lab
-pip install -e .
-```
-
-### pip
-
-If you already have GDAL, PROJ, GEOS, and (optionally) CUDA installed
-system-wide:
-
-```bash
-pip install -e ../borevitz_lab
-pip install -e .
+conda create -n paddockts -c conda-forge -c pytorch -c thestochasticman paddocktimeseries
+conda activate paddockts
 ```
 
 PaddockTS targets Python ≥ 3.11.
+
+> **Hardened-kernel note (Fedora / recent glibc).** If `import
+> tensorflow` fails with *"cannot enable executable stack as shared
+> object requires"*, your kernel enforces non-executable stacks and
+> conda-forge's TensorFlow libraries request one. Clear the flag once
+> (the libraries are in your env, so no root needed):
+>
+> ```bash
+> conda install -n paddockts -c conda-forge patchelf   # or use execstack
+> find "$CONDA_PREFIX" -name '*.so*' -exec sh -c \
+>   'execstack -c "$1" 2>/dev/null || true' _ {} \;
+> ```
+>
+> Most Linux systems don't hit this.
+
+### From source (development)
+
+```bash
+git clone https://github.com/thestochasticman/borevitz_lab.git
+git clone https://github.com/thestochasticman/pysentinel2.git
+git clone https://github.com/thestochasticman/pysilo.git
+git clone https://github.com/thestochasticman/pyozwald.git
+git clone https://github.com/thestochasticman/pycopdem.git
+git clone https://github.com/thestochasticman/pyslga.git
+git clone https://github.com/thestochasticman/paddocktimeseries.git
+cd paddocktimeseries
+conda env update -n borevitz_lab -f environment.yml   # native + scientific stack
+conda activate borevitz_lab
+pip install -e ../borevitz_lab -e ../pysentinel2 -e ../pysilo \
+            -e ../pyozwald -e ../pycopdem -e ../pyslga -e .
+```
 
 ### Configure (optional)
 
