@@ -1,23 +1,23 @@
-"""Per-year calendar of true-colour Sentinel-2 thumbnails per paddock.
+"""Multi-year calendar of true-colour Sentinel-2 thumbnails per paddock.
 
-Produces one page per year (split across multiple pages if there are
-more paddocks than ``max_paddocks_per_page``). Rows are paddocks
-(largest area at top); columns are 48 evenly-spaced slots across the
-year (4 per month). Each cell shows the Sentinel-2 RGB thumbnail of
-that paddock at the observation closest to the slot's day-of-year,
-with non-paddock pixels masked black.
+Produces one page per paddock (largest area first), so each paddock
+starts on a fresh page and can be compared across years. Rows are the
+years in the query; columns are 48 evenly-spaced slots across the year
+(4 per month). Each cell shows the Sentinel-2 RGB thumbnail of that
+paddock at the observation closest to the slot's day-of-year, with
+non-paddock pixels masked black.
 
 Each page is a matplotlib :class:`~matplotlib.figure.Figure` so that
 when it's written into a PDF report by :mod:`PaddockTS.Plotting.make_pdf`,
-the title / month / paddock labels remain *vector text* — readable at
-any zoom, immune to the rasterized-PNG-embed shrink that capped text
-size at ~13 pt in the previous PIL-composited version.
+the title / month / year labels remain *vector text* — readable at any
+zoom, immune to the rasterized-PNG-embed shrink that capped text size
+at ~13 pt in the previous PIL-composited version.
 
 Public entry points:
 
-- :func:`calendar_plot` — saves one PNG per page (matplotlib raster
-  output) under ``query.out_dir``. Standalone view, same as before.
-- :func:`iter_calendar_figures` — generator yielding ``(year, page_idx,
+- :func:`calendar_plot` — saves one PNG per paddock (matplotlib raster
+  output) under ``query.out_dir``.
+- :func:`iter_calendar_figures` — generator yielding ``(paddock_id,
   fig)`` tuples without writing anything to disk. Used by
   :mod:`PaddockTS.Plotting.make_pdf` to embed pages as vector-text PDF
   pages.
@@ -161,51 +161,49 @@ _HEADER_BAND = 0.04      # fraction of fig height for the month-name strip
 _BOTTOM_MARGIN = 0.04    # blank gutter under the grid
 
 
-def _build_page_figure(stub: str, year: int, page_idx: int, n_pages: int,
-                       page_paddock_ids: list[int], paddocks_sorted,
-                       paddock_ids_all: list[int],
-                       obs_thumbs: dict, slot_to_obs: list[int],
-                       n_slots: int = 48, thumb_size: int = 64,
-                       label_col: str | None = None,
-                       max_paddocks_per_page: int = 20):
-    """Build the matplotlib Figure for one calendar page.
+# One page per paddock: rows are years, columns are the 48 month-slots,
+# so the same paddock is seen year-over-year on a single page. Row height
+# is fixed by _ROWS_REF so a paddock with few years keeps square-ish
+# thumbnails (the grid is then vertically centred) instead of stretching.
+_ROWS_REF = 8
+
+
+def _build_paddock_figure(stub: str, paddock_id: int, label_text: str,
+                          years_sorted: list[int], years_data: dict,
+                          n_slots: int = 48, thumb_size: int = 64):
+    """Build the matplotlib Figure for one paddock's multi-year calendar.
 
     The thumbnail grid is composited into a single numpy array and drawn
-    via one ``imshow`` (fast). Title, month names, and paddock labels
-    are matplotlib text — vector when saved to PDF.
-
-    Row height is fixed by ``max_paddocks_per_page`` so a partial last
-    page has the same per-row height as the full pages above it.
+    via one ``imshow`` (fast). Title (the paddock label), month names, and
+    per-row year labels are matplotlib text — vector when saved to PDF.
     """
-    n_rows_visible = len(page_paddock_ids)
-    grid_h = n_rows_visible * thumb_size
+    n_rows = len(years_sorted)
+    grid_h = n_rows * thumb_size
     grid_w = n_slots * thumb_size
     grid = np.zeros((grid_h, grid_w, 3), dtype=np.uint8)
-    for i, pid in enumerate(page_paddock_ids):
+    for i, year in enumerate(years_sorted):
+        obs_thumbs, slot_to_obs = years_data[year]
         y0 = i * thumb_size
         for j in range(n_slots):
             x0 = j * thumb_size
-            grid[y0:y0 + thumb_size, x0:x0 + thumb_size] = obs_thumbs[slot_to_obs[j]][pid]
+            grid[y0:y0 + thumb_size, x0:x0 + thumb_size] = obs_thumbs[slot_to_obs[j]][paddock_id]
 
     fig = plt.figure(figsize=(_FIG_W_IN, _FIG_H_IN))
 
-    # Horizontal extent of the thumbnail grid (left edge = paddock-label
+    # Horizontal extent of the thumbnail grid (left edge = year-label
     # column ends; right edge = right gutter starts).
     grid_left = _LEFT_MARGIN
     grid_right = 1.0 - _RIGHT_MARGIN
 
-    # Vertical: the *available* band sits between the month-name strip
-    # (just under the title) and the bottom margin. Per-row height is
-    # fixed by max_paddocks_per_page so a half-full last page looks the
-    # same as full pages — but for partial pages, the grid is then
-    # vertically *centred* in the leftover space so it doesn't dangle at
-    # the top.
+    # Vertical: the band sits between the month-name strip and the bottom
+    # margin. Row height is fixed by _ROWS_REF so a paddock with few years
+    # keeps a consistent per-row height; the grid is then centred.
     band_top    = 1.0 - _TITLE_BAND - _HEADER_BAND
     band_bottom = _BOTTOM_MARGIN
     band_height = band_top - band_bottom
-    row_h_frac  = band_height / max_paddocks_per_page
-    visible_grid_h = row_h_frac * n_rows_visible
-    # Centre the visible grid vertically within the band.
+    rows_ref    = max(n_rows, _ROWS_REF)
+    row_h_frac  = band_height / rows_ref
+    visible_grid_h = row_h_frac * n_rows
     grid_top    = band_top - (band_height - visible_grid_h) / 2
     grid_bottom = grid_top - visible_grid_h
 
@@ -217,13 +215,11 @@ def _build_page_figure(stub: str, year: int, page_idx: int, n_pages: int,
     for spine in grid_ax.spines.values():
         spine.set_visible(False)
 
-    # Title
-    title_text = f'{stub} — {year} (page {page_idx + 1:02d}/{n_pages:02d})'
-    fig.text(0.5, 1.0 - _TITLE_BAND / 2, title_text,
+    # Title — the paddock label
+    fig.text(0.5, 1.0 - _TITLE_BAND / 2, f'{stub} — {label_text}',
              ha='center', va='center', fontsize=16, fontweight='bold')
 
-    # Month labels — sit just above the grid (not at a fixed band height)
-    # so they follow the grid when it's vertically centred for partial pages.
+    # Month labels — sit just above the grid so they follow it when centred.
     header_y = grid_top + _HEADER_BAND / 2
     grid_w_frac = grid_right - grid_left
     for m in range(12):
@@ -232,18 +228,12 @@ def _build_page_figure(stub: str, year: int, page_idx: int, n_pages: int,
         fig.text(x, header_y, _MONTH_NAMES[m],
                  ha='center', va='center', fontsize=11)
 
-    # Paddock labels (one per row, right-aligned just to the left of the grid)
+    # Year labels (one per row, right-aligned just to the left of the grid)
     label_x = grid_left - 0.005
-    for i, pid in enumerate(page_paddock_ids):
-        orig_idx = paddock_ids_all.index(pid)
-        row = paddocks_sorted.iloc[orig_idx]
-        if label_col is not None:
-            label_text = str(row[label_col])
-        else:
-            label_text = f'P{row["paddock"]}  {row["area_ha"]:.0f}ha'
+    for i, year in enumerate(years_sorted):
         y = grid_top - (i + 0.5) * row_h_frac
-        fig.text(label_x, y, label_text,
-                 ha='right', va='center', fontsize=10)
+        fig.text(label_x, y, str(year),
+                 ha='right', va='center', fontsize=11)
 
     return fig
 
@@ -253,10 +243,14 @@ def _build_page_figure(stub: str, year: int, page_idx: int, n_pages: int,
 def iter_calendar_figures(query: Query, paddocks_filepath: str | None = None,
                           ds_sentinel2: xr.Dataset | None = None,
                           thumb_size: int = 64,
-                          max_paddocks_per_page: int = 20,
                           label_col: str | None = None,
-                          ) -> Iterator[tuple[int, int, plt.Figure]]:
-    """Yield ``(year, page_idx, fig)`` for every calendar page.
+                          ) -> Iterator[tuple[int, plt.Figure]]:
+    """Yield ``(paddock_id, fig)`` — one page per paddock.
+
+    Each figure shows that paddock across every year in the query (years
+    as rows, months as columns), so the same paddock can be compared
+    year-over-year, and every paddock starts on a fresh page. Paddocks
+    are yielded largest-area first.
 
     Does not write to disk. Used by :mod:`PaddockTS.Plotting.make_pdf`
     to embed each page directly into the report PDF as a vector-text
@@ -270,36 +264,32 @@ def iter_calendar_figures(query: Query, paddocks_filepath: str | None = None,
     paddocks_sorted, paddock_ids, years_data = _prepare_thumbnails(
         query, paddocks_filepath, ds_sentinel2, thumb_size,
     )
+    years_sorted = sorted(years_data)
 
-    n_paddocks = len(paddock_ids)
-    n_pages = (n_paddocks + max_paddocks_per_page - 1) // max_paddocks_per_page
-    paddock_pages = [paddock_ids[i * max_paddocks_per_page:(i + 1) * max_paddocks_per_page]
-                     for i in range(n_pages)]
-
-    for year, (obs_thumbs, slot_to_obs) in years_data.items():
-        for page_idx, page_paddock_ids in enumerate(paddock_pages):
-            fig = _build_page_figure(
-                stub=query.stub, year=year, page_idx=page_idx, n_pages=n_pages,
-                page_paddock_ids=page_paddock_ids,
-                paddocks_sorted=paddocks_sorted, paddock_ids_all=paddock_ids,
-                obs_thumbs=obs_thumbs, slot_to_obs=slot_to_obs,
-                thumb_size=thumb_size, label_col=label_col,
-                max_paddocks_per_page=max_paddocks_per_page,
-            )
-            yield year, page_idx, fig
+    for orig_idx, pid in enumerate(paddock_ids):
+        row = paddocks_sorted.iloc[orig_idx]
+        if label_col is not None:
+            label_text = str(row[label_col])
+        else:
+            label_text = f'P{row["paddock"]}  {row["area_ha"]:.0f}ha'
+        fig = _build_paddock_figure(
+            stub=query.stub, paddock_id=pid, label_text=label_text,
+            years_sorted=years_sorted, years_data=years_data,
+            thumb_size=thumb_size,
+        )
+        yield pid, fig
 
 
 def calendar_plot(query: Query, ds_sentinel2: xr.Dataset | None = None,
                   paddocks_filepath: str | None = None,
                   thumb_size: int = 64,
-                  max_paddocks_per_page: int = 20,
                   label_col: str | None = None) -> list[str]:
-    """Render and save one calendar PNG per year × page chunk.
+    """Render and save one calendar PNG per paddock.
 
-    The PNGs are matplotlib-rasterized at 200 dpi for standalone
-    viewing. For the PDF report, :mod:`PaddockTS.Plotting.make_pdf`
-    calls :func:`iter_calendar_figures` directly so the text stays
-    vector.
+    Each PNG shows that paddock across every year in the query. They are
+    matplotlib-rasterized at 200 dpi for standalone viewing; for the PDF
+    report, :mod:`PaddockTS.Plotting.make_pdf` calls
+    :func:`iter_calendar_figures` directly so the text stays vector.
 
     Args:
         query: The :class:`borevitz_lab.query.Query`.
@@ -310,12 +300,11 @@ def calendar_plot(query: Query, ds_sentinel2: xr.Dataset | None = None,
             defaults to ``Paths(query).sam_paddocks``.
         thumb_size: Edge length of each thumbnail in pixels (input
             resolution; matplotlib resizes for display). Default 64.
-        max_paddocks_per_page: Maximum paddocks per page. Default 20.
-        label_col: Column in the paddocks GeoDataFrame to use for
-            per-row labels. ``None`` → ``"P{id}  {area:.0f}ha"``.
+        label_col: Column in the paddocks GeoDataFrame to use for the
+            per-page title. ``None`` → ``"P{id}  {area:.0f}ha"``.
 
     Returns:
-        list[str]: Paths of the generated PNGs (one per year × page).
+        list[str]: Paths of the generated PNGs (one per paddock).
     """
     if paddocks_filepath is None:
         paddocks_filepath = Paths(query).sam_paddocks
@@ -328,12 +317,11 @@ def calendar_plot(query: Query, ds_sentinel2: xr.Dataset | None = None,
         os.remove(old)
 
     out_paths: list[str] = []
-    for year, page_idx, fig in iter_calendar_figures(
+    for pid, fig in iter_calendar_figures(
         query, paddocks_filepath=paddocks_filepath, ds_sentinel2=ds_sentinel2,
-        thumb_size=thumb_size, max_paddocks_per_page=max_paddocks_per_page,
-        label_col=label_col,
+        thumb_size=thumb_size, label_col=label_col,
     ):
-        out_path = f'{query.out_dir}/{out_stem}_calendar_{year}_p{page_idx + 1:02d}.png'
+        out_path = f'{query.out_dir}/{out_stem}_calendar_p{pid:02d}.png'
         fig.savefig(out_path, dpi=200)
         plt.close(fig)
         print(f'Saved to {out_path}')

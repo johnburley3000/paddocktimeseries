@@ -175,7 +175,7 @@ def make_pdf(query: Query, paddocks_filepath: str | None = None,
                     continue
                 cal_label_col = label_col if requires_user else None
                 _add_section_page(pdf, section_title)
-                for _year, _page_idx, fig in iter_calendar_figures(
+                for _pid, fig in iter_calendar_figures(
                     query, paddocks_filepath=cal_paddocks,
                     label_col=cal_label_col,
                 ):
