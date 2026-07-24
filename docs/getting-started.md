@@ -34,8 +34,8 @@ and install it first.
 
 ```bash
 git clone https://github.com/thestochasticman/borevitz_lab.git
-git clone https://github.com/thestochasticman/paddock-ts-local.git
-cd paddock-ts-local
+git clone https://github.com/thestochasticman/paddocktimeseries.git
+cd paddocktimeseries
 conda env update -n borevitz_lab -f environment.yml
 conda activate borevitz_lab
 pip install -e ../borevitz_lab

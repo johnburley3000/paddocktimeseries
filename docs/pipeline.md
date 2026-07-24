@@ -215,5 +215,5 @@ the cache.
 - **[API reference](api/index.md)** — full function signatures with
   runnable examples
 - [`PaddockTS.get_outputs`](api/get_outputs.md) — the orchestrator
-- [`diagnostics.md`](https://github.com/thestochasticman/paddock-ts-local/blob/main/diagnostics.md)
+- [`diagnostics.md`](https://github.com/thestochasticman/paddocktimeseries/blob/main/diagnostics.md)
   — known failure modes (DEA STAC cold-start, GDAL HTTP auth)

@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "PaddockTS"
+name = "paddocktimeseries"
 version = "0.8.0"
 description = "Paddock segmentation and time-series analysis from Sentinel-2 imagery"
 readme = "README.md"
@@ -60,9 +60,9 @@ viewer = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/thestochasticman/paddock-ts-local"
-Repository = "https://github.com/thestochasticman/paddock-ts-local"
-Issues = "https://github.com/thestochasticman/paddock-ts-local/issues"
+Homepage = "https://github.com/thestochasticman/paddocktimeseries"
+Repository = "https://github.com/thestochasticman/paddocktimeseries"
+Issues = "https://github.com/thestochasticman/paddocktimeseries/issues"
 
 [tool.setuptools.packages.find]
 include = ["PaddockTS", "PaddockTS.*"]

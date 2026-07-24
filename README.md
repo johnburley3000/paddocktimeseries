@@ -9,11 +9,11 @@ and remote-sensing researchers who want a reproducible path from raw
 Sentinel-2 imagery to per-paddock greenness, ground cover, and
 phenology.
 
-[![Docs](https://img.shields.io/badge/docs-thestochasticman.github.io-2ea44f)](https://thestochasticman.github.io/paddock-ts-local/)
+[![Docs](https://img.shields.io/badge/docs-thestochasticman.github.io-2ea44f)](https://thestochasticman.github.io/paddocktimeseries/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 
-📚 **Documentation:** <https://thestochasticman.github.io/paddock-ts-local/>
+📚 **Documentation:** <https://thestochasticman.github.io/paddocktimeseries/>
 
 ---
 
@@ -69,8 +69,8 @@ and install it first.
 
 ```bash
 git clone https://github.com/thestochasticman/borevitz_lab.git
-git clone https://github.com/thestochasticman/paddock-ts-local.git
-cd paddock-ts-local
+git clone https://github.com/thestochasticman/paddocktimeseries.git
+cd paddocktimeseries
 conda env update -n borevitz_lab -f environment.yml
 conda activate borevitz_lab
 pip install -e ../borevitz_lab
@@ -117,7 +117,7 @@ Settings can also come from environment variables
 The Sentinel-2 → PaddockTS chain itself works without any credentials.
 
 You can also pass configuration directly to `Query` via a `Config`
-object — see the [Getting started](https://thestochasticman.github.io/paddock-ts-local/getting-started/)
+object — see the [Getting started](https://thestochasticman.github.io/paddocktimeseries/getting-started/)
 page.
 
 ---
@@ -264,7 +264,7 @@ The table below is the same chain, stage by stage:
 
 Every stage is a standalone function — pick any subset, swap in your
 own segmentation, plug in your own phenology library. See the
-[pipeline page](https://thestochasticman.github.io/paddock-ts-local/pipeline/)
+[pipeline page](https://thestochasticman.github.io/paddocktimeseries/pipeline/)
 for the full call-graph and per-stage caching behaviour.
 
 ---
@@ -348,9 +348,9 @@ relevant to your work:
 ## Contributing & support
 
 - **Bug reports / feature requests:**
-  [GitHub Issues](https://github.com/thestochasticman/paddock-ts-local/issues)
+  [GitHub Issues](https://github.com/thestochasticman/paddocktimeseries/issues)
 - **Documentation:**
-  <https://thestochasticman.github.io/paddock-ts-local/>
+  <https://thestochasticman.github.io/paddocktimeseries/>
 - **Known failure modes:** [`diagnostics.md`](diagnostics.md) (DEA STAC
   cold-start, GDAL HTTP auth)
 - **Maintainers:** Borevitz Lab, Australian National University

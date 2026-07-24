@@ -1,8 +1,8 @@
 site_name: PaddockTS
 site_description: Paddock segmentation and time-series analysis from Sentinel-2 imagery
-site_url: https://thestochasticman.github.io/paddock-ts-local/
-repo_url: https://github.com/thestochasticman/paddock-ts-local
-repo_name: thestochasticman/paddock-ts-local
+site_url: https://thestochasticman.github.io/paddocktimeseries/
+repo_url: https://github.com/thestochasticman/paddocktimeseries
+repo_name: thestochasticman/paddocktimeseries
 edit_uri: edit/main/docs/
 
 theme:
