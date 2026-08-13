@@ -37,8 +37,9 @@ def _band_medians(band_array, paddock_pixel_idx):
 
     return out
 
-def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=None, crs="epsg:6933"):
-    """Compute per-paddock medians for every band at every timestep.
+def make_paddock_time_series(query: Query, ds_sentinel2=None, ds_fractional_cover=None, paddocks_filepath=None, crs="epsg:6933"):
+    """Compute per-paddock medians for Sentinel-2, spectral indices,
+        and fractional-cover variables at every timestep.
 
     Steps:
 
@@ -56,6 +57,10 @@ def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=
         query: The :class:`PaddockTS.query.Query`.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset. If ``None``,
             ``query.sentinel2_path`` is opened (or downloaded first).
+        ds_fractional_cover:
+            Optional in-memory fractional-cover dataset containing bg, pv,
+            and npv. If None, the cached fractional-cover dataset is loaded
+            or computed if necessary.
         paddocks_filepath: Path to a GeoPackage (.gpkg) containing paddock
             polygons (must include a ``paddock`` column for IDs). If
             ``None``, defaults to ``{query.tmp_dir}/{query.stub}_sam_paddocks.gpkg``
@@ -67,7 +72,7 @@ def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=
     Returns:
         xarray.Dataset: Per-paddock medians on dims ``(paddock, time)``
         with one data variable per Sentinel-2 band and per spectral
-        index. Also persisted to ``{paddocks_filepath stem}_timeseries.zarr``.
+        index, and fractional cover. Also persisted to ``{paddocks_filepath stem}_timeseries.zarr``.
     """
     import rasterio.features
     from affine import Affine
@@ -89,6 +94,16 @@ def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=
     from PaddockTS.SpectralIndices.indices import compute_indices
     ds_sentinel2 = compute_indices(query, ds_sentinel2=ds_sentinel2)
 
+    # Load or compute fractional cover if it was not supplied
+    if ds_fractional_cover is None:
+        from PaddockTS.FractionalCover.compute_fractional_cover import (
+            compute_fractional_cover
+        )
+        ds_fractional_cover = compute_fractional_cover(
+            query,
+            ds_sentinel2=ds_sentinel2,
+        )
+
     if paddocks_filepath is None:
         paddocks_filepath = query.sam_paddocks_path
         if not exists(paddocks_filepath):
@@ -99,7 +114,10 @@ def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=
     from PaddockTS.utils import load_user_paddocks
     paddocks = load_user_paddocks(paddocks_filepath)
 
-    ds = ds_sentinel2
+    ds = xr.merge(
+        [ds_sentinel2, ds_fractional_cover],
+        join="exact",
+    )
 
     # 1) Ensure CRS is written
     ds = ds.rio.write_crs(crs, inplace=False)

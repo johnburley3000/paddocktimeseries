@@ -295,13 +295,14 @@ _S2_STEP_DEPS = {
     # SAM chain — depend on step 4 producing a valid paddocks gpkg
     5:  [4],   # SAM S2+paddocks video
     8:  [4],   # SAM FC+paddocks video
-    10: [4],   # SAM per-paddock TS
+    10: [2, 4],   # FC + SAM per-paddock TS
     16: [4],   # SAM calendar plot
     # SAM TS chain
     12: [10],  # SAM yearly TS
     14: [12],  # SAM phenology
     18: [14],  # SAM phenology plot
     # User TS chain (user gpkg is user-provided, so step 11 has no upstream)
+    11: [2],   # fractional cover required
     13: [11],  # user yearly TS
     15: [13],  # user phenology
     19: [15],  # user phenology plot
@@ -430,7 +431,7 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Phenology.make_paddock_time_series import make_paddock_time_series
-                ds_paddockTS = make_paddock_time_series(query, ds_sentinel2=ds_sentinel2, paddocks_filepath=gpkg_path)
+                ds_paddockTS = make_paddock_time_series(query, ds_sentinel2=ds_sentinel2, ds_fractional_cover=ds_fractional_cover, paddocks_filepath=gpkg_path)
 
             # Step 11: Make paddock TS (user)
             elif i == 11:
@@ -439,7 +440,7 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Phenology.make_paddock_time_series import make_paddock_time_series
-                ds_paddockTS_user = make_paddock_time_series(query, ds_sentinel2=ds_sentinel2, paddocks_filepath=paddocks_filepath)
+                ds_paddockTS_user = make_paddock_time_series(query, ds_sentinel2=ds_sentinel2, ds_fractional_cover=ds_fractional_cover, paddocks_filepath=paddocks_filepath)
 
             # Step 12: Make yearly paddock TS (SAM)
             elif i == 12:
