@@ -140,7 +140,7 @@ def _run_pipeline_steps(query, statuses, times, log, update_callback=None):
                 elif i == 8:
                     # Make paddock time series
                     from PaddockTS.Phenology.make_paddock_time_series import make_paddock_time_series
-                    ds_paddockTS = make_paddock_time_series(query, ds_sentinel2=ds_sentinel2, paddocks_filepath=query.sam_paddocks_path)
+                    ds_paddockTS = make_paddock_time_series(query, ds_sentinel2=ds_sentinel2,  ds_fractional_cover=ds_fractional_cover, paddocks_filepath=query.sam_paddocks_path)
 
                 elif i == 9:
                     # Make yearly paddock time series
