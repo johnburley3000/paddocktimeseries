@@ -9,6 +9,7 @@ downstream stages (yearly split, smoothing, phenology, plotting) consume.
 import warnings
 import numpy as np
 import xarray as xr
+import rioxarray
 from PaddockTS.query import Query
 
 def _band_medians(band_array, paddock_pixel_idx):
