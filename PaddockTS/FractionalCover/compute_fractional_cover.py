@@ -104,6 +104,14 @@ def compute_fractional_cover(query: Query, ds_sentinel2=None, model_n: int = 4, 
     for t0 in range(0, n_time, batch):
         sub = ds.isel(time=slice(t0, t0 + batch))
         inref = np.stack([sub[b].values for b in BANDS], axis=1).astype(np.float32)
+        # Cleaned cube bands are int16 with masked pixels at the nodata
+        # sentinel; convert to NaN so the unmixing propagates missingness
+        # instead of ingesting -999 as reflectance.
+        for bi, b in enumerate(BANDS):
+            nodata = ds[b].attrs.get('nodata')
+            if nodata is not None:
+                inref[:, bi][inref[:, bi] == float(nodata)] = np.nan
+        inref[inref == 0] = np.nan
         inref *= factors
         fractions = np.empty((inref.shape[0], 3, inref.shape[2], inref.shape[3]),
                              dtype=np.float32)

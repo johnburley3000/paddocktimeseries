@@ -43,8 +43,10 @@ def compute_ndwi_fourier(ds: xr.Dataset) -> NDArray[np.float32]:
     green = ds["nbart_green"].transpose("y", "x", "time").values.astype(np.float32)
     nir = ds["nbart_nir_1"].transpose("y", "x", "time").values.astype(np.float32)
 
-    green[green == 0] = np.nan
-    nir[nir == 0] = np.nan
+    # 0 = unobserved; negative = the cleaned cube's int16 nodata sentinel
+    # (-999). Both are missing.
+    green[green <= 0] = np.nan
+    nir[nir <= 0] = np.nan
     green /= 10000.0
     nir /= 10000.0
 

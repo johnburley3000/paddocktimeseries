@@ -138,8 +138,20 @@ def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=
     paddock_ids  = int_ids.tolist()             # integer IDs in order
     paddock_strs = unique_labels.astype(str).tolist()  # original labels as strings
 
-    # 4) Grab all band arrays in memory
-    bands = {var: ds[var].values for var in ds.data_vars}
+    # 4) Bands are converted one at a time inside the median loop below —
+    #    the cleaned cube keeps reflectance int16 with a nodata sentinel,
+    #    and converting every band to float at once is exactly the
+    #    multi-GB footprint the int16 pipeline exists to avoid.
+    def _band_as_float(var):
+        vals = ds[var].values
+        if not np.issubdtype(vals.dtype, np.integer):
+            return vals
+        nodata = ds[var].attrs.get('nodata')
+        fvals = vals.astype(np.float32)
+        if nodata is not None:
+            fvals[vals == nodata] = np.nan
+        fvals[fvals == 0] = np.nan
+        return fvals
 
     # Precompute the flat pixel indices for each paddock once — shared across
     # every band, so the mask comparison isn't repeated per band.
@@ -153,8 +165,8 @@ def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=
     #    median is now vectorised over time, so a plain loop is fast enough and
     #    spawns nothing.
     results = {
-        var: _band_medians(arr, paddock_pixel_idx)
-        for var, arr in bands.items()
+        var: _band_medians(_band_as_float(var), paddock_pixel_idx)
+        for var in ds.data_vars
     }
 
     # 6) Stitch back into xarray

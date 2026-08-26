@@ -63,7 +63,10 @@ def _to_rgb(ds, time_idx):
     g = ds['nbart_green'].isel(time=time_idx).values.astype(np.float32)
     b = ds['nbart_blue'].isel(time=time_idx).values.astype(np.float32)
     rgb = np.stack([r, g, b], axis=-1)
-    rgb[rgb == 0] = np.nan
+    # 0 = unobserved; negative = the int16 nodata sentinel (-999) the
+    # cleaned cube uses for masked pixels. Both are missing, and must not
+    # leak into the percentile stretch below.
+    rgb[rgb <= 0] = np.nan
     rgb /= 10000.0
     # Contrast: 2–98 percentile stretch over the scene's valid pixels,
     # computed jointly across bands so the hue is preserved. Falls back
