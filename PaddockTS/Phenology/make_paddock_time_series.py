@@ -79,14 +79,14 @@ def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=
     from os.path import exists
     from pathlib import Path
     import geopandas as gpd
-    from pysentinel2.derive import INDICES, add_indices
+    from pysentinel2.derive import INDICES
 
     if ds_sentinel2 is None:
         from pysentinel2.cube import Cube
-        ds_sentinel2 = Cube(config=query.config).get_ds_query(
-            query, indices=tuple(INDICES))
-    elif not set(INDICES) <= set(ds_sentinel2.data_vars):
-        ds_sentinel2 = add_indices(ds_sentinel2, tuple(INDICES))
+        ds_sentinel2 = Cube(config=query.config).get_ds_query(query)
+    # Indices are NOT materialised onto the dataset: five float32
+    # full-window arrays are ~3.5 GB for a multi-year query. Each index
+    # is computed transiently in the median loop below and freed.
 
     if paddocks_filepath is None:
         from PaddockTS.paths import Paths
@@ -168,6 +168,27 @@ def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=
         var: _band_medians(_band_as_float(var), paddock_pixel_idx)
         for var in ds.data_vars
     }
+    # Spectral indices, one transient float32 array at a time.
+    for name, fn in INDICES.items():
+        if name not in results:
+            results[name] = _band_medians(fn(ds), paddock_pixel_idx)
+
+    # Fractional cover per-paddock medians, from the per-query FC zarr
+    # (computed earlier in the pipeline from this same cleaned window, so
+    # the time axes match; guarded in case a caller mixes windows). Was
+    # lost in the store refactor — the manuscript's drought-exposure
+    # analysis reads ``bg`` from the smoothed series.
+    from PaddockTS.paths import Paths as _Paths
+    fc_path = _Paths(query).fractional_cover
+    if exists(fc_path):
+        fc = xr.open_zarr(fc_path, chunks=None, decode_coords='all')
+        if fc.time.size == ds.sizes['time']:
+            for name in ('bg', 'pv', 'npv'):
+                if name in fc.data_vars:
+                    results[name] = _band_medians(fc[name].values, paddock_pixel_idx)
+        else:
+            print(f'fractional cover zarr has {fc.time.size} frames vs window '
+                  f'{ds.sizes["time"]} — skipping FC columns in the time series')
 
     # 6) Stitch back into xarray
     coords = {

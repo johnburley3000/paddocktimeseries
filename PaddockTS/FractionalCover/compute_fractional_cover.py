@@ -95,6 +95,12 @@ def compute_fractional_cover(query: Query, ds_sentinel2=None, model_n: int = 4, 
     # timestep as float — needs >10 GB for a multi-year query and OOMs
     # 8 GB machines; a 32-frame batch stays around 200 MB regardless of
     # the time range. The model is loaded once, not per timestep.
+    #
+    # Unmixing runs serially on purpose: 4 threads with per-thread
+    # interpreters measured 615.2 s vs 618.3 s serial on an 8-year window
+    # (340% CPU for zero wall gain — the matmul is memory-bandwidth
+    # bound). If this step ever needs to be faster, batch several frames
+    # into one Invoke rather than adding threads.
     model = get_model(n=model_n)
     makedirs(os.path.dirname(fractional_cover_path), exist_ok=True)
     timestamp = datetime.utcnow().isoformat() + 'Z'

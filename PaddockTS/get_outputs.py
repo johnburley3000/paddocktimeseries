@@ -354,8 +354,11 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                 from pysentinel2.cube import Cube
                 ds_sentinel2 = Cube(config=query.config).get_ds_query(query, clean=True)
             elif i == 1:
-                from pysentinel2.derive import add_indices, INDICES
-                ds_sentinel2 = add_indices(ds_sentinel2, tuple(INDICES))
+                # Indices are no longer materialised onto the window here —
+                # five full float32 arrays are ~3.5 GB for a multi-year
+                # query, and their only consumer (the per-paddock time
+                # series) now computes each one transiently at median time.
+                pass
             elif i == 2:
                 from PaddockTS.FractionalCover.compute_fractional_cover import compute_fractional_cover
                 ds_fractional_cover = compute_fractional_cover(query, ds_sentinel2=ds_sentinel2)
