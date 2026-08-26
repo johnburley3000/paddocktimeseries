@@ -88,9 +88,28 @@ def get_paddocks(
 
     # 2. SAMGeo segmentation
     if not check_if_valid_paddocks_exists(paths.sam_raw):
+        # Give torch every CPU thread, here — after preseg, right before
+        # samgeo (and through it torch) is imported. Order matters twice:
+        # torch sizes its default thread pool from OMP_NUM_THREADS at
+        # import, so the env vars must be gone before the import; and
+        # set_num_threads must run before the first inference. Doing this
+        # at the get_outputs level (or not at all, for standalone
+        # get_paddocks calls) leaves whatever thread caps dask/BLAS set
+        # earlier in force for the ViT-H inference.
+        for _var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
+            os.environ.pop(_var, None)
+
         from samgeo import SamGeo
 
         gc.collect()
+        try:
+            import torch
+            torch.set_num_threads(os.cpu_count() or 4)
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except ImportError:
+            pass
+
         checkpoint_dir = f"{config.tmp_dir}/sam_weights"
 
         _log("  SAMGeo: loading model...")
