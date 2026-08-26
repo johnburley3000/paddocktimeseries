@@ -22,7 +22,7 @@ import rioxarray as rxr
 import rasterio
 from rasterio.enums import Resampling
 from scipy.ndimage import gaussian_filter
-from PaddockTS.Environmental.TerrainTiles.utils import pysheds_accumulation, calculate_slope, calculate_twi
+from PaddockTS.Plotting.terrain_derivatives import pysheds_accumulation, calculate_slope, calculate_twi
 from borevitz_lab.query import Query
 from os import makedirs
 import tempfile
@@ -107,10 +107,17 @@ def terrain_tiles_plot(query: Query, ds_sentinel2=None, sigma: int = 10):
         _array_to_tif(arr, smooth_path, path)
         tif_paths[name] = path
 
-    # Load sentinel2 as the reference grid
+    # Reference grid: the S2 pixel grid, reconstructed deterministically
+    # from the query bbox on pysentinel2's fixed global grid. No cube
+    # read — loading the cleaned window here materialises the full time
+    # range a second time, concurrently with the S2 worker thread, which
+    # OOMs 8 GB machines.
     if ds_sentinel2 is None:
-        from pysentinel2.cube import Cube
-        ds_ref = Cube(config=query.config).get_ds_query(query, clean=True).isel(time=0)
+        from odc.geo.xr import xr_zeros
+        from pysentinel2 import grid as s2grid
+        ds_ref = xr_zeros(
+            s2grid.geobox_for_window(s2grid.window_for_bbox(query.bbox)),
+            dtype='uint8')
     else:
         ds_ref = ds_sentinel2.isel(time=0) if 'time' in ds_sentinel2.dims else ds_sentinel2
 

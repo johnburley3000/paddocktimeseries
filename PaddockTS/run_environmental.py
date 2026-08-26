@@ -87,7 +87,7 @@ def _run_env_steps(query, statuses, times, log, concurrent, update_callback=None
                     _SlgaStore(config=query.config).fill_query(query)
 
                 elif i == 4:
-                    from PaddockTS.Environmental.daesim_forcing import daesim_forcing
+                    from PaddockTS.daesim_forcing import daesim_forcing
                     daesim_forcing(query)
 
                 elif i == 5:

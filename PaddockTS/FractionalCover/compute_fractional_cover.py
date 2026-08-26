@@ -82,35 +82,55 @@ def compute_fractional_cover(query: Query, ds_sentinel2=None, model_n: int = 4, 
         ds = Cube(config=query.config).get_ds_query(query, clean=True)
     else:
         ds = ds_sentinel2
-    inref = np.stack([ds[b].values for b in BANDS], axis=1).astype(np.float32)
 
     if correction:
-        factors = np.array([0.9551, 1.0582, 0.9871, 1.0187, 0.9528, 0.9688]) + \
-                  np.array([-0.0022, 0.0031, 0.0064, 0.012, 0.0079, -0.0042])
-        inref *= factors[:, np.newaxis, np.newaxis]
+        factors = (np.array([0.9551, 1.0582, 0.9871, 1.0187, 0.9528, 0.9688]) +
+                   np.array([-0.0022, 0.0031, 0.0064, 0.012, 0.0079, -0.0042])
+                   ).astype(np.float32)[:, np.newaxis, np.newaxis]
     else:
-        inref *= 0.0001
+        factors = np.float32(0.0001)
 
-    fractions = np.empty((inref.shape[0], 3, inref.shape[2], inref.shape[3]))
-    for t in range(inref.shape[0]):
-        fractions[t] = unmix_fractional_cover(inref[t], fc_model=get_model(n=model_n))
-
-    coords = {'time': ds.time, 'y': ds.y, 'x': ds.x}
-    frac_ds = xr.Dataset({
-        'bg': xr.DataArray(fractions[:, 0], dims=['time', 'y', 'x'], coords=coords),
-        'pv': xr.DataArray(fractions[:, 1], dims=['time', 'y', 'x'], coords=coords),
-        'npv': xr.DataArray(fractions[:, 2], dims=['time', 'y', 'x'], coords=coords),
-    })
-
+    # Stream in small time batches, appending each to the zarr as it's
+    # unmixed. Materialising the whole window at once — six bands x every
+    # timestep as float — needs >10 GB for a multi-year query and OOMs
+    # 8 GB machines; a 32-frame batch stays around 200 MB regardless of
+    # the time range. The model is loaded once, not per timestep.
+    model = get_model(n=model_n)
     makedirs(os.path.dirname(fractional_cover_path), exist_ok=True)
     timestamp = datetime.utcnow().isoformat() + 'Z'
-    frac_ds = frac_ds.assign_attrs(fractional_cover_computed_at=timestamp)
-    frac_ds.to_zarr(fractional_cover_path, mode='w', zarr_format=2)
+
+    n_time = ds.sizes['time']
+    batch = 32
+    for t0 in range(0, n_time, batch):
+        sub = ds.isel(time=slice(t0, t0 + batch))
+        inref = np.stack([sub[b].values for b in BANDS], axis=1).astype(np.float32)
+        inref *= factors
+        fractions = np.empty((inref.shape[0], 3, inref.shape[2], inref.shape[3]),
+                             dtype=np.float32)
+        for i in range(inref.shape[0]):
+            fractions[i] = unmix_fractional_cover(inref[i], fc_model=model)
+
+        coords = {'time': sub.time, 'y': ds.y, 'x': ds.x}
+        batch_ds = xr.Dataset({
+            'bg': xr.DataArray(fractions[:, 0], dims=['time', 'y', 'x'], coords=coords),
+            'pv': xr.DataArray(fractions[:, 1], dims=['time', 'y', 'x'], coords=coords),
+            'npv': xr.DataArray(fractions[:, 2], dims=['time', 'y', 'x'], coords=coords),
+        })
+        if t0 == 0:
+            batch_ds = batch_ds.assign_attrs(fractional_cover_computed_at=timestamp)
+            batch_ds.to_zarr(fractional_cover_path, mode='w', zarr_format=2,
+                             encoding={v: {'chunks': (1, ds.sizes['y'], ds.sizes['x'])}
+                                       for v in ('bg', 'pv', 'npv')})
+        else:
+            batch_ds.to_zarr(fractional_cover_path, append_dim='time', zarr_format=2)
+
     # Touch _SUCCESS *after* the zarr write completes; its presence is what
     # the next call uses as the cache-validity check.
     with open(f'{fractional_cover_path}/_SUCCESS', 'w') as f:
         f.write(timestamp)
-    return frac_ds
+    # Re-open from disk: a lazy, zarr-backed view rather than the in-RAM
+    # batches — downstream consumers slice what they need.
+    return xr.open_zarr(fractional_cover_path, chunks=None, decode_coords='all')
 
 
 def _temp_query():
