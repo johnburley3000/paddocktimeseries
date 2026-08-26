@@ -182,7 +182,9 @@ def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=
     fc_path = _Paths(query).fractional_cover
     if exists(fc_path):
         fc = xr.open_zarr(fc_path, chunks=None, decode_coords='all')
-        if fc.time.size == ds.sizes['time']:
+        if (fc.time.size == ds.sizes['time']
+                and fc.sizes['y'] == ds.sizes['y']
+                and fc.sizes['x'] == ds.sizes['x']):
             for name in ('bg', 'pv', 'npv'):
                 if name in fc.data_vars:
                     results[name] = _band_medians(fc[name].values, paddock_pixel_idx)

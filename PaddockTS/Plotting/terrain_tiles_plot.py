@@ -115,8 +115,11 @@ def terrain_tiles_plot(query: Query, ds_sentinel2=None, sigma: int = 10):
     if ds_sentinel2 is None:
         from odc.geo.xr import xr_zeros
         from pysentinel2 import grid as s2grid
+        # Tight (pixel-snapped) window, matching what Cube.get_ds delivers
+        # to every other product — chunk-snapped would pad the topography
+        # ~3.6x beyond the bbox the rest of the report covers.
         ds_ref = xr_zeros(
-            s2grid.geobox_for_window(s2grid.window_for_bbox(query.bbox)),
+            s2grid.geobox_for_window(s2grid.tight_window_for_bbox(query.bbox)),
             dtype='uint8')
     else:
         ds_ref = ds_sentinel2.isel(time=0) if 'time' in ds_sentinel2.dims else ds_sentinel2
