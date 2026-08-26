@@ -129,7 +129,13 @@ def make_pdf(query: Query, paddocks_filepath: str | None = None,
     os.makedirs(out_dir, exist_ok=True)
 
     # Derive stems for SAM and user paddocks
-    sam_stem = f'{query.stub}_sam_paddocks'
+    # Must match how the plotting stages name their outputs: they stem the
+    # paddocks file they were given (get_outputs passes the sam_paddocks
+    # gpkg path), so files land as 'sam_paddocks_*', not
+    # '{stub}_sam_paddocks_*'. out_dir is per-stub, so the stem needs no
+    # stub prefix to be unambiguous.
+    from PaddockTS.paths import Paths
+    sam_stem = Path(Paths(query).sam_paddocks).stem
     if paddocks_filepath is not None:
         user_stem = Path(paddocks_filepath).stem
     else:

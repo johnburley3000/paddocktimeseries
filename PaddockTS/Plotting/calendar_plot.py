@@ -7,6 +7,12 @@ years in the query; columns are 48 evenly-spaced slots across the year
 paddock at the observation closest to the slot's day-of-year, with
 non-paddock pixels masked black.
 
+Thumbnails are contrast-stretched (2–98 percentile per scene). Cells
+whose nearest observation is mostly cloud-masked are filled with a
+time-weighted blend of the nearest clear observations either side and
+outlined in red; every page carries a legend marking them as
+interpolated.
+
 Each page is a matplotlib :class:`~matplotlib.figure.Figure` so that
 when it's written into a PDF report by :mod:`PaddockTS.Plotting.make_pdf`,
 the title / month / year labels remain *vector text* — readable at any
@@ -41,6 +47,17 @@ from PaddockTS.paths import Paths
 
 # --- thumbnail prep --------------------------------------------------------
 
+# A calendar cell is considered usable when at least _VALID_FRAC_THRESH of
+# the paddock's pixels survived cloud masking in the chosen observation;
+# below it the whole cell is replaced by temporal interpolation. Usable
+# cells below _CLEAR_FULL_THRESH keep their clear pixels but have the
+# masked ones gap-filled from the same interpolation. Both cases are
+# outlined (see _build_paddock_figure).
+_VALID_FRAC_THRESH = 0.6
+_CLEAR_FULL_THRESH = 0.98
+_INTERP_COLOR = 'red'
+
+
 def _to_rgb(ds, time_idx):
     r = ds['nbart_red'].isel(time=time_idx).values.astype(np.float32)
     g = ds['nbart_green'].isel(time=time_idx).values.astype(np.float32)
@@ -48,16 +65,50 @@ def _to_rgb(ds, time_idx):
     rgb = np.stack([r, g, b], axis=-1)
     rgb[rgb == 0] = np.nan
     rgb /= 10000.0
-    rgb = np.clip(rgb * 3, 0, 1)
-    rgb = np.nan_to_num(rgb, nan=0.0)
+    # Contrast: 2–98 percentile stretch over the scene's valid pixels,
+    # computed jointly across bands so the hue is preserved. Falls back
+    # to the old fixed gain when the scene is (near-)fully masked.
+    lo, hi = np.nanpercentile(rgb, [2, 98])
+    if np.isfinite(lo) and np.isfinite(hi) and hi > lo:
+        rgb = (rgb - lo) / (hi - lo)
+    else:
+        rgb = rgb * 3
+    rgb = np.clip(rgb, 0, 1)
+    # NaNs (cloud-masked pixels) are preserved — _crop_all derives the
+    # per-thumbnail validity mask from them before blacking them out.
     return rgb
 
 
-def _resolve_ds(query: Query, ds_sentinel2):
+_CALENDAR_BANDS = ('nbart_red', 'nbart_green', 'nbart_blue')
+
+
+def _iter_year_datasets(query: Query, ds_sentinel2):
+    """Yield ``(year, cleaned RGB dataset)`` one year at a time.
+
+    Materialising the full query window at once is a memory hazard: an
+    8-year, 11-band window is several GB after cleaning promotes to
+    float, which OOM-kills 8 GB machines. Reading per year and only the
+    RGB bands the calendar uses bounds the peak to a few hundred MB.
+    A caller-supplied in-memory dataset is honoured and split instead.
+    """
     if ds_sentinel2 is not None:
-        return ds_sentinel2
+        years = np.unique(ds_sentinel2.time.dt.year.values)
+        for year in years:
+            year_mask = ds_sentinel2.time.dt.year.values == int(year)
+            ds_year = ds_sentinel2.isel(time=year_mask)
+            if ds_year.sizes['time']:
+                yield int(year), ds_year
+        return
+
+    from datetime import date as _date
     from pysentinel2.cube import Cube
-    return Cube(config=query.config).get_ds_query(query, clean=True)
+    cube = Cube(config=query.config)
+    for year in range(query.start.year, query.end.year + 1):
+        y0 = max(query.start, _date(year, 1, 1))
+        y1 = min(query.end, _date(year, 12, 31))
+        ds_year = cube.get_ds(query.bbox, y0, y1, clean=True, bands=_CALENDAR_BANDS)
+        if ds_year.sizes['time']:
+            yield int(year), ds_year
 
 
 def _prepare_thumbnails(query: Query, paddocks_filepath: str,
@@ -70,25 +121,41 @@ def _prepare_thumbnails(query: Query, paddocks_filepath: str,
         Paddocks sorted largest-area first.
     paddock_ids : list[int]
         Paddock IDs in the same order as ``paddocks_sorted``.
-    years_data : dict[int, tuple[dict, list[int]]]
-        ``{year: (obs_thumbs, slot_to_obs)}``. ``obs_thumbs`` is
-        ``{obs_idx: {paddock_id: (thumb_size, thumb_size, 3) uint8 array}}``;
-        ``slot_to_obs`` is the per-slot index into the year's observations.
+    years_data : dict[int, tuple[dict, dict]]
+        ``{year: (obs_thumbs, slot_specs)}``. ``obs_thumbs`` is
+        ``{obs_idx: {paddock_id: (rgb_thumb, valid_thumb)}}`` — the uint8
+        thumbnail plus its boolean clear-pixel mask. ``slot_specs`` is
+        ``{paddock_id: [spec] * 48}`` where each spec is one of
+        ``('direct', obs_idx)`` — fully clear; ``('partial', obs_idx,
+        prev_idx, next_idx, w)`` — mostly clear, masked pixels gap-filled
+        from the ``w``-weighted blend of the neighbours; or ``('interp',
+        prev_idx, next_idx, w)`` — mostly masked, whole cell replaced by
+        the blend (``next_idx`` is ``None`` when only one side has a
+        clear observation that year).
     """
+    import itertools
     import rioxarray  # noqa: F401
     from PIL import Image
     from PaddockTS.utils import load_user_paddocks
 
+    # Years stream through one at a time (see _iter_year_datasets); the
+    # first year supplies the grid, which is identical across years.
+    year_iter = _iter_year_datasets(query, ds_sentinel2)
+    first = next(year_iter, None)
+    if first is None:
+        raise ValueError('No Sentinel-2 observations in the query window.')
+    ref = first[1]
+
     paddocks = load_user_paddocks(paddocks_filepath)
-    ds_crs = ds_sentinel2.rio.crs
+    ds_crs = ref.rio.crs
     if paddocks.crs != ds_crs:
         paddocks = paddocks.to_crs(ds_crs)
 
     paddocks_sorted = paddocks.sort_values('area_ha', ascending=False).reset_index(drop=True)
     paddock_ids = [int(row['paddock']) for _, row in paddocks_sorted.iterrows()]
 
-    transform = ds_sentinel2.rio.transform()
-    h, w = ds_sentinel2.sizes['y'], ds_sentinel2.sizes['x']
+    transform = ref.rio.transform()
+    h, w = ref.sizes['y'], ref.sizes['x']
     shapes = [(geom, pid) for geom, pid in zip(paddocks_sorted.geometry, paddock_ids)]
     mask = rasterize(shapes, out_shape=(h, w), transform=transform, fill=0, dtype=np.int32)
 
@@ -106,39 +173,96 @@ def _prepare_thumbnails(query: Query, paddocks_filepath: str,
             mask_crops[pid] = mask[y0:y1, x0:x1]
 
     black_thumb = np.zeros((thumb_size, thumb_size, 3), dtype=np.uint8)
+    invalid_thumb = np.zeros((thumb_size, thumb_size), dtype=bool)
 
     def _crop_all(rgb):
+        """Per-paddock ``(thumb, valid_thumb)`` pairs for one observation.
+
+        ``valid_thumb`` is True where the thumbnail pixel is inside the
+        paddock and survived cloud masking — used for per-pixel gap fill.
+        """
         thumbs = {}
         for pid in paddock_ids:
             bbox = bboxes[pid]
             if bbox is None:
-                thumbs[pid] = black_thumb
+                thumbs[pid] = (black_thumb, invalid_thumb)
                 continue
             y0, y1, x0, x1 = bbox
             crop = rgb[y0:y1, x0:x1].copy()
-            crop[mask_crops[pid] != pid] = 0.0
+            crop[mask_crops[pid] != pid] = np.nan
+            valid = ~np.isnan(crop).any(axis=-1)
+            crop = np.nan_to_num(crop, nan=0.0)
             img = Image.fromarray((crop * 255).astype(np.uint8))
-            thumbs[pid] = np.array(img.resize((thumb_size, thumb_size), Image.NEAREST))
+            vimg = Image.fromarray(valid.astype(np.uint8) * 255)
+            thumbs[pid] = (
+                np.array(img.resize((thumb_size, thumb_size), Image.NEAREST)),
+                np.array(vimg.resize((thumb_size, thumb_size), Image.NEAREST)) > 0,
+            )
         return thumbs
 
     n_slots = 48
     slot_centres = np.linspace(1, 365, n_slots + 1)
     slot_centres = (slot_centres[:-1] + slot_centres[1:]) / 2
 
-    years = np.unique(ds_sentinel2.time.dt.year.values)
-    years_data: dict[int, tuple[dict, list[int]]] = {}
-    for year in years:
-        year_mask = ds_sentinel2.time.dt.year.values == int(year)
-        ds_year = ds_sentinel2.isel(time=year_mask)
-        if ds_year.sizes['time'] == 0:
-            continue
+    years_data: dict[int, tuple[dict, dict]] = {}
+    for year, ds_year in itertools.chain([first], year_iter):
         obs_doy = ds_year.time.dt.dayofyear.values
         slot_to_obs = [int(np.argmin(np.abs(obs_doy - sc))) for sc in slot_centres]
+
+        # Per-(observation, paddock) clear fraction: how much of the
+        # paddock survived cloud masking. One band suffices — cleaning
+        # masks all bands together.
+        red = ds_year['nbart_red'].values
+        clear_px = (red > 0) & ~np.isnan(red)
+        clear_frac = {}
+        for pid in paddock_ids:
+            if bboxes[pid] is None:
+                clear_frac[pid] = np.zeros(len(obs_doy))
+                continue
+            y0, y1, x0, x1 = bboxes[pid]
+            in_paddock = mask_crops[pid] == pid
+            clear_frac[pid] = clear_px[:, y0:y1, x0:x1][:, in_paddock].mean(axis=1)
+
+        # Resolve each (paddock, slot) to one of: a fully clear direct
+        # observation; a mostly-clear observation whose masked pixels get
+        # gap-filled ('partial'); or a full temporal interpolation between
+        # the nearest clear observations either side ('interp').
+        slot_specs: dict[int, list] = {}
+        needed: set[int] = set()
+        for pid in paddock_ids:
+            f = clear_frac[pid]
+            valid_obs = np.where(f >= _VALID_FRAC_THRESH)[0]
+            specs = []
+            for j, sc in enumerate(slot_centres):
+                k = slot_to_obs[j]
+                if f[k] >= _CLEAR_FULL_THRESH or len(valid_obs) == 0:
+                    specs.append(('direct', k))
+                    needed.add(k)
+                    continue
+                doys = obs_doy[valid_obs]
+                prev_c = valid_obs[doys <= sc]
+                next_c = valid_obs[doys > sc]
+                if len(prev_c) and len(next_c):
+                    p, n = int(prev_c[-1]), int(next_c[0])
+                    w = float((obs_doy[n] - sc) / (obs_doy[n] - obs_doy[p]))
+                elif len(prev_c) or len(next_c):
+                    p = int(prev_c[-1]) if len(prev_c) else int(next_c[0])
+                    n, w = None, 1.0
+                if f[k] >= _VALID_FRAC_THRESH:
+                    specs.append(('partial', k, p, n, w))
+                    needed.add(k)
+                else:
+                    specs.append(('interp', p, n, w))
+                needed.add(p)
+                if n is not None:
+                    needed.add(n)
+            slot_specs[pid] = specs
+
         obs_thumbs = {}
-        for obs_idx in set(slot_to_obs):
+        for obs_idx in needed:
             rgb = _to_rgb(ds_year, obs_idx)
             obs_thumbs[obs_idx] = _crop_all(rgb)
-        years_data[int(year)] = (obs_thumbs, slot_to_obs)
+        years_data[int(year)] = (obs_thumbs, slot_specs)
 
     return paddocks_sorted, paddock_ids, years_data
 
@@ -169,24 +293,52 @@ _ROWS_REF = 8
 
 
 def _build_paddock_figure(stub: str, paddock_id: int, label_text: str,
+                          area_ha: float,
                           years_sorted: list[int], years_data: dict,
                           n_slots: int = 48, thumb_size: int = 64):
     """Build the matplotlib Figure for one paddock's multi-year calendar.
 
     The thumbnail grid is composited into a single numpy array and drawn
-    via one ``imshow`` (fast). Title (the paddock label), month names, and
-    per-row year labels are matplotlib text — vector when saved to PDF.
+    via one ``imshow`` (fast). Title (paddock label, area, year range),
+    month names, and per-row year labels are matplotlib text — vector
+    when saved to PDF.
+
+    Cells whose nearest observation was mostly cloud-masked are filled
+    with a time-weighted blend of the nearest clear observations and
+    outlined in red; every page carries a matching legend.
     """
     n_rows = len(years_sorted)
     grid_h = n_rows * thumb_size
     grid_w = n_slots * thumb_size
     grid = np.zeros((grid_h, grid_w, 3), dtype=np.uint8)
+    interp_cells: list[tuple[int, int]] = []
     for i, year in enumerate(years_sorted):
-        obs_thumbs, slot_to_obs = years_data[year]
+        obs_thumbs, slot_specs = years_data[year]
+        specs = slot_specs[paddock_id]
         y0 = i * thumb_size
+
+        def _blend(p, n, w):
+            if n is None:
+                return obs_thumbs[p][paddock_id][0]
+            return (w * obs_thumbs[p][paddock_id][0].astype(np.float32)
+                    + (1 - w) * obs_thumbs[n][paddock_id][0].astype(np.float32)
+                    ).astype(np.uint8)
+
         for j in range(n_slots):
+            spec = specs[j]
+            if spec[0] == 'direct':
+                tile = obs_thumbs[spec[1]][paddock_id][0]
+            elif spec[0] == 'partial':
+                _, k, p, n, w = spec
+                base, valid = obs_thumbs[k][paddock_id]
+                tile = np.where(valid[..., None], base, _blend(p, n, w))
+                interp_cells.append((i, j))
+            else:
+                _, p, n, w = spec
+                tile = _blend(p, n, w)
+                interp_cells.append((i, j))
             x0 = j * thumb_size
-            grid[y0:y0 + thumb_size, x0:x0 + thumb_size] = obs_thumbs[slot_to_obs[j]][paddock_id]
+            grid[y0:y0 + thumb_size, x0:x0 + thumb_size] = tile
 
     fig = plt.figure(figsize=(_FIG_W_IN, _FIG_H_IN))
 
@@ -215,8 +367,26 @@ def _build_paddock_figure(stub: str, paddock_id: int, label_text: str,
     for spine in grid_ax.spines.values():
         spine.set_visible(False)
 
-    # Title — the paddock label
-    fig.text(0.5, 1.0 - _TITLE_BAND / 2, f'{stub} — {label_text}',
+    # Outline interpolated cells; the legend appears on every page so a
+    # reader landing mid-report knows what an outlined cell means.
+    from matplotlib.patches import Rectangle
+    for i, j in interp_cells:
+        grid_ax.add_patch(Rectangle(
+            (j * thumb_size - 0.5, i * thumb_size - 0.5), thumb_size, thumb_size,
+            fill=False, edgecolor=_INTERP_COLOR, linewidth=1.0,
+        ))
+    proxy = Rectangle((0, 0), 1, 1, fill=False,
+                      edgecolor=_INTERP_COLOR, linewidth=1.2)
+    fig.legend([proxy], ['interpolated (no clear observation)'],
+               loc='lower center', frameon=False, fontsize=9)
+
+    # Title: "Paddock 1, 32 ha, 2018 – 2025" (single-year drops the range)
+    if len(years_sorted) == 1:
+        year_text = f'{years_sorted[0]}'
+    else:
+        year_text = f'{years_sorted[0]} – {years_sorted[-1]}'
+    fig.text(0.5, 1.0 - _TITLE_BAND / 2,
+             f'{label_text}, {area_ha:.0f} ha, {year_text}',
              ha='center', va='center', fontsize=16, fontweight='bold')
 
     # Month labels — sit just above the grid so they follow it when centred.
@@ -260,7 +430,8 @@ def iter_calendar_figures(query: Query, paddocks_filepath: str | None = None,
     if paddocks_filepath is None:
         paddocks_filepath = Paths(query).sam_paddocks
 
-    ds_sentinel2 = _resolve_ds(query, ds_sentinel2)
+    # ds_sentinel2 may be None: _prepare_thumbnails then streams the
+    # cleaned RGB window from the cube one year at a time (memory-bounded).
     paddocks_sorted, paddock_ids, years_data = _prepare_thumbnails(
         query, paddocks_filepath, ds_sentinel2, thumb_size,
     )
@@ -271,9 +442,10 @@ def iter_calendar_figures(query: Query, paddocks_filepath: str | None = None,
         if label_col is not None:
             label_text = str(row[label_col])
         else:
-            label_text = f'P{row["paddock"]}  {row["area_ha"]:.0f}ha'
+            label_text = f'Paddock {row["paddock"]}'
         fig = _build_paddock_figure(
             stub=query.stub, paddock_id=pid, label_text=label_text,
+            area_ha=float(row['area_ha']),
             years_sorted=years_sorted, years_data=years_data,
             thumb_size=thumb_size,
         )
