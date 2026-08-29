@@ -6,7 +6,7 @@ pressure). All variables are plotted as daily time-series.
 """
 
 from matplotlib import pyplot as plt
-from troi.troi import Troi
+from troi import Troi
 from os import makedirs
 import pandas as pd
 
@@ -48,7 +48,7 @@ def silo_plot(troi: Troi, groups: dict = None):
     ``{troi.out_dir}/{troi.stub}_silo_{group}.png``.
 
     Args:
-        troi: The :class:`troi.troi.Troi`.
+        troi: The :class:`troi.Troi`.
         groups: Optional override of the default grouping. If ``None``,
             uses :data:`PLOT_GROUPS` (temperature, rainfall, radiation,
             evapotranspiration, humidity).

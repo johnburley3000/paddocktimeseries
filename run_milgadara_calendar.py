@@ -1,6 +1,6 @@
 from datetime import date
 
-from troi.troi import Troi
+from troi import Troi
 from PaddockTS.Plotting.calendar_plot import calendar_plot
 
 # 5-paddock cluster subset of the Milgadara farm (>=5 ha, chosen by

@@ -1,6 +1,6 @@
 from datetime import date
 
-from troi.troi import Troi
+from troi import Troi
 from PaddockTS.get_outputs import get_outputs
 
 fp = "artifacts/Milgadara_subset5.gpkg"

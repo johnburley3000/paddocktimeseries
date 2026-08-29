@@ -6,7 +6,7 @@ vegetation index, etc.) and plotted as thin-line time-series.
 """
 
 from matplotlib import pyplot as plt
-from troi.troi import Troi
+from troi import Troi
 from os import makedirs
 import pandas as pd
 
@@ -98,7 +98,7 @@ def ozwald_daily_plot(troi: Troi, groups: dict = None):
     ``{troi.out_dir}/{troi.stub}_ozwald_daily_{group}.png``.
 
     Args:
-        troi: The :class:`troi.troi.Troi`.
+        troi: The :class:`troi.Troi`.
         groups: Optional override of the default grouping. Maps a group
             name to ``{'vars': [...], 'ylabel': str, 'title': str,
             'kind': 'line'|'bar'}``. If ``None``, uses
@@ -119,7 +119,7 @@ def ozwald_8day_plot(troi: Troi, groups: dict = None):
     ``{troi.out_dir}/{troi.stub}_ozwald_8day_{group}.png``.
 
     Args:
-        troi: The :class:`troi.troi.Troi`.
+        troi: The :class:`troi.Troi`.
         groups: Optional override of the default grouping. If ``None``,
             uses :data:`EIGHTDAY_GROUPS` (vegetation index, fractional
             cover, LAI/GPP, soil water/runoff).

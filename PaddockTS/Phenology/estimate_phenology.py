@@ -53,7 +53,7 @@ def estimate_phenology(troi, ds_yearly=None, variable='NDVI', min_observations=2
        attaches the peak count.
 
     Args:
-        troi: The :class:`troi.troi.Troi`.
+        troi: The :class:`troi.Troi`.
         ds_yearly: Optional ``{year: xarray.Dataset}`` mapping (typically
             from :func:`PaddockTS.Phenology.make_yearly_paddock_time_series`). If
             ``None``, built on demand. Each dataset must have a ``doy``

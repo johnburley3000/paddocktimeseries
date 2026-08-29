@@ -23,7 +23,7 @@ import rasterio
 from rasterio.enums import Resampling
 from scipy.ndimage import gaussian_filter
 from PaddockTS.Plotting.terrain_derivatives import pysheds_accumulation, calculate_slope, calculate_twi
-from troi.troi import Troi
+from troi import Troi
 from os import makedirs
 import tempfile
 import os
@@ -45,7 +45,7 @@ def terrain_tiles_plot(troi: Troi, ds_sentinel2=None, sigma: int = 10):
     """Plot a 2 × 2 panel of elevation, flow accumulation, aspect, and slope.
 
     Args:
-        troi: The :class:`troi.troi.Troi`. Output is written to
+        troi: The :class:`troi.Troi`. Output is written to
             ``{troi.out_dir}/{troi.stub}_topography.png``.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset, used as the
             spatial reference grid that the terrain tiles are

@@ -32,7 +32,7 @@ def make_smoothed_paddock_time_series(troi, ds_paddockTS=None, paddocks_filepath
        ``{paddocks_filepath stem}_timeseries_smoothed.zarr``.
 
     Args:
-        troi: The :class:`troi.troi.Troi`.
+        troi: The :class:`troi.Troi`.
         ds_paddockTS: Optional in-memory paddockTS dataset. If ``None``,
             opens (or generates, then opens) the cached timeseries zarr.
         paddocks_filepath: Path to the paddocks GeoPackage. Used to derive

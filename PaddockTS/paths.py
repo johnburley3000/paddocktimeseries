@@ -15,7 +15,7 @@ No inheritance — composition only.
 from attrs import frozen, field
 from os import makedirs
 
-from troi.troi import Troi
+from troi import Troi
 
 
 @frozen
@@ -23,7 +23,7 @@ class Paths:
     """Where the PaddockTS pipeline writes for one Troi.
 
     Attributes:
-        troi: The :class:`troi.troi.Troi` the paths are keyed by.
+        troi: The :class:`troi.Troi` the paths are keyed by.
         cache_dir: Region x time cache
             (``{config.tmp_dir}/paddockts/{bbox_hash}/{time_hash}``).
             Created on init. Two stubs with the same bbox and dates share
@@ -68,7 +68,7 @@ class Paths:
 def _temp_troi():
     import tempfile
     from datetime import date
-    from troi.config import Config
+    from troi import Config
     tmpdir = tempfile.mkdtemp(prefix='paddockts_paths_test_')
     return Troi(
         bbox=[148.36265, -33.52606, 148.38265, -33.50606],

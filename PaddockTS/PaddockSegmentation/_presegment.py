@@ -4,7 +4,7 @@ from numpy.typing import NDArray
 from datetime import datetime
 from os import makedirs
 from os.path import exists, dirname
-from troi.troi import Troi
+from troi import Troi
 from PaddockTS.paths import Paths
 from PaddockTS.PaddockSegmentation.check_if_valid_preseg_exists import check_if_valid_preseg_exists
 

@@ -28,7 +28,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from troi.troi import Troi
+from troi import Troi
 
 ENV_STEPS = [
     'Download terrain',
@@ -561,7 +561,7 @@ def get_outputs(troi: Troi, reload: bool = False, show_log: bool = False,
       plots (SAM and user variants), and a final PDF report.
 
     Args:
-        troi: The :class:`troi.troi.Troi` to run the pipeline for.
+        troi: The :class:`troi.Troi` to run the pipeline for.
         reload: If ``True``, delete PaddockTS's own cached artifacts —
             the region x time cache (:class:`PaddockTS.paths.Paths`:
             fractional cover, presegmentation, SAM masks/paddocks), the
@@ -594,7 +594,7 @@ def get_outputs(troi: Troi, reload: bool = False, show_log: bool = False,
     Example:
         ```python
         from datetime import date
-        from troi.troi import Troi
+        from troi import Troi
         from PaddockTS.get_outputs import get_outputs
 
         q = Troi(

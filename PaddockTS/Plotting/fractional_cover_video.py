@@ -10,7 +10,7 @@ is pure green, and so on.
 import cv2
 import numpy as np
 import xarray as xr
-from troi.troi import Troi
+from troi import Troi
 from PaddockTS.paths import Paths
 
 
@@ -31,7 +31,7 @@ def fractional_cover_video(troi: Troi, ds_fractional_cover=None, fps: int = 4, m
     """Encode the fractional-cover cube as a false-colour H.264 video.
 
     Args:
-        troi: The :class:`troi.troi.Troi`. Output is written to
+        troi: The :class:`troi.Troi`. Output is written to
             ``{troi.out_dir}/{troi.stub}_fractional_cover.mp4``.
         ds_fractional_cover: Optional in-memory fractional cover dataset
             (with ``bg``, ``pv``, ``npv`` variables). If ``None``,

@@ -1,5 +1,5 @@
 from os.path import exists
-from troi.troi import Troi
+from troi import Troi
 
 
 def status(troi: Troi) -> dict[str, bool]:

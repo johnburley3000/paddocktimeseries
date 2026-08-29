@@ -2,7 +2,7 @@
 the Milgadara farm's eastern coverage boundary, calendar year 2024."""
 from datetime import date
 
-from troi.troi import Troi
+from troi import Troi
 from PaddockTS.get_outputs import get_outputs
 
 q = Troi(

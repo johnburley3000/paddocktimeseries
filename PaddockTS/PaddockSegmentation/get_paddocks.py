@@ -26,8 +26,8 @@ import geopandas as gpd
 from datetime import datetime
 from os import makedirs
 from os.path import exists
-from troi.troi import Troi
-from troi.config import config
+from troi import Troi
+from troi import config
 from PaddockTS.paths import Paths
 from PaddockTS.PaddockSegmentation._presegment import presegment
 from PaddockTS.PaddockSegmentation.check_if_valid_paddocks_exists import check_if_valid_paddocks_exists
@@ -53,7 +53,7 @@ def get_paddocks(
     and other stubs over the same bbox x dates reuse the work.
 
     Args:
-        troi: The :class:`troi.troi.Troi`.
+        troi: The :class:`troi.Troi`.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset. If ``None``,
             the cloud-masked window is read from the pysentinel2 cube.
         min_area_ha: Minimum polygon area in hectares; smaller polygons

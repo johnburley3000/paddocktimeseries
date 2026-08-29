@@ -13,8 +13,8 @@ from os.path import exists
 
 import pandas as pd
 
-from troi.config import Config, config as default_config
-from troi.troi import Troi
+from troi import Config, config as default_config
+from troi import Troi
 
 RENAME = {
     'Pg': 'Precipitation',
@@ -53,7 +53,7 @@ def daesim_forcing_df(lat: float, lon: float, start: date, end: date,
     """Build the DAESIM forcing table for a coordinate and date range.
 
     Troi-agnostic — the data-assembly layer. Pipelines that speak
-    :class:`troi.troi.Troi` use :func:`daesim_forcing`, which
+    :class:`troi.Troi` use :func:`daesim_forcing`, which
     adds stub-keyed CSV caching on top.
 
     Args:

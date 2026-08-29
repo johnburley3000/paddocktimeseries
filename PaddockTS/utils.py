@@ -1,4 +1,4 @@
-from troi.troi import Troi
+from troi import Troi
 from datetime import date
 from os.path import exists
 from urllib import request

@@ -2,7 +2,7 @@
 # geopackage made in QGIS espg4326, one field desgnates paddock name, another field is a random variable to see how it handles it.. 
 
 from datetime import date
-from troi.troi import Troi
+from troi import Troi
 from PaddockTS.get_outputs import get_outputs
 
 # From GeoJSON with custom label column

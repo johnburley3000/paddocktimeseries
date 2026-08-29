@@ -13,7 +13,7 @@
 # Needs the viewer extra:  pip install 'PaddockTS[viewer]'
 
 from datetime import date
-from troi.troi import Troi
+from troi import Troi
 from PaddockTS.viewer import serve
 
 

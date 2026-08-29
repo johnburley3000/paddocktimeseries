@@ -12,7 +12,7 @@ import numpy as np
 import xarray as xr
 import rioxarray
 from rasterio.features import rasterize
-from troi.troi import Troi
+from troi import Troi
 from PaddockTS.paths import Paths
 from .fractional_cover_video import _to_rgb
 
@@ -21,7 +21,7 @@ def fractional_cover_paddocks_video(troi: Troi, paddocks_filepath: str | None = 
     """Encode a fractional-cover video with paddock outlines + labels.
 
     Args:
-        troi: The :class:`troi.troi.Troi`. Output is written to
+        troi: The :class:`troi.Troi`. Output is written to
             ``{troi.out_dir}/{paddocks_stem}_fractional_cover_paddocks.mp4``.
         paddocks_filepath: Path to the paddocks file. If ``None``, uses
             SAM paddocks from ``{troi.tmp_dir}/{troi.stub}_sam_paddocks.gpkg``.

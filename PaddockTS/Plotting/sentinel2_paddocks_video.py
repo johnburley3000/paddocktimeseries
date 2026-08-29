@@ -11,7 +11,7 @@ import numpy as np
 import xarray as xr
 import rioxarray
 from rasterio.features import rasterize
-from troi.troi import Troi
+from troi import Troi
 from PaddockTS.paths import Paths
 from .sentinel2_video import _to_rgb
 
@@ -20,7 +20,7 @@ def sentinel2_video_with_paddocks(troi: Troi, paddocks_filepath: str | None = No
     """Encode a true-colour Sentinel-2 video with paddock outlines + labels.
 
     Args:
-        troi: The :class:`troi.troi.Troi`. Output is written to
+        troi: The :class:`troi.Troi`. Output is written to
             ``{troi.out_dir}/{paddocks_stem}_sentinel2_paddocks.mp4``.
         paddocks_filepath: Path to the paddocks file. If ``None``, uses
             SAM paddocks from ``{troi.tmp_dir}/{troi.stub}_sam_paddocks.gpkg``.

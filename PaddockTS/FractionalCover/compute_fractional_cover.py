@@ -31,7 +31,7 @@ from os import makedirs
 from os.path import exists
 from datetime import datetime
 from xarray import Dataset
-from troi.troi import Troi
+from troi import Troi
 from PaddockTS.paths import Paths
 from PaddockTS.FractionalCover.check_if_valid_fractional_cover_exists import check_if_valid_fractional_cover_exists
 
@@ -50,7 +50,7 @@ def compute_fractional_cover(troi: Troi, ds_sentinel2=None, model_n: int = 4, co
     ``(time, y, x)``.
 
     Args:
-        troi: The :class:`troi.troi.Troi`.
+        troi: The :class:`troi.Troi`.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset. If ``None``,
             the cloud-masked window is read from the machine-wide
             pysentinel2 cube (downloading only what's missing). Must
@@ -150,7 +150,7 @@ def compute_fractional_cover(troi: Troi, ds_sentinel2=None, model_n: int = 4, co
 def _temp_troi():
     import tempfile
     from datetime import date
-    from troi.config import Config
+    from troi import Config
     tmpdir = tempfile.mkdtemp(prefix='paddockts_fc_test_')
     cfg = Config(out_dir=tmpdir, tmp_dir=tmpdir)
     return Troi(

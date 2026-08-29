@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from troi.troi import Troi
+from troi import Troi
 from PaddockTS.paths import Paths
 
 
@@ -27,7 +27,7 @@ def phenology_plot(troi: Troi, phenology_results: dict[int, pd.DataFrame] | None
     """Plot per-paddock × per-year phenology curves with SoS / PoS / EoS markers.
 
     Args:
-        troi: The :class:`troi.troi.Troi`. Output is written to
+        troi: The :class:`troi.Troi`. Output is written to
             ``{troi.out_dir}/{paddocks_stem}_phenology.png``.
         phenology_results: Optional ``{year: DataFrame}`` from
             :func:`PaddockTS.Phenology.estimate_phenology`. If ``None``,

@@ -41,7 +41,7 @@ import xarray as xr
 import matplotlib.pyplot as plt
 from rasterio.features import rasterize
 
-from troi.troi import Troi
+from troi import Troi
 from PaddockTS.paths import Paths
 
 
@@ -467,7 +467,7 @@ def calendar_plot(troi: Troi, ds_sentinel2: xr.Dataset | None = None,
     :func:`iter_calendar_figures` directly so the text stays vector.
 
     Args:
-        troi: The :class:`troi.troi.Troi`.
+        troi: The :class:`troi.Troi`.
         ds_sentinel2: Optional in-memory cleaned Sentinel-2 dataset. If
             ``None``, opened (or downloaded + cleaned) from
             the pysentinel2 cube (cloud-masked, on read).

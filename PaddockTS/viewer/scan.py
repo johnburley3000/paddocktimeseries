@@ -175,7 +175,7 @@ def scan_outputs(target) -> OutputSet:
     """Scan a troi's output directory and return a categorised OutputSet.
 
     Args:
-        target: a :class:`troi.troi.Troi` (uses ``troi.out_dir`` and
+        target: a :class:`troi.Troi` (uses ``troi.out_dir`` and
             ``troi.stub``) or a path-like pointing directly at an output
             directory.
 

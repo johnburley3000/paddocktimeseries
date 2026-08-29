@@ -9,7 +9,7 @@ downstream stages (yearly split, smoothing, phenology, plotting) consume.
 import warnings
 import numpy as np
 import xarray as xr
-from troi.troi import Troi
+from troi import Troi
 
 def _band_medians(band_array, paddock_pixel_idx):
     """Per-paddock NaN-aware median across pixels, for every timestep.
@@ -53,7 +53,7 @@ def make_paddock_time_series(troi: Troi, ds_sentinel2=None, paddocks_filepath=No
        ``{paddocks_filepath stem}_timeseries.zarr``.
 
     Args:
-        troi: The :class:`troi.troi.Troi`.
+        troi: The :class:`troi.Troi`.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset (with the five
             indices already added, or they will be computed). If ``None``,
             the cloud-masked window with indices comes from the

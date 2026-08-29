@@ -25,7 +25,7 @@ def serve(target, *, port: int = 8501, headless: bool | None = None,
     """Launch the Streamlit viewer pointed at a troi's output directory.
 
     Args:
-        target: a :class:`troi.troi.Troi` or a path to an output
+        target: a :class:`troi.Troi` or a path to an output
             directory.
         port: TCP port for the Streamlit server. Default ``8501``.
         headless: If ``None`` (default), auto-detect — headless when running

@@ -2,7 +2,7 @@
 as a script: full farm, both paddock modes, via get_outputs."""
 from datetime import date
 
-from troi.troi import Troi
+from troi import Troi
 from PaddockTS.get_outputs import get_outputs
 
 paddocks_fp = "artifacts/Milgadara_paddock-polygons_2024-12-17_12-45-58.json"

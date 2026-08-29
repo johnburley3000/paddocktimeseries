@@ -9,7 +9,7 @@ directory, then encoded to H.264 with ``ffmpeg`` (``libopenh264``).
 import cv2
 import numpy as np
 import xarray as xr
-from troi.troi import Troi
+from troi import Troi
 
 
 def _to_rgb(ds, time_idx):
@@ -28,7 +28,7 @@ def sentinel2_video(troi: Troi, ds_sentinel2=None, fps: int = 4, min_size: int =
     """Encode the Sentinel-2 cube as a true-colour H.264 video.
 
     Args:
-        troi: The :class:`troi.troi.Troi`. Output is written to
+        troi: The :class:`troi.Troi`. Output is written to
             ``{troi.out_dir}/{troi.stub}_sentinel2.mp4``.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset. If ``None``,
             the cloud-masked window is read from the pysentinel2 cube.

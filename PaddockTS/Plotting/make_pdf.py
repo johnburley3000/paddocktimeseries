@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from PIL import Image
 
-from troi.troi import Troi
+from troi import Troi
 from PaddockTS.paths import Paths
 
 
@@ -113,7 +113,7 @@ def make_pdf(troi: Troi, paddocks_filepath: str | None = None,
     """Generate a PDF report combining all plots for a troi.
 
     Args:
-        troi: The :class:`troi.troi.Troi`.
+        troi: The :class:`troi.Troi`.
         paddocks_filepath: Optional path to the user-provided paddocks file.
             If provided, includes user paddock calendar and phenology plots
             in the report.
