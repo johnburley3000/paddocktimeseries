@@ -18,6 +18,8 @@ mismatch upstream sees as a hard error.
 
 import xarray as xr
 from contextlib import contextmanager
+import pandas as pd
+from pathlib import Path
 from PaddockTS.Phenology import _phenolopy as phenolopy
 
 # Backup the original merge
@@ -38,7 +40,7 @@ def _override_xr_merge():
         phenolopy.xr.merge = _real_merge
 
 
-def estimate_phenology(troi, ds_yearly=None, variable='NDVI', min_observations=25):
+def estimate_phenology(troi, ds_yearly=None, variable='NDVI', min_observations=25, paddocks_filepath=None):
     """Compute per-paddock phenology metrics for each year.
 
     For each year in ``ds_yearly``, this:
@@ -72,7 +74,7 @@ def estimate_phenology(troi, ds_yearly=None, variable='NDVI', min_observations=2
     """
     if ds_yearly is None:
         from PaddockTS.Phenology.make_yearly_paddock_time_series import make_yearly_paddock_time_series
-        ds_yearly = make_yearly_paddock_time_series(troi)
+        ds_yearly = make_yearly_paddock_time_series(troi, paddocks_filepath=paddocks_filepath)
 
     results = {}
     for year, ds in ds_yearly.items():
@@ -117,8 +119,21 @@ def estimate_phenology(troi, ds_yearly=None, variable='NDVI', min_observations=2
         )
         phenos_df["num_peaks"] = da_num_seasons.values
 
+        phenos_df.insert(0, "year", int(year))  # year identifier for the combined table
         results[year] = phenos_df
         print(f'  {year}: {len(phenos_df)} paddocks, {phenos_df["num_peaks"].mean():.1f} avg peaks')
+
+    # Combined per-paddock table across years, alongside the per-year dict
+    # (John Burley, for the preprint analyses).
+    if results:
+        if paddocks_filepath is None:
+            from PaddockTS.paths import Paths
+            paddocks_filepath = Paths(troi).sam_paddocks
+        output_df = pd.concat(results.values(), ignore_index=True)
+        Path(troi.out_dir).mkdir(parents=True, exist_ok=True)
+        out_path = Path(troi.out_dir) / f'{Path(paddocks_filepath).stem}_phenology.csv'
+        output_df.to_csv(out_path, index=False)
+        print(f'Saved to {out_path}')
 
     return results
 

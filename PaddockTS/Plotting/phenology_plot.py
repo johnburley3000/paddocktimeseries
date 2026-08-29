@@ -74,7 +74,7 @@ def phenology_plot(troi: Troi, phenology_results: dict[int, pd.DataFrame] | None
 
     if phenology_results is None:
         from PaddockTS.Phenology.estimate_phenology import estimate_phenology
-        phenology_results = estimate_phenology(troi, ds_yearly=ds_yearly, variable=variable)
+        phenology_results = estimate_phenology(troi, ds_yearly=ds_yearly, variable=variable, paddocks_filepath=paddocks_filepath)
 
     if ds_yearly is None:
         from PaddockTS.Phenology.make_yearly_paddock_time_series import make_yearly_paddock_time_series

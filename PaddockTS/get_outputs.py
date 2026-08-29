@@ -465,7 +465,7 @@ def _run_s2_steps(troi, statuses, times, paddocks_filepath=None, skip_sam=False,
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Phenology.estimate_phenology import estimate_phenology
-                phenology_results = estimate_phenology(troi, ds_yearly=ds_yearly)
+                phenology_results = estimate_phenology(troi, ds_yearly=ds_yearly, paddocks_filepath=gpkg_path)
 
             # Step 15: Estimate phenology (user)
             elif i == 15:
@@ -474,7 +474,7 @@ def _run_s2_steps(troi, statuses, times, paddocks_filepath=None, skip_sam=False,
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Phenology.estimate_phenology import estimate_phenology
-                phenology_results_user = estimate_phenology(troi, ds_yearly=ds_yearly_user)
+                phenology_results_user = estimate_phenology(troi, ds_yearly=ds_yearly_user, paddocks_filepath=paddocks_filepath)
 
             # Step 16: Calendar plot (SAM)
             elif i == 16:
