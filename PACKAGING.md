@@ -12,7 +12,7 @@ channel so inter-package deps resolve:
 
 ```bash
 CH=~/conda-channel
-conda build borevitz_lab/conda --output-folder $CH -c conda-forge
+conda build troi/conda --output-folder $CH -c conda-forge
 for p in pysentinel2 pysilo pyozwald pycopdem pyslga; do
   conda build $p/conda --output-folder $CH -c file://$CH -c conda-forge
 done

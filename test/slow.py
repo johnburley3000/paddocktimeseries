@@ -6,11 +6,11 @@ now comes from the machine-wide pysentinel2 cube (cloud-masked, with
 the five indices on read); everything downstream is unchanged.
 """
 from datetime import date
-from borevitz_lab.query import Query
+from troi.troi import Troi
 
 paddocks_fp = "artifacts/Milgadara_paddock-polygons_2024-12-17_12-45-58.json"
 
-q = Query.build_from_paddocks(
+q = Troi.build_from_paddocks(
     paddocks_filepath=paddocks_fp,
     start=date(2018, 1, 1),
     end=date(2025, 12, 31),
@@ -27,7 +27,7 @@ from PaddockTS.Phenology.make_smoothed_paddock_time_series import make_smoothed_
 from PaddockTS.Phenology.make_yearly_paddock_time_series import make_yearly_paddock_time_series
 
 # Cloud-masked window + the five spectral indices, straight from the cube.
-ds = Cube(config=q.config).get_ds_query(q, indices=tuple(INDICES))
+ds = Cube(config=q.config).get_ds_troi(q, indices=tuple(INDICES))
 fc = compute_fractional_cover(q, ds_sentinel2=ds)
 # paddocks = get_paddocks(q, ds_sentinel2=ds)  # SAM — slow, run interactively
 ts = make_paddock_time_series(q, ds_sentinel2=ds, paddocks_filepath=paddocks_fp)

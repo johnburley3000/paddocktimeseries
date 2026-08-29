@@ -1,13 +1,13 @@
-# Augments (or creates) the shared borevitz_lab conda environment with
+# Augments (or creates) the shared troi conda environment with
 # PaddockTS's full stack (geospatial natives, SAM/samgeo, PyTorch,
 # TensorFlow, ffmpeg):
 #
-#   conda env update -n borevitz_lab -f environment.yml
-#   conda activate borevitz_lab
-#   pip install -e ../borevitz_lab && pip install -e ../pysentinel2 && pip install -e .
+#   conda env update -n troi -f environment.yml
+#   conda activate troi
+#   pip install -e ../troi && pip install -e ../pysentinel2 && pip install -e .
 #
 # Never use --prune: the env is shared across lab repos.
-name: borevitz_lab
+name: troi
 channels:
   - conda-forge
   - pytorch

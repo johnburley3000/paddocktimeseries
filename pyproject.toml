@@ -40,7 +40,7 @@ classifiers = [
 # Only the lab packages are declared here so `pip install -e .` is fast
 # and doesn't re-resolve the native stack.
 dependencies = [
-  "borevitz-lab",
+  "troi",
   "pysentinel2",
   "pysilo",
   "pyozwald",

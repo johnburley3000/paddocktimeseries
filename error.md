@@ -66,15 +66,15 @@ During handling of the above exception, another exception occurred:
 
 Traceback (most recent call last):
   File "/Users/adeel/borevitz_projects/repos/paddocktimeseries/PaddockTS/get_outputs.py", line 687, in <module>
-    get_outputs(query, reload='--reload' in sys.argv, paddocks_filepath=fp, label_col='paddock', show_log=True)
+    get_outputs(troi, reload='--reload' in sys.argv, paddocks_filepath=fp, label_col='paddock', show_log=True)
   File "/Users/adeel/borevitz_projects/repos/paddocktimeseries/PaddockTS/get_outputs.py", line 679, in get_outputs
     raise errors[0][1]
   File "/Users/adeel/borevitz_projects/repos/paddocktimeseries/PaddockTS/get_outputs.py", line 639, in env_worker
-    _run_env_steps(query, env_statuses, env_times, errors=errors)
+    _run_env_steps(troi, env_statuses, env_times, errors=errors)
   File "/Users/adeel/borevitz_projects/repos/paddocktimeseries/PaddockTS/get_outputs.py", line 287, in _run_env_steps
     raise step_errors[0][1]
   File "/Users/adeel/borevitz_projects/repos/paddocktimeseries/PaddockTS/get_outputs.py", line 253, in _run_env_steps
-    download_slga_soils(query)
+    download_slga_soils(troi)
   File "/Users/adeel/borevitz_projects/repos/paddocktimeseries/PaddockTS/Environmental/SLGASoils/download_slgasoils.py", line 43, in download_slga_soils
     list(starmap(download_cog, args))
   File "/Users/adeel/borevitz_projects/repos/paddocktimeseries/PaddockTS/Environmental/SLGASoils/download_cog.py", line 34, in download_cog

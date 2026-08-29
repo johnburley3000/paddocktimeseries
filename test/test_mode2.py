@@ -2,11 +2,11 @@
 # geopackage made in QGIS espg4326, one field desgnates paddock name, another field is a random variable to see how it handles it.. 
 
 from datetime import date
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.get_outputs import get_outputs
 
 # From GeoJSON with custom label column
-q = Query.build_from_paddocks(
+q = Troi.build_from_paddocks(
     
     paddocks_filepath='artifacts/test_paddocks_WA.gpkg',
     start=date(2024, 1, 1),
