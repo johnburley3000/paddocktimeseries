@@ -6,7 +6,7 @@ usage, and auto-generated signatures from the source docstrings.
 
 | Module | What it does |
 |---|---|
-| [Query & Config](query.md) | The bbox + date-range object every stage consumes, plus runtime configuration. |
+| [Troi & Config](troi.md) | The bbox + date-range object every stage consumes, plus runtime configuration. |
 | [Sentinel-2 download](sentinel2.md) | STAC fetch, cloud mask, scene drop, and Zarr write. |
 | [Spectral indices](spectral_indices.md) | NDVI, CFI, NIRv, NDTI, CAI from S2 reflectance. |
 | [Fractional cover](fractional_cover.md) | bg / pv / npv unmixing via TFLite MLP. |

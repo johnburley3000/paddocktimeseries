@@ -9,7 +9,7 @@ per-paddock summaries:
 | `make_yearly_paddock_time_series` | The same dataset split into one slice per calendar year, with a `doy` (day-of-year) coordinate attached. |
 | `make_smoothed_paddock_time_series` | The same data resampled to a fixed cadence, gap-filled with PCHIP interpolation, and smoothed with a Savitzky-Golay filter. |
 
-All three persist Zarr v2 outputs under `query.tmp_dir`, named from the
+All three persist Zarr v2 outputs under `troi.tmp_dir`, named from the
 paddocks file's stem:
 
 - `{stem}_timeseries.zarr`
@@ -25,10 +25,10 @@ central time-series dataset that phenology and plotting consume.
 
 ```python
 from datetime import date
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.Phenology.make_paddock_time_series import make_paddock_time_series
 
-q = Query(
+q = Troi(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],
     start=date(2024, 1, 1),
     end=date(2024, 12, 31),
@@ -73,8 +73,8 @@ multi-year series can be overlaid on a common DOY axis:
 import matplotlib.pyplot as plt
 from PaddockTS.Phenology.make_yearly_paddock_time_series import make_yearly_paddock_time_series
 
-# Use a multi-year query
-q = Query(
+# Use a multi-year troi
+q = Troi(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],
     start=date(2022, 1, 1),
     end=date(2024, 12, 31),
@@ -122,7 +122,7 @@ ax.axes.legend()
 ## Bring your own paddocks
 
 All three functions accept `paddocks_filepath`. If `None`, they default
-to the SAM paddocks at `query.sam_paddocks_path` (running SAM if it
+to the SAM paddocks at `troi.sam_paddocks_path` (running SAM if it
 hasn't been run yet). Any GeoPackage / Shapefile / GeoJSON with a
 `paddock` column works; `load_user_paddocks` will derive missing
 columns.

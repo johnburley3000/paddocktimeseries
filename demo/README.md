@@ -6,7 +6,7 @@ others based on what you need.
 
 | Notebook | What it covers |
 |---|---|
-| [`01_quickstart.ipynb`](01_quickstart.ipynb) | The simplest end-to-end run: bbox + dates → `get_outputs(query)` → live dashboard → review the calendar / phenology / PDF. |
+| [`01_quickstart.ipynb`](01_quickstart.ipynb) | The simplest end-to-end run: bbox + dates → `get_outputs(troi)` → live dashboard → review the calendar / phenology / PDF. |
 | [`02_pipeline_stages.ipynb`](02_pipeline_stages.ipynb) | Calling each stage individually (Sentinel-2 download, clean, indices, fractional cover, SAM segmentation, per-paddock TS, phenology) — useful for debugging, fine-tuning, or replacing a single stage with your own implementation. Also shows how to inspect the outputs (geopackage, zarr, dataframes). |
 | [`03_custom_paddocks.ipynb`](03_custom_paddocks.ipynb) | Bringing your own paddock boundaries (GeoPackage / Shapefile / GeoJSON) and skipping SAM. Uses the bundled `artifacts/PaddockSet1.gpkg` as the worked example. |
 
@@ -24,8 +24,8 @@ content-addressed cache means rerunning is instant.
 
 ## Prerequisites
 
-- PaddockTS installed (`pip install -e .` or `conda env update -n borevitz_lab -f
-  environment.yml && conda activate borevitz_lab && pip install -e .`).
+- PaddockTS installed (`pip install -e .` or `conda env update -n troi -f
+  environment.yml && conda activate troi && pip install -e .`).
 - Internet access — Sentinel-2 is downloaded on demand from Geoscience
   Australia's STAC.
 - **No** credentials needed for the Sentinel-2 chain. SILO needs an
@@ -38,10 +38,10 @@ content-addressed cache means rerunning is instant.
 Each notebook prints the relevant paths as it goes. By default:
 
 - **Outputs** (paddocks gpkg, time-series zarr, calendar PNGs, MP4
-  videos, PDF report) → `~/Documents/BorevitzLab-Outputs/<stub>/`
+  videos, PDF report) → `~/Documents/Troi-Outputs/<stub>/`
 - **Caches** (raw + clean Sentinel-2 zarr, indices, fractional cover,
   presegmentation tif, SAM masks, terrain DEM, env CSVs) →
-  `~/Downloads/BorevitzLab-Tmp/...`
+  `~/Downloads/Troi-Tmp/...`
 
-To redirect both, set `out_dir` / `tmp_dir` in `~/.config/BorevitzLab.json`
+To redirect both, set `out_dir` / `tmp_dir` in `~/.config/Troi.json`
 before running. See [Getting Started → Configure](https://thestochasticman.github.io/paddocktimeseries/getting-started/#configure).

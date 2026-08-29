@@ -4,16 +4,16 @@ Sentinel-2 lives in its own package now:
 [`pysentinel2`](https://github.com/thestochasticman/pysentinel2), a
 machine-wide self-filling datacube. PaddockTS consumes it directly:
 
-- `Cube.get_ds_query(query)` — the **raw** ARD window (including the
+- `Cube.get_ds_troi(troi)` — the **raw** ARD window (including the
   fmask quality band), downloading only the (day × chunk) cells no
-  previous query has fetched. The default source is Geoscience
+  previous troi has fetched. The default source is Geoscience
   Australia's [Digital Earth Australia](https://explorer.dea.ga.gov.au/)
   ARD collection (`ga_s2am_ard_3` / `ga_s2bm_ard_3`).
-- `Cube.get_ds_query(query, clean=True)` — the cloud-masked window,
+- `Cube.get_ds_troi(troi, clean=True)` — the cloud-masked window,
   computed on read (never stored): dilated cloud/shadow/snow masking
   plus two frame gates, `max_cloud_fraction` (contamination over
   *valid* pixels) and `min_valid_fraction` (swath coverage).
-- `Cube.get_ds_query(query, indices=('NDVI', ...))` — spectral indices
+- `Cube.get_ds_troi(troi, indices=('NDVI', ...))` — spectral indices
   as on-read derivatives (implies `clean=True`).
 
 ---
@@ -42,17 +42,17 @@ decode_coords='all')`.
 
 ```python
 from datetime import date
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from pysentinel2.cube import Cube
 
-q = Query(
+q = Troi(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],
     start=date(2024, 1, 1),
     end=date(2024, 3, 31),
     stub="s2_demo",
 )
 
-ds = Cube(config=q.config).get_ds_query(q)
+ds = Cube(config=q.config).get_ds_troi(q)
 print(ds)
 # <xarray.Dataset>
 # Dimensions:      (time: 19, y: 257, x: 197)
@@ -76,7 +76,7 @@ print(ds)
 from pysentinel2.cube import Cube
 
 cube = Cube(config=q.config)
-ds_clean = cube.get_ds_query(q, clean=True,
+ds_clean = cube.get_ds_troi(q, clean=True,
                              max_cloud_fraction=0.5,   # ≤50% contamination of valid pixels
                              min_valid_fraction=0.2)   # ≥20% of the window sensed
 
@@ -107,7 +107,7 @@ custom = Sentinel2(
     bands=('oa_fmask', 'nbart_red', 'nbart_green', 'nbart_blue', 'nbart_nir_1'),
     resolution=20,
 )
-ds = Cube(config=q.config, sentinel2=custom).get_ds_query(q)
+ds = Cube(config=q.config, sentinel2=custom).get_ds_troi(q)
 ```
 
 ---

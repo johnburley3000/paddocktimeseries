@@ -49,7 +49,7 @@ Give PaddockTS a bounding box and a date range. It returns:
   phenology curves with SoS / PoS / EoS markers, climate diagnostic
   panels.
 
-Every output is cache-aware: rerunning the same `Query` is a no-op,
+Every output is cache-aware: rerunning the same `Troi` is a no-op,
 and partial writes (interrupted by OOM, kill, network drop) are
 automatically detected and re-fetched on the next run.
 
@@ -59,7 +59,7 @@ automatically detected and re-fetched on the next run.
 
 ### Conda (recommended)
 
-One command pulls the whole ecosystem — the `borevitz-lab` core, the
+One command pulls the whole ecosystem — the `troi` core, the
 five data-store packages, PaddockTS itself, and the full native stack
 (GDAL/PROJ/GEOS, PyTorch, TensorFlow, Segment Anything) — from the lab
 channel plus conda-forge:
@@ -88,7 +88,7 @@ PaddockTS targets Python ≥ 3.11.
 ### From source (development)
 
 ```bash
-git clone https://github.com/thestochasticman/borevitz_lab.git
+git clone https://github.com/thestochasticman/troi.git
 git clone https://github.com/thestochasticman/pysentinel2.git
 git clone https://github.com/thestochasticman/pysilo.git
 git clone https://github.com/thestochasticman/pyozwald.git
@@ -96,17 +96,17 @@ git clone https://github.com/thestochasticman/pycopdem.git
 git clone https://github.com/thestochasticman/pyslga.git
 git clone https://github.com/thestochasticman/paddocktimeseries.git
 cd paddocktimeseries
-conda env update -n borevitz_lab -f environment.yml   # native + scientific stack
-conda activate borevitz_lab
-pip install -e ../borevitz_lab -e ../pysentinel2 -e ../pysilo \
+conda env update -n troi -f environment.yml   # native + scientific stack
+conda activate troi
+pip install -e ../troi -e ../pysentinel2 -e ../pysilo \
             -e ../pyozwald -e ../pycopdem -e ../pyslga -e .
 ```
 
 ### Configure (optional)
 
-Default output and cache directories are `~/Documents/BorevitzLab-Outputs`
-and `~/Downloads/BorevitzLab-Tmp`. Override and add credentials by
-creating `~/.config/BorevitzLab.json`:
+Default output and cache directories are `~/Documents/Troi-Outputs`
+and `~/Downloads/Troi-Tmp`. Override and add credentials by
+creating `~/.config/Troi.json`:
 
 ```json
 {
@@ -118,8 +118,8 @@ creating `~/.config/BorevitzLab.json`:
 ```
 
 Settings can also come from environment variables
-(`BOREVITZ_LAB_OUTDIR`, `BOREVITZ_LAB_TMPDIR`, `BOREVITZ_LAB_EMAIL`,
-`BOREVITZ_LAB_TERN_KEY`).
+(`TROI_OUTDIR`, `TROI_TMPDIR`, `TROI_EMAIL`,
+`TROI_TERN_KEY`).
 
 **Credentials:**
 
@@ -129,7 +129,7 @@ Settings can also come from environment variables
 
 The Sentinel-2 → PaddockTS chain itself works without any credentials.
 
-You can also pass configuration directly to `Query` via a `Config`
+You can also pass configuration directly to `Troi` via a `Config`
 object — see the [Getting started](https://thestochasticman.github.io/paddocktimeseries/getting-started/)
 page.
 
@@ -140,7 +140,7 @@ page.
 Three Jupyter notebooks under [`demo/`](demo/) walk through the most
 common workflows:
 
-- [`demo/01_quickstart.ipynb`](demo/01_quickstart.ipynb) — bbox + dates → `get_outputs(query)` → review the calendar / phenology / PDF.
+- [`demo/01_quickstart.ipynb`](demo/01_quickstart.ipynb) — bbox + dates → `get_outputs(troi)` → review the calendar / phenology / PDF.
 - [`demo/02_pipeline_stages.ipynb`](demo/02_pipeline_stages.ipynb) — call each Sentinel-2 stage individually, inspect intermediate outputs.
 - [`demo/03_custom_paddocks.ipynb`](demo/03_custom_paddocks.ipynb) — bring your own paddock boundaries and skip SAM.
 
@@ -154,24 +154,24 @@ jupyter lab demo/
 
 ```python
 from datetime import date
-from PaddockTS.query import Query
+from PaddockTS.troi import Troi
 from PaddockTS.get_outputs import get_outputs
 
-query = Query(
+troi = Troi(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],  # [W, S, E, N]
     start=date(2020, 1, 1),
     end=date(2021, 12, 31),
     stub="my_first_run",
 )
 
-get_outputs(query)
+get_outputs(troi)
 ```
 
 This kicks off both pipelines (Sentinel-2 → PaddockTS and Environmental)
-in parallel and renders a live dashboard. The next `get_outputs(query)`
-on the same `Query` skips every cached step.
+in parallel and renders a live dashboard. The next `get_outputs(troi)`
+on the same `Troi` skips every cached step.
 
-Outputs land under `~/Documents/BorevitzLab-Outputs/<stub>/`:
+Outputs land under `~/Documents/Troi-Outputs/<stub>/`:
 
 | File | What's in it |
 |---|---|
@@ -194,12 +194,12 @@ previous run), skip SAM segmentation and use them directly:
 
 ```python
 from datetime import date
-from PaddockTS.query import Query
+from PaddockTS.troi import Troi
 from PaddockTS.get_outputs import get_outputs
 
 paddocks_fp = "/path/to/paddocks.gpkg"  # .gpkg, .shp, or .geojson
 
-query = Query.build_from_paddocks(
+troi = Troi.build_from_paddocks(
     paddocks_filepath=paddocks_fp,
     start=date(2024, 1, 1),
     end=date(2024, 12, 31),
@@ -208,7 +208,7 @@ query = Query.build_from_paddocks(
 )
 
 get_outputs(
-    query,
+    troi,
     paddocks_filepath=paddocks_fp,
     skip_sam=True,
     label_col="paddock_name",
@@ -219,14 +219,14 @@ get_outputs(
 
 ## Pipeline at a glance
 
-`get_outputs(query)` runs two pipelines on parallel threads. The
+`get_outputs(troi)` runs two pipelines on parallel threads. The
 Sentinel-2 chain segments paddocks and builds the per-paddock time
 series, phenology, and plots; the Environmental chain pulls terrain,
 climate, and soils. Both feed the final stitched PDF.
 
 ```mermaid
 flowchart TD
-    Q["<b>Query</b><br/>bbox · dates · stub"] --> GO(["get_outputs(query)"])
+    Q["<b>Troi</b><br/>bbox · dates · stub"] --> GO(["get_outputs(troi)"])
 
     GO -->|"thread 1 · Sentinel-2 → PaddockTS"| D["Download + clean<br/>Sentinel-2"]
     D --> IDX["Spectral indices<br/>NDVI · CFI · NIRv · NDTI · CAI"]
@@ -290,10 +290,10 @@ from PaddockTS.SpectralIndices.indices import compute_indices
 from PaddockTS.FractionalCover import compute_fractional_cover
 from PaddockTS.PaddockSegmentation.get_paddocks import get_paddocks
 
-ds = download_sentinel2(query)                          # Zarr cube on disk
-ds = compute_indices(query, ds_sentinel2=ds)            # NDVI, CFI, NIRv, NDTI, CAI
-fc = compute_fractional_cover(query, ds_sentinel2=ds)   # bg / pv / npv
-paddocks = get_paddocks(query, ds_sentinel2=ds)         # GeoDataFrame
+ds = download_sentinel2(troi)                          # Zarr cube on disk
+ds = compute_indices(troi, ds_sentinel2=ds)            # NDVI, CFI, NIRv, NDTI, CAI
+fc = compute_fractional_cover(troi, ds_sentinel2=ds)   # bg / pv / npv
+paddocks = get_paddocks(troi, ds_sentinel2=ds)         # GeoDataFrame
 ```
 
 Every function loads its own inputs from the cache if you don't pass

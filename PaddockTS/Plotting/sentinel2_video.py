@@ -9,7 +9,7 @@ directory, then encoded to H.264 with ``ffmpeg`` (``libopenh264``).
 import cv2
 import numpy as np
 import xarray as xr
-from borevitz_lab.query import Query
+from troi.troi import Troi
 
 
 def _to_rgb(ds, time_idx):
@@ -24,12 +24,12 @@ def _to_rgb(ds, time_idx):
     return rgb
 
 
-def sentinel2_video(query: Query, ds_sentinel2=None, fps: int = 4, min_size: int = 1080):
+def sentinel2_video(troi: Troi, ds_sentinel2=None, fps: int = 4, min_size: int = 1080):
     """Encode the Sentinel-2 cube as a true-colour H.264 video.
 
     Args:
-        query: The :class:`borevitz_lab.query.Query`. Output is written to
-            ``{query.out_dir}/{query.stub}_sentinel2.mp4``.
+        troi: The :class:`troi.troi.Troi`. Output is written to
+            ``{troi.out_dir}/{troi.stub}_sentinel2.mp4``.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset. If ``None``,
             the cloud-masked window is read from the pysentinel2 cube.
         fps: Frames per second. Default 4.
@@ -47,7 +47,7 @@ def sentinel2_video(query: Query, ds_sentinel2=None, fps: int = 4, min_size: int
     """
     if ds_sentinel2 is None:
         from pysentinel2.cube import Cube
-        ds = Cube(config=query.config).get_ds_query(query, clean=True)
+        ds = Cube(config=troi.config).get_ds_troi(troi, clean=True)
     else:
         ds = ds_sentinel2
     n_times = ds.sizes['time']
@@ -61,8 +61,8 @@ def sentinel2_video(query: Query, ds_sentinel2=None, fps: int = 4, min_size: int
     import subprocess
     import tempfile
 
-    os.makedirs(query.out_dir, exist_ok=True)
-    out_path = f'{query.out_dir}/{query.stub}_sentinel2.mp4'
+    os.makedirs(troi.out_dir, exist_ok=True)
+    out_path = f'{troi.out_dir}/{troi.stub}_sentinel2.mp4'
 
     # write frames as PNGs, then encode with ffmpeg for H.264
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -100,8 +100,8 @@ def sentinel2_video(query: Query, ds_sentinel2=None, fps: int = 4, min_size: int
 
 
 def test():
-    from PaddockTS.utils import get_example_query
-    sentinel2_video(get_example_query())
+    from PaddockTS.utils import get_example_troi
+    sentinel2_video(get_example_troi())
 
 if __name__ == '__main__':
     test()

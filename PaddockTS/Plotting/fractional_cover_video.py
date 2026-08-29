@@ -10,7 +10,7 @@ is pure green, and so on.
 import cv2
 import numpy as np
 import xarray as xr
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.paths import Paths
 
 
@@ -27,15 +27,15 @@ def _to_rgb(ds, time_idx):
     return np.nan_to_num(np.clip(rgb, 0, 1), nan=0.0)
 
 
-def fractional_cover_video(query: Query, ds_fractional_cover=None, fps: int = 4, min_size: int = 1080):
+def fractional_cover_video(troi: Troi, ds_fractional_cover=None, fps: int = 4, min_size: int = 1080):
     """Encode the fractional-cover cube as a false-colour H.264 video.
 
     Args:
-        query: The :class:`borevitz_lab.query.Query`. Output is written to
-            ``{query.out_dir}/{query.stub}_fractional_cover.mp4``.
+        troi: The :class:`troi.troi.Troi`. Output is written to
+            ``{troi.out_dir}/{troi.stub}_fractional_cover.mp4``.
         ds_fractional_cover: Optional in-memory fractional cover dataset
             (with ``bg``, ``pv``, ``npv`` variables). If ``None``,
-            ``Paths(query).fractional_cover`` is opened (or generated first).
+            ``Paths(troi).fractional_cover`` is opened (or generated first).
         fps: Frames per second. Default 4.
         min_size: Minimum dimension of the output video in pixels.
             Smaller cubes are upscaled with nearest-neighbour. H.264
@@ -50,10 +50,10 @@ def fractional_cover_video(query: Query, ds_fractional_cover=None, fps: int = 4,
     """
     if ds_fractional_cover is None:
         import os
-        if not os.path.exists(Paths(query).fractional_cover):
+        if not os.path.exists(Paths(troi).fractional_cover):
             from PaddockTS.FractionalCover.compute_fractional_cover import compute_fractional_cover
-            compute_fractional_cover(query)
-        ds = xr.open_zarr(Paths(query).fractional_cover, chunks=None, decode_coords="all")
+            compute_fractional_cover(troi)
+        ds = xr.open_zarr(Paths(troi).fractional_cover, chunks=None, decode_coords="all")
     else:
         ds = ds_fractional_cover
     n_times = ds.sizes['time']
@@ -67,8 +67,8 @@ def fractional_cover_video(query: Query, ds_fractional_cover=None, fps: int = 4,
     import subprocess
     import tempfile
 
-    os.makedirs(query.out_dir, exist_ok=True)
-    out_path = f'{query.out_dir}/{query.stub}_fractional_cover.mp4'
+    os.makedirs(troi.out_dir, exist_ok=True)
+    out_path = f'{troi.out_dir}/{troi.stub}_fractional_cover.mp4'
 
     with tempfile.TemporaryDirectory() as tmpdir:
         for i in range(n_times):
@@ -106,12 +106,12 @@ def fractional_cover_video(query: Query, ds_fractional_cover=None, fps: int = 4,
 
 def test():
     from os.path import exists
-    from PaddockTS.utils import get_example_query
-    query = get_example_query()
-    if not exists(Paths(query).fractional_cover):
+    from PaddockTS.utils import get_example_troi
+    troi = get_example_troi()
+    if not exists(Paths(troi).fractional_cover):
         from PaddockTS.FractionalCover.compute_fractional_cover import compute_fractional_cover
-        compute_fractional_cover(query)
-    fractional_cover_video(query)
+        compute_fractional_cover(troi)
+    fractional_cover_video(troi)
 
 if __name__ == '__main__':
     test()

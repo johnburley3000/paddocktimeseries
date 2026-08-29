@@ -4,8 +4,8 @@ Don't run this file by hand — launch it through the helper, which handles
 local-vs-SSH and the port-forward hint::
 
     from PaddockTS.viewer import serve
-    serve(query)                 # local: opens your browser
-    serve(query, headless=True)  # SSH: bind a port, you forward it
+    serve(troi)                 # local: opens your browser
+    serve(troi, headless=True)  # SSH: bind a port, you forward it
 
 Under the hood the launcher runs::
 

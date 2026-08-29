@@ -17,7 +17,7 @@ review-grade output PaddockTS produces.
 | `terrain_tiles_plot` | `{stub}_topography.png` | 2 × 2 panel: elevation, flow accumulation, aspect, slope. |
 | `make_pdf` | `{stub}_report.pdf` | Single PDF stitching every plot above, with section headers + PDF metadata. |
 
-All static plots and videos write to `{query.out_dir}/`.
+All static plots and videos write to `{troi.out_dir}/`.
 
 ---
 
@@ -62,11 +62,11 @@ scaling to `min_size`.
 
 ```python
 from datetime import date
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.Plotting.sentinel2_video import sentinel2_video
 from PaddockTS.Plotting.sentinel2_paddocks_video import sentinel2_video_with_paddocks
 
-q = Query(
+q = Troi(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],
     start=date(2024, 1, 1),
     end=date(2024, 12, 31),
@@ -147,9 +147,9 @@ shrink that capped text at ~13 pt in the previous PIL design.
 
 Two public entry points:
 
-- `calendar_plot(query, ...)` — saves one rasterised PNG per page
-  under `query.out_dir` (standalone view).
-- `iter_calendar_figures(query, ...)` — generator yielding
+- `calendar_plot(troi, ...)` — saves one rasterised PNG per page
+  under `troi.out_dir` (standalone view).
+- `iter_calendar_figures(troi, ...)` — generator yielding
   `(year, page_idx, fig)` triples without touching disk. Used by
   `make_pdf` to embed each page directly into the PDF as vector text.
 
@@ -245,12 +245,12 @@ terrain_tiles_plot(q, sigma=10)
 
 ## PDF report
 
-`make_pdf` stitches the plots produced for a query into a single
+`make_pdf` stitches the plots produced for a troi into a single
 A4-landscape PDF with section headers — Landscape (topography),
 Climate (SILO, OzWALD), Satellite Calendar (SAM + user paddocks),
 Phenology (SAM + user paddocks).
 
-Output: `{query.out_dir}/{query.stub}_report.pdf`.
+Output: `{troi.out_dir}/{troi.stub}_report.pdf`.
 
 ```python
 from PaddockTS.Plotting.make_pdf import make_pdf
@@ -269,7 +269,7 @@ make_pdf(q, paddocks_filepath="/path/to/paddocks.gpkg",
 - **PDF metadata** — `Title`, `Author`, `Subject` (includes bbox +
   dates), `Keywords`, and `Creator` are set on the document so the
   report shows up cleanly in viewer tabs and file-manager properties.
-- **Cover page** with the query stub, dates, and bbox.
+- **Cover page** with the troi stub, dates, and bbox.
 - **Sections** — each one has a header page followed by its content.
   Sections marked `requires_user_paddocks=True` (the User-paddocks
   calendar + phenology) are skipped if no `paddocks_filepath` is
@@ -301,6 +301,6 @@ SECTIONS = [
 ```
 
 The patterns use `{stub}` / `{sam_stem}` / `{user_stem}` placeholders,
-expanded to filesystem globs against `query.out_dir`.
+expanded to filesystem globs against `troi.out_dir`.
 
 ::: PaddockTS.Plotting.make_pdf.make_pdf

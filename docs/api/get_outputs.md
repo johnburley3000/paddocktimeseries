@@ -18,10 +18,10 @@ terminal scrollback.
 
 ```python
 from datetime import date
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.get_outputs import get_outputs
 
-q = Query(
+q = Troi(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],
     start=date(2024, 1, 1),
     end=date(2024, 12, 31),
@@ -50,7 +50,7 @@ You'll see something like:
 
 ## Reload from scratch
 
-To wipe every cached artifact for this query and force a clean rebuild:
+To wipe every cached artifact for this troi and force a clean rebuild:
 
 ```python
 get_outputs(q, reload=True)
@@ -58,16 +58,16 @@ get_outputs(q, reload=True)
 
 This deletes PaddockTS's own artifacts only:
 
-- **`Paths(query).cache_dir`** — the region × time cache: fractional
+- **`Paths(troi).cache_dir`** — the region × time cache: fractional
   cover zarr, presegmentation tif, SAM mask + raw polygons + filtered
   paddocks gpkg.
-- **`query.tmp_dir`** — per-stub time-series zarrs (paddockTS,
+- **`troi.tmp_dir`** — per-stub time-series zarrs (paddockTS,
   yearly, smoothed).
-- **`query.out_dir`** — every final output (PNGs, MP4s, PDF report).
+- **`troi.out_dir`** — every final output (PNGs, MP4s, PDF report).
 
 The shared, machine-wide data stores (Sentinel-2, terrain, climate,
-soils) are **not** touched — they dedup across every query on the
-machine and are not one query's to evict.
+soils) are **not** touched — they dedup across every troi on the
+machine and are not one troi's to evict.
 
 This is rarely needed — the per-stage `_SUCCESS` markers catch partial
 writes automatically. Use it when you've changed something the cache
@@ -124,14 +124,14 @@ sets of calendars and phenology plots.
 ## End-to-end with a paddocks-defined AOI
 
 If your paddocks file already defines the area of interest, use
-`Query.build_from_paddocks` to take its envelope as the bbox:
+`Troi.build_from_paddocks` to take its envelope as the bbox:
 
 ```python
-from borevitz_lab.query import Query
+from troi.troi import Troi
 
 paddocks_fp = "/path/to/paddocks.gpkg"
 
-q = Query.build_from_paddocks(
+q = Troi.build_from_paddocks(
     paddocks_filepath=paddocks_fp,
     start=date(2024, 1, 1),
     end=date(2024, 12, 31),

@@ -1,7 +1,7 @@
 """Discover and categorise the plot / video / report files a PaddockTS run
-writes into ``query.out_dir``.
+writes into ``troi.out_dir``.
 
-The pipeline writes everything for a query into one flat directory
+The pipeline writes everything for a troi into one flat directory
 (``{config.out_dir}/{stub}/``) with predictable name suffixes. This module
 globs that directory and sorts the files into typed groups so a UI (the
 Streamlit viewer, a notebook, the PDF builder) can present them without
@@ -65,7 +65,7 @@ class Asset:
 
 @dataclass
 class OutputSet:
-    """All discovered outputs for one query, grouped by category."""
+    """All discovered outputs for one troi, grouped by category."""
 
     out_dir: Path
     stub: str
@@ -162,7 +162,7 @@ def _classify(path: Path) -> Asset | None:
 
 
 def _resolve_target(target):
-    """Accept a Query (duck-typed) or a directory path; return (out_dir, stub)."""
+    """Accept a Troi (duck-typed) or a directory path; return (out_dir, stub)."""
     out_dir = getattr(target, 'out_dir', None)
     stub = getattr(target, 'stub', None)
     if out_dir is not None:
@@ -172,11 +172,11 @@ def _resolve_target(target):
 
 
 def scan_outputs(target) -> OutputSet:
-    """Scan a query's output directory and return a categorised OutputSet.
+    """Scan a troi's output directory and return a categorised OutputSet.
 
     Args:
-        target: a :class:`borevitz_lab.query.Query` (uses ``query.out_dir`` and
-            ``query.stub``) or a path-like pointing directly at an output
+        target: a :class:`troi.troi.Troi` (uses ``troi.out_dir`` and
+            ``troi.stub``) or a path-like pointing directly at an output
             directory.
 
     Returns:

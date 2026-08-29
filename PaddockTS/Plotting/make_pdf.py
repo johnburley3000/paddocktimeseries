@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from PIL import Image
 
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.paths import Paths
 
 
@@ -27,7 +27,7 @@ def _natural_sort_key(s):
 
 
 # Ordered sections. Each entry is (section_title, file_patterns, requires_user_paddocks).
-# Patterns use {stub} for query.stub, {sam_stem} for SAM paddocks (always
+# Patterns use {stub} for troi.stub, {sam_stem} for SAM paddocks (always
 # present), and {user_stem} for user paddocks (present only when the caller
 # passes paddocks_filepath). Sections with requires_user_paddocks=True are
 # skipped when no user file was supplied — replaces the older brittle
@@ -108,12 +108,12 @@ def _add_image_page(pdf, image_path):
     img.close()
 
 
-def make_pdf(query: Query, paddocks_filepath: str | None = None,
+def make_pdf(troi: Troi, paddocks_filepath: str | None = None,
              label_col: str | None = None):
-    """Generate a PDF report combining all plots for a query.
+    """Generate a PDF report combining all plots for a troi.
 
     Args:
-        query: The :class:`borevitz_lab.query.Query`.
+        troi: The :class:`troi.troi.Troi`.
         paddocks_filepath: Optional path to the user-provided paddocks file.
             If provided, includes user paddock calendar and phenology plots
             in the report.
@@ -124,8 +124,8 @@ def make_pdf(query: Query, paddocks_filepath: str | None = None,
     Returns:
         str: Filesystem path of the generated PDF.
     """
-    out_dir = query.out_dir
-    pdf_path = f'{out_dir}/{query.stub}_report.pdf'
+    out_dir = troi.out_dir
+    pdf_path = f'{out_dir}/{troi.stub}_report.pdf'
     os.makedirs(out_dir, exist_ok=True)
 
     # Derive stems for SAM and user paddocks
@@ -135,7 +135,7 @@ def make_pdf(query: Query, paddocks_filepath: str | None = None,
     # '{stub}_sam_paddocks_*'. out_dir is per-stub, so the stem needs no
     # stub prefix to be unambiguous.
     from PaddockTS.paths import Paths
-    sam_stem = Path(Paths(query).sam_paddocks).stem
+    sam_stem = Path(Paths(troi).sam_paddocks).stem
     if paddocks_filepath is not None:
         user_stem = Path(paddocks_filepath).stem
     else:
@@ -146,11 +146,11 @@ def make_pdf(query: Query, paddocks_filepath: str | None = None,
         # and search indexes. Cheap to set; helpful for users juggling many
         # reports across queries.
         meta = pdf.infodict()
-        meta['Title'] = f'PaddockTS Report — {query.stub}'
+        meta['Title'] = f'PaddockTS Report — {troi.stub}'
         meta['Author'] = 'PaddockTS'
         meta['Subject'] = (
-            f'Paddock-scale time-series analysis for bbox {query.bbox} '
-            f'between {query.start} and {query.end}'
+            f'Paddock-scale time-series analysis for bbox {troi.bbox} '
+            f'between {troi.start} and {troi.end}'
         )
         meta['Keywords'] = 'PaddockTS, Sentinel-2, phenology, fractional cover'
         meta['Creator'] = 'PaddockTS.Plotting.make_pdf'
@@ -161,8 +161,8 @@ def make_pdf(query: Query, paddocks_filepath: str | None = None,
         _add_section_page(
             pdf,
             'PaddockTS Report',
-            f'{query.stub}\n{query.start} → {query.end}\n'
-            f'bbox: {query.bbox}',
+            f'{troi.stub}\n{troi.start} → {troi.end}\n'
+            f'bbox: {troi.bbox}',
         )
 
         for section_title, plots, requires_user in SECTIONS:
@@ -176,13 +176,13 @@ def make_pdf(query: Query, paddocks_filepath: str | None = None,
             if 'Calendar' in section_title:
                 from PaddockTS.Plotting.calendar_plot import iter_calendar_figures
                 cal_paddocks = (paddocks_filepath if requires_user
-                                else Paths(query).sam_paddocks)
+                                else Paths(troi).sam_paddocks)
                 if not exists(cal_paddocks):
                     continue
                 cal_label_col = label_col if requires_user else None
                 _add_section_page(pdf, section_title)
                 for _pid, fig in iter_calendar_figures(
-                    query, paddocks_filepath=cal_paddocks,
+                    troi, paddocks_filepath=cal_paddocks,
                     label_col=cal_label_col,
                 ):
                     pdf.savefig(fig)
@@ -192,7 +192,7 @@ def make_pdf(query: Query, paddocks_filepath: str | None = None,
             # Collect all files for this section
             section_files = []
             for label, pattern in plots:
-                pat = pattern.replace('{stub}', query.stub)
+                pat = pattern.replace('{stub}', troi.stub)
                 pat = pat.replace('{sam_stem}', sam_stem)
                 pat = pat.replace('{user_stem}', user_stem)
                 matches = sorted(glob.glob(f'{out_dir}/{pat}'), key=_natural_sort_key)
@@ -214,8 +214,8 @@ def make_pdf(query: Query, paddocks_filepath: str | None = None,
 if __name__ == '__main__':
     # Build a PDF for the repo-bundled artifacts. Assumes the upstream
     # pipeline has already produced calendar / phenology / topography PNGs
-    # for this query under query.out_dir; if not, sections silently skip.
+    # for this troi under troi.out_dir; if not, sections silently skip.
     from datetime import date
     fp = 'artifacts/PaddockSet1.gpkg'
-    query = Query.build_from_paddocks(fp, date(2024, 1, 1), date(2025, 1, 1), 'PaddockSet1')
-    make_pdf(query, paddocks_filepath=fp)
+    troi = Troi.build_from_paddocks(fp, date(2024, 1, 1), date(2025, 1, 1), 'PaddockSet1')
+    make_pdf(troi, paddocks_filepath=fp)

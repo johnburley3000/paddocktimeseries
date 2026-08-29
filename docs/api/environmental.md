@@ -17,9 +17,9 @@ The Sentinel-2 → PaddockTS chain itself doesn't depend on any of these
 — they're independent context layers, useful for downstream analyses
 that combine remote sensing with weather, soil, or topography.
 
-Every store follows the same design: a query-agnostic core
-(`get_ds(bbox, ...)` / `get_df(lat, lon, ...)`), a `*_query` adapter
-for pipelines that speak the shared `Query`, and a `fill(...)` that
+Every store follows the same design: a troi-agnostic core
+(`get_ds(bbox, ...)` / `get_df(lat, lon, ...)`), a `*_troi` adapter
+for pipelines that speak the shared `Troi`, and a `fill(...)` that
 returns how much was actually downloaded (0 = fully cached).
 
 ---
@@ -33,22 +33,22 @@ are computed **on read**, never stored.
 
 ```python
 from datetime import date
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from pycopdem.store import Store
 
-q = Query(
+q = Troi(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],
     start=date(2024, 1, 1),
     end=date(2024, 12, 31),
     stub="env_demo",
 )
 
-ds = Store(config=q.config).get_ds_query(q, derivatives=('slope', 'twi'))
+ds = Store(config=q.config).get_ds_troi(q, derivatives=('slope', 'twi'))
 ds['elevation']   # (lat, lon), metres
 ds['slope']       # degrees, computed on read
 ```
 
-Dates on the query are ignored — elevation is time-invariant. Use with
+Dates on the troi are ignored — elevation is time-invariant. Use with
 [`terrain_tiles_plot`](plotting.md#terrain-plot) to render elevation /
 slope / aspect / flow accumulation.
 
@@ -64,8 +64,8 @@ re-fetching until complete, then never again.
 from pyozwald.store import Store
 
 store = Store(config=q.config)
-met = store.get_df_query(q, cadence='daily')                     # Pg, Tmax, Tmin, Uavg, ...
-veg = store.get_df_query(q, cadence='8day',
+met = store.get_df_troi(q, cadence='daily')                     # Pg, Tmax, Tmin, Uavg, ...
+veg = store.get_df_troi(q, cadence='8day',
                          variables=['NDVI', 'LAI', 'GPP', 'Ssoil'])
 ```
 
@@ -80,12 +80,12 @@ stored series.
 Point series from the DataDrill endpoint at the AOI centre, snapped to
 SILO's native 0.05° (~5 km) grid, with a coverage-span ledger so only
 missing date ranges are ever requested. Requires a registration email
-(`email` in `~/.config/BorevitzLab.json`, or `BOREVITZ_LAB_EMAIL`).
+(`email` in `~/.config/Troi.json`, or `TROI_EMAIL`).
 
 ```python
 from pysilo.store import Store
 
-df = Store(config=q.config).get_df_query(q)
+df = Store(config=q.config).get_df_troi(q)
 df.columns   # date, daily_rain, max_temp, min_temp, radiation, vp, et_short_crop, ... (18 vars)
 ```
 
@@ -97,13 +97,13 @@ National ~90 m COGs, one per attribute × depth, windowed-read per chunk
 into a sparse store. Layer filenames are resolved from the TERN
 datastore listing at first contact (release dates differ per
 attribute). Pixel reads require a TERN API key (`tern_api_key` in
-`~/.config/BorevitzLab.json`, or `BOREVITZ_LAB_TERN_KEY` — free from
+`~/.config/Troi.json`, or `TROI_TERN_KEY` — free from
 <https://account.tern.org.au/>); cached reads need no key.
 
 ```python
 from pyslga.store import Store
 
-ds = Store(config=q.config).get_ds_query(
+ds = Store(config=q.config).get_ds_troi(
     q, attributes=('Clay', 'Sand', 'Silt', 'pH_Water'),
     depths=('0-5cm', '5-15cm'))
 ds['Clay_5-15cm']   # (lat, lon), percent

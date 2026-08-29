@@ -28,7 +28,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from borevitz_lab.query import Query
+from troi.troi import Troi
 
 ENV_STEPS = [
     'Download terrain',
@@ -224,8 +224,8 @@ def _make_view(log_buf, env_statuses, env_times, s2_statuses, s2_times, show_log
 
 # --- step runners ----------------------------------------------------------
 
-def _run_env_steps(query: Query, statuses, times, errors=None):
-    os.makedirs(query.tmp_dir, exist_ok=True)
+def _run_env_steps(troi: Troi, statuses, times, errors=None):
+    os.makedirs(troi.tmp_dir, exist_ok=True)
     step_errors = []
     for i in range(len(ENV_STEPS)):
         statuses[i] = 'running'
@@ -233,41 +233,41 @@ def _run_env_steps(query: Query, statuses, times, errors=None):
         try:
             if i == 0:
                 from pycopdem.store import Store as _DemStore
-                _DemStore(config=query.config).fill_query(query)
+                _DemStore(config=troi.config).fill_troi(troi)
             elif i == 1:
                 from pyozwald.store import Store as _OzStore
-                _OzStore(config=query.config).fill_query(query, cadence='daily')
+                _OzStore(config=troi.config).fill_troi(troi, cadence='daily')
             elif i == 2:
-                if not query.config.email:
+                if not troi.config.email:
                     statuses[i] = 'skipped'
                     times[i] = time.time() - t0
                     continue
                 from pysilo.store import Store as _SiloStore
-                _SiloStore(config=query.config).fill_query(query)
+                _SiloStore(config=troi.config).fill_troi(troi)
             elif i == 3:
-                if not query.config.tern_api_key:
+                if not troi.config.tern_api_key:
                     statuses[i] = 'skipped'
                     times[i] = time.time() - t0
                     continue
                 from pyslga.store import Store as _SlgaStore
-                _SlgaStore(config=query.config).fill_query(query)
+                _SlgaStore(config=troi.config).fill_troi(troi)
             elif i == 4:
                 from PaddockTS.Plotting.ozwald_plot import ozwald_daily_plot
-                ozwald_daily_plot(query)
+                ozwald_daily_plot(troi)
             elif i == 5:
-                if not query.config.email:
+                if not troi.config.email:
                     statuses[i] = 'skipped'
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Plotting.silo_plot import silo_plot
-                silo_plot(query)
+                silo_plot(troi)
             elif i == 6:
                 # The terrain plot reprojects onto the Sentinel-2 grid; it
                 # reads that grid from the pysentinel2 cube itself (filling
                 # only what's missing — the S2 worker has usually populated
                 # it already, and the chunk ledger makes concurrent reads safe).
                 from PaddockTS.Plotting.terrain_tiles_plot import terrain_tiles_plot
-                terrain_tiles_plot(query)
+                terrain_tiles_plot(troi)
             statuses[i] = 'done'
         except Exception as e:
             statuses[i] = 'error'
@@ -302,14 +302,14 @@ _S2_STEP_DEPS = {
 }
 
 
-def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False, label_col=None):
+def _run_s2_steps(troi, statuses, times, paddocks_filepath=None, skip_sam=False, label_col=None):
     import xarray as xr
     from PaddockTS.paths import Paths
     from PaddockTS.PaddockSegmentation.check_if_valid_paddocks_exists import check_if_valid_paddocks_exists
 
     ds_sentinel2 = None
     ds_fractional_cover = None
-    gpkg_path = Paths(query).sam_paddocks
+    gpkg_path = Paths(troi).sam_paddocks
 
     # SAM-based datasets
     ds_paddockTS = None
@@ -321,7 +321,7 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
     ds_yearly_user = None
     phenology_results_user = None
 
-    os.makedirs(query.tmp_dir, exist_ok=True)
+    os.makedirs(troi.tmp_dir, exist_ok=True)
     step_errors = []
     for i in range(len(S2_STEPS)):
         # Free memory and let torch own all CPU threads before SAM
@@ -352,19 +352,19 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                 # Cloud-masked window from the machine-wide pysentinel2 cube
                 # (downloads only the missing day x chunk cells).
                 from pysentinel2.cube import Cube
-                ds_sentinel2 = Cube(config=query.config).get_ds_query(query, clean=True)
+                ds_sentinel2 = Cube(config=troi.config).get_ds_troi(troi, clean=True)
             elif i == 1:
                 # Indices are no longer materialised onto the window here —
                 # five full float32 arrays are ~3.5 GB for a multi-year
-                # query, and their only consumer (the per-paddock time
+                # troi, and their only consumer (the per-paddock time
                 # series) now computes each one transiently at median time.
                 pass
             elif i == 2:
                 from PaddockTS.FractionalCover.compute_fractional_cover import compute_fractional_cover
-                ds_fractional_cover = compute_fractional_cover(query, ds_sentinel2=ds_sentinel2)
+                ds_fractional_cover = compute_fractional_cover(troi, ds_sentinel2=ds_sentinel2)
             elif i == 3:
                 from PaddockTS.Plotting.sentinel2_video import sentinel2_video
-                sentinel2_video(query, ds_sentinel2=ds_sentinel2)
+                sentinel2_video(troi, ds_sentinel2=ds_sentinel2)
 
             # Step 4: Segment paddocks (SAM)
             elif i == 4:
@@ -374,7 +374,7 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                     continue
                 elif not check_if_valid_paddocks_exists(gpkg_path):
                     from PaddockTS.PaddockSegmentation.get_paddocks import get_paddocks
-                    get_paddocks(query, ds_sentinel2=ds_sentinel2)
+                    get_paddocks(troi, ds_sentinel2=ds_sentinel2)
 
             # Step 5: S2 + paddocks video (SAM)
             elif i == 5:
@@ -383,7 +383,7 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Plotting.sentinel2_paddocks_video import sentinel2_video_with_paddocks
-                sentinel2_video_with_paddocks(query, paddocks_filepath=gpkg_path, ds_sentinel2=ds_sentinel2)
+                sentinel2_video_with_paddocks(troi, paddocks_filepath=gpkg_path, ds_sentinel2=ds_sentinel2)
 
             # Step 6: S2 + paddocks video (user)
             elif i == 6:
@@ -392,12 +392,12 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Plotting.sentinel2_paddocks_video import sentinel2_video_with_paddocks
-                sentinel2_video_with_paddocks(query, paddocks_filepath=paddocks_filepath, ds_sentinel2=ds_sentinel2, label_col=label_col)
+                sentinel2_video_with_paddocks(troi, paddocks_filepath=paddocks_filepath, ds_sentinel2=ds_sentinel2, label_col=label_col)
 
             # Step 7: Fractional cover video
             elif i == 7:
                 from PaddockTS.Plotting.fractional_cover_video import fractional_cover_video
-                fractional_cover_video(query, ds_fractional_cover=ds_fractional_cover)
+                fractional_cover_video(troi, ds_fractional_cover=ds_fractional_cover)
 
             # Step 8: FC + paddocks video (SAM)
             elif i == 8:
@@ -406,7 +406,7 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Plotting.fractional_cover_paddocks_video import fractional_cover_paddocks_video
-                fractional_cover_paddocks_video(query, paddocks_filepath=gpkg_path, ds_fractional_cover=ds_fractional_cover, ds_sentinel2=ds_sentinel2)
+                fractional_cover_paddocks_video(troi, paddocks_filepath=gpkg_path, ds_fractional_cover=ds_fractional_cover, ds_sentinel2=ds_sentinel2)
 
             # Step 9: FC + paddocks video (user)
             elif i == 9:
@@ -415,7 +415,7 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Plotting.fractional_cover_paddocks_video import fractional_cover_paddocks_video
-                fractional_cover_paddocks_video(query, paddocks_filepath=paddocks_filepath, ds_fractional_cover=ds_fractional_cover, ds_sentinel2=ds_sentinel2, label_col=label_col)
+                fractional_cover_paddocks_video(troi, paddocks_filepath=paddocks_filepath, ds_fractional_cover=ds_fractional_cover, ds_sentinel2=ds_sentinel2, label_col=label_col)
 
             # Step 10: Make paddock TS (SAM)
             elif i == 10:
@@ -424,7 +424,7 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Phenology.make_paddock_time_series import make_paddock_time_series
-                ds_paddockTS = make_paddock_time_series(query, ds_sentinel2=ds_sentinel2, paddocks_filepath=gpkg_path)
+                ds_paddockTS = make_paddock_time_series(troi, ds_sentinel2=ds_sentinel2, paddocks_filepath=gpkg_path)
 
             # Step 11: Make paddock TS (user)
             elif i == 11:
@@ -433,7 +433,7 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Phenology.make_paddock_time_series import make_paddock_time_series
-                ds_paddockTS_user = make_paddock_time_series(query, ds_sentinel2=ds_sentinel2, paddocks_filepath=paddocks_filepath)
+                ds_paddockTS_user = make_paddock_time_series(troi, ds_sentinel2=ds_sentinel2, paddocks_filepath=paddocks_filepath)
 
             # Step 12: Make yearly paddock TS (SAM)
             elif i == 12:
@@ -446,7 +446,7 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                 # smoothed zarr) rather than passing the raw ds_paddockTS —
                 # the phenology plot's "interpolated" curve and phenolopy's
                 # SoS/PoS/EoS markers need the resampled+smoothed signal.
-                ds_yearly = make_yearly_paddock_time_series(query, paddocks_filepath=gpkg_path)
+                ds_yearly = make_yearly_paddock_time_series(troi, paddocks_filepath=gpkg_path)
 
             # Step 13: Make yearly paddock TS (user)
             elif i == 13:
@@ -456,7 +456,7 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                     continue
                 from PaddockTS.Phenology.make_yearly_paddock_time_series import make_yearly_paddock_time_series
                 # See SAM branch above: use the smoothed series, not raw.
-                ds_yearly_user = make_yearly_paddock_time_series(query, paddocks_filepath=paddocks_filepath)
+                ds_yearly_user = make_yearly_paddock_time_series(troi, paddocks_filepath=paddocks_filepath)
 
             # Step 14: Estimate phenology (SAM)
             elif i == 14:
@@ -465,7 +465,7 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Phenology.estimate_phenology import estimate_phenology
-                phenology_results = estimate_phenology(query, ds_yearly=ds_yearly)
+                phenology_results = estimate_phenology(troi, ds_yearly=ds_yearly)
 
             # Step 15: Estimate phenology (user)
             elif i == 15:
@@ -474,7 +474,7 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Phenology.estimate_phenology import estimate_phenology
-                phenology_results_user = estimate_phenology(query, ds_yearly=ds_yearly_user)
+                phenology_results_user = estimate_phenology(troi, ds_yearly=ds_yearly_user)
 
             # Step 16: Calendar plot (SAM)
             elif i == 16:
@@ -483,7 +483,7 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Plotting.calendar_plot import calendar_plot
-                calendar_plot(query, ds_sentinel2=ds_sentinel2, paddocks_filepath=gpkg_path)
+                calendar_plot(troi, ds_sentinel2=ds_sentinel2, paddocks_filepath=gpkg_path)
 
             # Step 17: Calendar plot (user)
             elif i == 17:
@@ -492,7 +492,7 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Plotting.calendar_plot import calendar_plot
-                calendar_plot(query, ds_sentinel2=ds_sentinel2, paddocks_filepath=paddocks_filepath, label_col=label_col)
+                calendar_plot(troi, ds_sentinel2=ds_sentinel2, paddocks_filepath=paddocks_filepath, label_col=label_col)
 
             # Step 18: Phenology plot (SAM)
             elif i == 18:
@@ -501,7 +501,7 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Plotting.phenology_plot import phenology_plot
-                phenology_plot(query, phenology_results=phenology_results, ds_yearly=ds_yearly, ds_paddockTS=ds_paddockTS, paddocks_filepath=gpkg_path)
+                phenology_plot(troi, phenology_results=phenology_results, ds_yearly=ds_yearly, ds_paddockTS=ds_paddockTS, paddocks_filepath=gpkg_path)
 
             # Step 19: Phenology plot (user)
             elif i == 19:
@@ -510,12 +510,12 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
                     times[i] = time.time() - t0
                     continue
                 from PaddockTS.Plotting.phenology_plot import phenology_plot
-                phenology_plot(query, phenology_results=phenology_results_user, ds_yearly=ds_yearly_user, ds_paddockTS=ds_paddockTS_user, paddocks_filepath=paddocks_filepath, label_col=label_col)
+                phenology_plot(troi, phenology_results=phenology_results_user, ds_yearly=ds_yearly_user, ds_paddockTS=ds_paddockTS_user, paddocks_filepath=paddocks_filepath, label_col=label_col)
 
             # Step 20: Make PDF report
             elif i == 20:
                 from PaddockTS.Plotting.make_pdf import make_pdf
-                make_pdf(query, paddocks_filepath=paddocks_filepath,
+                make_pdf(troi, paddocks_filepath=paddocks_filepath,
                          label_col=label_col)
 
             statuses[i] = 'done'
@@ -533,10 +533,10 @@ def _run_s2_steps(query, statuses, times, paddocks_filepath=None, skip_sam=False
 
 # --- driver ----------------------------------------------------------------
 
-def get_outputs(query: Query, reload: bool = False, show_log: bool = False,
+def get_outputs(troi: Troi, reload: bool = False, show_log: bool = False,
                 paddocks_filepath: str = None, skip_sam: bool = False,
                 label_col: str | None = None):
-    """Run the full PaddockTS pipeline for ``query`` with a live status dashboard.
+    """Run the full PaddockTS pipeline for ``troi`` with a live status dashboard.
 
     Spawns two worker threads — one for environmental data
     (terrain / OzWALD / SILO / SLGA) and one for the
@@ -561,14 +561,14 @@ def get_outputs(query: Query, reload: bool = False, show_log: bool = False,
       plots (SAM and user variants), and a final PDF report.
 
     Args:
-        query: The :class:`borevitz_lab.query.Query` to run the pipeline for.
+        troi: The :class:`troi.troi.Troi` to run the pipeline for.
         reload: If ``True``, delete PaddockTS's own cached artifacts —
             the region x time cache (:class:`PaddockTS.paths.Paths`:
             fractional cover, presegmentation, SAM masks/paddocks), the
-            per-stub time-series zarrs in ``query.tmp_dir``, and the final
-            outputs in ``query.out_dir`` — before starting. The shared,
+            per-stub time-series zarrs in ``troi.tmp_dir``, and the final
+            outputs in ``troi.out_dir`` — before starting. The shared,
             machine-wide data stores (Sentinel-2, terrain, climate, soils)
-            are NOT touched: they dedup across every query, so re-fetching
+            are NOT touched: they dedup across every troi, so re-fetching
             national data for one reload would be wasteful and would
             surprise other queries. Default ``False``.
         show_log: If ``True``, render a tail-of-log panel below the
@@ -594,10 +594,10 @@ def get_outputs(query: Query, reload: bool = False, show_log: bool = False,
     Example:
         ```python
         from datetime import date
-        from borevitz_lab.query import Query
+        from troi.troi import Troi
         from PaddockTS.get_outputs import get_outputs
 
-        q = Query(
+        q = Troi(
             bbox=[148.46, -34.39, 148.50, -34.36],
             start=date(2023, 1, 1),
             end=date(2023, 12, 31),
@@ -614,17 +614,17 @@ def get_outputs(query: Query, reload: bool = False, show_log: bool = False,
         # PaddockTS's own region x time cache: fractional cover,
         # presegmentation tif, SAM masks, and the SAM paddocks gpkg.
         # Shared only by Queries with identical (bbox, start, end).
-        cache_dir = Paths(query).cache_dir
+        cache_dir = Paths(troi).cache_dir
         if exists(cache_dir):
             shutil.rmtree(cache_dir)
         # Per-stub time-series zarrs + final outputs.
-        if exists(query.tmp_dir):
-            shutil.rmtree(query.tmp_dir)
-        if exists(query.out_dir):
-            shutil.rmtree(query.out_dir)
+        if exists(troi.tmp_dir):
+            shutil.rmtree(troi.tmp_dir)
+        if exists(troi.out_dir):
+            shutil.rmtree(troi.out_dir)
         # NOTE: the shared data stores (pysentinel2 / pycopdem / pysilo /
         # pyozwald / pyslga) are deliberately left alone — they dedup across
-        # every query and are not this query's to evict.
+        # every troi and are not this troi's to evict.
 
     env_statuses = ['pending'] * len(ENV_STEPS)
     env_times = [None] * len(ENV_STEPS)
@@ -637,13 +637,13 @@ def get_outputs(query: Query, reload: bool = False, show_log: bool = False,
 
         def env_worker():
             try:
-                _run_env_steps(query, env_statuses, env_times, errors=errors)
+                _run_env_steps(troi, env_statuses, env_times, errors=errors)
             except Exception as e:
                 errors.append(('Environmental', e))
 
         def s2_worker():
             try:
-                _run_s2_steps(query, s2_statuses, s2_times,
+                _run_s2_steps(troi, s2_statuses, s2_times,
                               paddocks_filepath=paddocks_filepath, skip_sam=skip_sam,
                               label_col=label_col)
             except Exception as e:
@@ -684,5 +684,5 @@ def get_outputs(query: Query, reload: bool = False, show_log: bool = False,
 if __name__ == '__main__':
     from datetime import date
     fp = 'artifacts/PaddockSet1.gpkg'
-    query = Query.build_from_paddocks(fp, date(2024, 1, 1), date(2025, 1, 1), 'PaddockSet1')
-    get_outputs(query, reload='--reload' in sys.argv, paddocks_filepath=fp, label_col='paddock', show_log=True)
+    troi = Troi.build_from_paddocks(fp, date(2024, 1, 1), date(2025, 1, 1), 'PaddockSet1')
+    get_outputs(troi, reload='--reload' in sys.argv, paddocks_filepath=fp, label_col='paddock', show_log=True)

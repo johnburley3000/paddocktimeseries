@@ -4,7 +4,7 @@ from numpy.typing import NDArray
 from datetime import datetime
 from os import makedirs
 from os.path import exists, dirname
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.paths import Paths
 from PaddockTS.PaddockSegmentation.check_if_valid_preseg_exists import check_if_valid_preseg_exists
 
@@ -103,18 +103,18 @@ def save_geotiff(ds: xr.Dataset, uint8_image: NDArray[np.uint8], path: str) -> N
     da.transpose("band", "y", "x").rio.to_raster(path)
 
 
-def presegment(query: Query, ds_sentinel2=None) -> str:
+def presegment(troi: Troi, ds_sentinel2=None) -> str:
     """
     Create a 3-band uint8 NDWI Fourier GeoTIFF from Sentinel-2 data.
     Returns the path to the saved preseg GeoTIFF.
     """
-    preseg_path = Paths(query).preseg
+    preseg_path = Paths(troi).preseg
     if check_if_valid_preseg_exists(preseg_path):
         return preseg_path
 
     if ds_sentinel2 is None:
         from pysentinel2.cube import Cube
-        ds = Cube(config=query.config).get_ds_query(query, clean=True)
+        ds = Cube(config=troi.config).get_ds_troi(troi, clean=True)
     else:
         ds = ds_sentinel2
     features = compute_ndwi_fourier(ds)

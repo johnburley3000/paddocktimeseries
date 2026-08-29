@@ -127,10 +127,10 @@ def test():
     import matplotlib.pyplot as plt
     from os.path import exists
 
-    from PaddockTS.utils import get_example_query
+    from PaddockTS.utils import get_example_troi
     from PaddockTS.Environmental.TerrainTiles.download_terrain_tiles import download_terrain
 
-    q = get_example_query()
+    q = get_example_troi()
     terrain_tif = q.terrain_path
 
     # Download if needed

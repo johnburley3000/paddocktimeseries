@@ -19,7 +19,7 @@ phenology.
 
 ## What you get
 
-Given a `Query` (a bounding box + date range), PaddockTS produces:
+Given a `Troi` (a bounding box + date range), PaddockTS produces:
 
 | Output | What it is |
 |---|---|
@@ -36,23 +36,23 @@ Given a `Query` (a bounding box + date range), PaddockTS produces:
 
 ```python
 from datetime import date
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.get_outputs import get_outputs
 
-query = Query(
+troi = Troi(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],
     start=date(2020, 1, 1),
     end=date(2021, 12, 31),
     stub="my_first_run",
 )
 
-get_outputs(query)
+get_outputs(troi)
 ```
 
 This kicks off both pipelines (Sentinel-2 → PaddockTS and Environmental)
 in parallel and renders a live two-column status dashboard. Outputs
-land under `~/Documents/BorevitzLab-Outputs/<stub>/` (configurable). The
-next `get_outputs(query)` for the same `Query` is a no-op — every
+land under `~/Documents/Troi-Outputs/<stub>/` (configurable). The
+next `get_outputs(troi)` for the same `Troi` is a no-op — every
 stage finds its cached output and skips.
 
 ---
@@ -64,12 +64,12 @@ a previous run, skip SAM segmentation and use them directly:
 
 ```python
 from datetime import date
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.get_outputs import get_outputs
 
 paddocks_fp = "/path/to/my_paddocks.gpkg"  # or .geojson / .shp
 
-query = Query.build_from_paddocks(
+troi = Troi.build_from_paddocks(
     paddocks_filepath=paddocks_fp,
     start=date(2024, 1, 1),
     end=date(2024, 12, 31),
@@ -78,7 +78,7 @@ query = Query.build_from_paddocks(
 )
 
 get_outputs(
-    query,
+    troi,
     paddocks_filepath=paddocks_fp,
     skip_sam=True,
     label_col="paddock_name",
@@ -90,7 +90,7 @@ get_outputs(
 ## Where to go next
 
 - **[Getting started](getting-started.md)** — install, configure,
-  construct a `Query`, and run your first pipeline.
+  construct a `Troi`, and run your first pipeline.
 - **[Pipeline](pipeline.md)** — every stage, what it produces, what it
   reads, what it caches, and how to skip or replace any of it.
 - **[API reference](api/index.md)** — full signatures and runnable

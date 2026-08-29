@@ -12,22 +12,22 @@ import numpy as np
 import xarray as xr
 import rioxarray
 from rasterio.features import rasterize
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.paths import Paths
 from .fractional_cover_video import _to_rgb
 
 
-def fractional_cover_paddocks_video(query: Query, paddocks_filepath: str | None = None, ds_fractional_cover=None, ds_sentinel2=None, fps: int = 4, min_size: int = 1080, label_col: str | None = None):
+def fractional_cover_paddocks_video(troi: Troi, paddocks_filepath: str | None = None, ds_fractional_cover=None, ds_sentinel2=None, fps: int = 4, min_size: int = 1080, label_col: str | None = None):
     """Encode a fractional-cover video with paddock outlines + labels.
 
     Args:
-        query: The :class:`borevitz_lab.query.Query`. Output is written to
-            ``{query.out_dir}/{paddocks_stem}_fractional_cover_paddocks.mp4``.
+        troi: The :class:`troi.troi.Troi`. Output is written to
+            ``{troi.out_dir}/{paddocks_stem}_fractional_cover_paddocks.mp4``.
         paddocks_filepath: Path to the paddocks file. If ``None``, uses
-            SAM paddocks from ``{query.tmp_dir}/{query.stub}_sam_paddocks.gpkg``.
+            SAM paddocks from ``{troi.tmp_dir}/{troi.stub}_sam_paddocks.gpkg``.
         ds_fractional_cover: Optional in-memory fractional cover dataset.
             If ``None``, opens (or generates, then opens)
-            ``Paths(query).fractional_cover``.
+            ``Paths(troi).fractional_cover``.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset, used only
             to read the rasterisation transform. If ``None``, opens
             the pysentinel2 cube.
@@ -47,16 +47,16 @@ def fractional_cover_paddocks_video(query: Query, paddocks_filepath: str | None 
 
     # Default to SAM paddocks if no filepath provided
     if paddocks_filepath is None:
-        paddocks_filepath = Paths(query).sam_paddocks
+        paddocks_filepath = Paths(troi).sam_paddocks
 
     out_stem = Path(paddocks_filepath).stem
     paddocks = load_user_paddocks(paddocks_filepath)
 
     if ds_fractional_cover is None:
-        if not os.path.exists(Paths(query).fractional_cover):
+        if not os.path.exists(Paths(troi).fractional_cover):
             from PaddockTS.FractionalCover.compute_fractional_cover import compute_fractional_cover
-            compute_fractional_cover(query)
-        ds = xr.open_zarr(Paths(query).fractional_cover, chunks=None, decode_coords="all")
+            compute_fractional_cover(troi)
+        ds = xr.open_zarr(Paths(troi).fractional_cover, chunks=None, decode_coords="all")
     else:
         ds = ds_fractional_cover
     n_times = ds.sizes['time']
@@ -69,7 +69,7 @@ def fractional_cover_paddocks_video(query: Query, paddocks_filepath: str | None 
     # rasterize boundaries once
     if ds_sentinel2 is None:
         from pysentinel2.cube import Cube
-        s2 = Cube(config=query.config).get_ds_query(query, clean=True)
+        s2 = Cube(config=troi.config).get_ds_troi(troi, clean=True)
     else:
         s2 = ds_sentinel2
 
@@ -98,8 +98,8 @@ def fractional_cover_paddocks_video(query: Query, paddocks_filepath: str | None 
     import subprocess
     import tempfile
 
-    os.makedirs(query.out_dir, exist_ok=True)
-    out_path = f'{query.out_dir}/{out_stem}_fractional_cover_paddocks.mp4'
+    os.makedirs(troi.out_dir, exist_ok=True)
+    out_path = f'{troi.out_dir}/{out_stem}_fractional_cover_paddocks.mp4'
 
     with tempfile.TemporaryDirectory() as tmpdir:
         for i in range(n_times):
@@ -146,12 +146,12 @@ def fractional_cover_paddocks_video(query: Query, paddocks_filepath: str | None 
 
 def test():
     from os.path import exists
-    from PaddockTS.utils import get_example_query
-    query = get_example_query()
-    if not exists(Paths(query).fractional_cover):
+    from PaddockTS.utils import get_example_troi
+    troi = get_example_troi()
+    if not exists(Paths(troi).fractional_cover):
         from PaddockTS.FractionalCover.compute_fractional_cover import compute_fractional_cover
-        compute_fractional_cover(query)
-    fractional_cover_paddocks_video(query)
+        compute_fractional_cover(troi)
+    fractional_cover_paddocks_video(troi)
 
 if __name__ == '__main__':
     test()

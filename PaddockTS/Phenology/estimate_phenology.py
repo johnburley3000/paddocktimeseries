@@ -38,7 +38,7 @@ def _override_xr_merge():
         phenolopy.xr.merge = _real_merge
 
 
-def estimate_phenology(query, ds_yearly=None, variable='NDVI', min_observations=25):
+def estimate_phenology(troi, ds_yearly=None, variable='NDVI', min_observations=25):
     """Compute per-paddock phenology metrics for each year.
 
     For each year in ``ds_yearly``, this:
@@ -53,7 +53,7 @@ def estimate_phenology(query, ds_yearly=None, variable='NDVI', min_observations=
        attaches the peak count.
 
     Args:
-        query: The :class:`borevitz_lab.query.Query`.
+        troi: The :class:`troi.troi.Troi`.
         ds_yearly: Optional ``{year: xarray.Dataset}`` mapping (typically
             from :func:`PaddockTS.Phenology.make_yearly_paddock_time_series`). If
             ``None``, built on demand. Each dataset must have a ``doy``
@@ -72,7 +72,7 @@ def estimate_phenology(query, ds_yearly=None, variable='NDVI', min_observations=
     """
     if ds_yearly is None:
         from PaddockTS.Phenology.make_yearly_paddock_time_series import make_yearly_paddock_time_series
-        ds_yearly = make_yearly_paddock_time_series(query)
+        ds_yearly = make_yearly_paddock_time_series(troi)
 
     results = {}
     for year, ds in ds_yearly.items():
@@ -124,10 +124,10 @@ def estimate_phenology(query, ds_yearly=None, variable='NDVI', min_observations=
 
 
 def test():
-    from PaddockTS.utils import get_example_query
+    from PaddockTS.utils import get_example_troi
 
-    query = get_example_query()
-    results = estimate_phenology(query)
+    troi = get_example_troi()
+    results = estimate_phenology(troi)
     for year, df in results.items():
         print(f'{year}: {df.columns.tolist()}')
 

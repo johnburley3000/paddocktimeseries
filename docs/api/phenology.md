@@ -43,10 +43,10 @@ edit the call to change).
 
 ```python
 from datetime import date
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.Phenology.estimate_phenology import estimate_phenology
 
-q = Query(
+q = Troi(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],
     start=date(2022, 1, 1),
     end=date(2024, 12, 31),

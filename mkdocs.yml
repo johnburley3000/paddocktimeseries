@@ -87,7 +87,7 @@ nav:
   - Pipeline: pipeline.md
   - API reference:
     - Overview: api/index.md
-    - Query & Config: api/query.md
+    - Troi & Config: api/troi.md
     - Sentinel-2 download: api/sentinel2.md
     - Spectral indices: api/spectral_indices.md
     - Fractional cover: api/fractional_cover.md

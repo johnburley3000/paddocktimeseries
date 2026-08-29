@@ -11,19 +11,19 @@ import numpy as np
 import xarray as xr
 import rioxarray
 from rasterio.features import rasterize
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.paths import Paths
 from .sentinel2_video import _to_rgb
 
 
-def sentinel2_video_with_paddocks(query: Query, paddocks_filepath: str | None = None, ds_sentinel2=None, fps: int = 4, min_size: int = 1080, label_col: str | None = None):
+def sentinel2_video_with_paddocks(troi: Troi, paddocks_filepath: str | None = None, ds_sentinel2=None, fps: int = 4, min_size: int = 1080, label_col: str | None = None):
     """Encode a true-colour Sentinel-2 video with paddock outlines + labels.
 
     Args:
-        query: The :class:`borevitz_lab.query.Query`. Output is written to
-            ``{query.out_dir}/{paddocks_stem}_sentinel2_paddocks.mp4``.
+        troi: The :class:`troi.troi.Troi`. Output is written to
+            ``{troi.out_dir}/{paddocks_stem}_sentinel2_paddocks.mp4``.
         paddocks_filepath: Path to the paddocks file. If ``None``, uses
-            SAM paddocks from ``{query.tmp_dir}/{query.stub}_sam_paddocks.gpkg``.
+            SAM paddocks from ``{troi.tmp_dir}/{troi.stub}_sam_paddocks.gpkg``.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset. If ``None``,
             the cloud-masked window is read from the pysentinel2 cube.
         fps: Frames per second. Default 4.
@@ -43,14 +43,14 @@ def sentinel2_video_with_paddocks(query: Query, paddocks_filepath: str | None = 
 
     # Default to SAM paddocks if no filepath provided
     if paddocks_filepath is None:
-        paddocks_filepath = Paths(query).sam_paddocks
+        paddocks_filepath = Paths(troi).sam_paddocks
 
     out_stem = Path(paddocks_filepath).stem
     paddocks = load_user_paddocks(paddocks_filepath)
 
     if ds_sentinel2 is None:
         from pysentinel2.cube import Cube
-        ds = Cube(config=query.config).get_ds_query(query, clean=True)
+        ds = Cube(config=troi.config).get_ds_troi(troi, clean=True)
     else:
         ds = ds_sentinel2
     n_times = ds.sizes['time']
@@ -86,8 +86,8 @@ def sentinel2_video_with_paddocks(query: Query, paddocks_filepath: str | None = 
     import subprocess
     import tempfile
 
-    os.makedirs(query.out_dir, exist_ok=True)
-    out_path = f'{query.out_dir}/{out_stem}_sentinel2_paddocks.mp4'
+    os.makedirs(troi.out_dir, exist_ok=True)
+    out_path = f'{troi.out_dir}/{out_stem}_sentinel2_paddocks.mp4'
 
     with tempfile.TemporaryDirectory() as tmpdir:
         for i in range(n_times):
@@ -133,9 +133,9 @@ def sentinel2_video_with_paddocks(query: Query, paddocks_filepath: str | None = 
 
 
 def test():
-    from PaddockTS.utils import get_example_query
-    query = get_example_query()
-    sentinel2_video_with_paddocks(query)
+    from PaddockTS.utils import get_example_troi
+    troi = get_example_troi()
+    sentinel2_video_with_paddocks(troi)
 
 if __name__ == '__main__':
     test()

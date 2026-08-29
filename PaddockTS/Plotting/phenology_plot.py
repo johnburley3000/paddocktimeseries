@@ -19,16 +19,16 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.paths import Paths
 
 
-def phenology_plot(query: Query, phenology_results: dict[int, pd.DataFrame] | None = None, ds_yearly: dict[int, xr.Dataset] | None = None, ds_paddockTS: xr.Dataset | None = None, variable: str = 'NDVI', paddocks_filepath: str | None = None, max_paddocks_per_page: int = 8, label_col: str | None = None) -> list[str]:
+def phenology_plot(troi: Troi, phenology_results: dict[int, pd.DataFrame] | None = None, ds_yearly: dict[int, xr.Dataset] | None = None, ds_paddockTS: xr.Dataset | None = None, variable: str = 'NDVI', paddocks_filepath: str | None = None, max_paddocks_per_page: int = 8, label_col: str | None = None) -> list[str]:
     """Plot per-paddock × per-year phenology curves with SoS / PoS / EoS markers.
 
     Args:
-        query: The :class:`borevitz_lab.query.Query`. Output is written to
-            ``{query.out_dir}/{paddocks_stem}_phenology.png``.
+        troi: The :class:`troi.troi.Troi`. Output is written to
+            ``{troi.out_dir}/{paddocks_stem}_phenology.png``.
         phenology_results: Optional ``{year: DataFrame}`` from
             :func:`PaddockTS.Phenology.estimate_phenology`. If ``None``,
             recomputed on demand using ``variable``.
@@ -43,7 +43,7 @@ def phenology_plot(query: Query, phenology_results: dict[int, pd.DataFrame] | No
             ``'NIRv'`` and ``'CFI'`` also work.
         paddocks_filepath: Path to the paddocks file. Used to derive
             the output filename stem. If ``None``, defaults to
-            ``{query.stub}_sam_paddocks``.
+            ``{troi.stub}_sam_paddocks``.
         max_paddocks_per_page: Maximum number of paddocks per output image.
             Default 8. Prevents images from becoming too tall with many
             paddocks.
@@ -55,18 +55,18 @@ def phenology_plot(query: Query, phenology_results: dict[int, pd.DataFrame] | No
     """
     import os
     from pathlib import Path
-    os.makedirs(query.out_dir, exist_ok=True)
+    os.makedirs(troi.out_dir, exist_ok=True)
 
     # Derive output filename stem from paddocks_filepath
     if paddocks_filepath is not None:
         out_stem = Path(paddocks_filepath).stem
     else:
-        out_stem = f'{query.stub}_sam_paddocks'
+        out_stem = f'{troi.stub}_sam_paddocks'
 
     # Build paddock label mapping
     if label_col is not None:
         from PaddockTS.utils import load_user_paddocks
-        label_filepath = paddocks_filepath if paddocks_filepath else Paths(query).sam_paddocks
+        label_filepath = paddocks_filepath if paddocks_filepath else Paths(troi).sam_paddocks
         gdf = load_user_paddocks(label_filepath)
         paddock_labels = dict(zip(gdf['paddock'].astype(str), gdf[label_col].astype(str)))
     else:
@@ -74,11 +74,11 @@ def phenology_plot(query: Query, phenology_results: dict[int, pd.DataFrame] | No
 
     if phenology_results is None:
         from PaddockTS.Phenology.estimate_phenology import estimate_phenology
-        phenology_results = estimate_phenology(query, ds_yearly=ds_yearly, variable=variable)
+        phenology_results = estimate_phenology(troi, ds_yearly=ds_yearly, variable=variable)
 
     if ds_yearly is None:
         from PaddockTS.Phenology.make_yearly_paddock_time_series import make_yearly_paddock_time_series
-        ds_yearly = make_yearly_paddock_time_series(query)
+        ds_yearly = make_yearly_paddock_time_series(troi)
 
     # Only plot years that have phenology results (some may be skipped due to insufficient data)
     years = sorted(set(ds_yearly.keys()) & set(phenology_results.keys()))
@@ -91,7 +91,7 @@ def phenology_plot(query: Query, phenology_results: dict[int, pd.DataFrame] | No
 
     # Clean up any existing phenology files for this stem
     import glob
-    for old_file in glob.glob(f'{query.out_dir}/{out_stem}_phenology*.png'):
+    for old_file in glob.glob(f'{troi.out_dir}/{out_stem}_phenology*.png'):
         os.remove(old_file)
 
     # Split paddocks into pages
@@ -180,7 +180,7 @@ def phenology_plot(query: Query, phenology_results: dict[int, pd.DataFrame] | No
         fig.tight_layout(rect=[0, 0, 1, 0.95])
 
         # Output filename always includes page number
-        out_path = f'{query.out_dir}/{out_stem}_phenology_p{page_idx + 1:02d}.png'
+        out_path = f'{troi.out_dir}/{out_stem}_phenology_p{page_idx + 1:02d}.png'
         plt.savefig(out_path, dpi=300)
         plt.close()
         print(f'Saved to {out_path}')
@@ -190,10 +190,10 @@ def phenology_plot(query: Query, phenology_results: dict[int, pd.DataFrame] | No
 
 
 def test():
-    from PaddockTS.utils import get_example_query
+    from PaddockTS.utils import get_example_troi
 
-    query = get_example_query()
-    phenology_plot(query, variable='NDVI')
+    troi = get_example_troi()
+    phenology_plot(troi, variable='NDVI')
 
 
 if __name__ == '__main__':

@@ -10,7 +10,7 @@ Three internal stages:
    Sentinel-2 stack using NDWI Fourier features. This emphasises
    stable field boundaries and suppresses transient noise (clouds,
    shadows, seasonal greenness). Written as a GeoTIFF at
-   `query.preseg_path`.
+   `troi.preseg_path`.
 2. **SAM mask generation** — feeds the presegmented image to
    [`segment-geospatial`](https://samgeo.gishub.org/) (`samgeo`).
    Default backbone is SAM ViT-H (`sam_vit_h_4b8939.pth`, ~2.4 GB)
@@ -22,7 +22,7 @@ Three internal stages:
    computes `area_ha` and isoperimetric `compactness = 4πA/L²`, drops
    polygons outside `[min_area_ha, max_area_ha]` or below
    `min_compactness`, sorts by area descending, and assigns 1-based
-   `paddock` IDs. Result written to `query.sam_paddocks_path`.
+   `paddock` IDs. Result written to `troi.sam_paddocks_path`.
 
 ---
 
@@ -30,10 +30,10 @@ Three internal stages:
 
 ```python
 from datetime import date
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.PaddockSegmentation.get_paddocks import get_paddocks
 
-q = Query(
+q = Troi(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],
     start=date(2024, 1, 1),
     end=date(2024, 12, 31),
@@ -94,7 +94,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pysentinel2.cube import Cube
 
-ds = Cube(config=q.config).get_ds_query(q, indices=('NDVI',))
+ds = Cube(config=q.config).get_ds_troi(q, indices=('NDVI',))
 ndvi_median = np.nanmedian(ds['NDVI'].values, axis=0)
 extent = [ds.x.min(), ds.x.max(), ds.y.min(), ds.y.max()]
 

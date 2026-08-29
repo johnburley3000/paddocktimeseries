@@ -1,18 +1,18 @@
 # Pipeline
 
-PaddockTS runs two pipelines in parallel from a single `Query`:
+PaddockTS runs two pipelines in parallel from a single `Troi`:
 
 - **Sentinel-2 → PaddockTS** — up to 21 stages producing paddock
   segmentation, time series, phenology, plots, and a stitched PDF
   report.
 - **Environmental** — 7 stages pulling terrain, climate, and soil data.
 
-`PaddockTS.get_outputs.get_outputs(query)` orchestrates both on two
+`PaddockTS.get_outputs.get_outputs(troi)` orchestrates both on two
 threads with a live `rich` dashboard.
 
 ```mermaid
 flowchart TD
-    Q["<b>Query</b><br/>bbox · dates · stub"] --> GO(["get_outputs(query)"])
+    Q["<b>Troi</b><br/>bbox · dates · stub"] --> GO(["get_outputs(troi)"])
 
     GO -->|"thread 1 · Sentinel-2 → PaddockTS"| D["Download + clean<br/>Sentinel-2"]
     D --> IDX["Spectral indices<br/>NDVI · CFI · NIRv · NDTI · CAI"]
@@ -46,11 +46,11 @@ flowchart TD
 
 Each stage is a plain Python function that:
 
-- takes the `Query` plus optionally a previous stage's in-memory
+- takes the `Troi` plus optionally a previous stage's in-memory
   output as a kwarg,
 - if that kwarg is missing, loads the previous output from disk (and
   cascades — generating it first if needed),
-- writes its own output to a deterministic path derived from `Query`,
+- writes its own output to a deterministic path derived from `Troi`,
 - touches a `_SUCCESS` marker **after** the data write completes; the
   marker is the cache-validity check on the next call.
 
@@ -103,8 +103,8 @@ stages, or no `paddocks_filepath` skips the user stages).
 
 Sentinel-2 comes from the machine-wide
 [`pysentinel2`](https://github.com/thestochasticman/pysentinel2) cube:
-`Cube.get_ds_query(query, clean=True)` downloads only the (day × chunk)
-cells no previous query has fetched, then applies cloud masking **on
+`Cube.get_ds_troi(troi, clean=True)` downloads only the (day × chunk)
+cells no previous troi has fetched, then applies cloud masking **on
 read**. Cleaning dilates the fmask cloud/shadow (and snow) mask by
 `buffer_px` to catch cloud-edge halos, and gates frames on
 `max_cloud_fraction` (contamination over *valid* pixels) and
@@ -124,7 +124,7 @@ Three internal steps:
    features. This collapses time into a representation that emphasises
    stable field boundaries and suppresses transient noise (clouds,
    shadows, seasonal greenness). Written as a GeoTIFF at
-   `Paths(query).preseg`.
+   `Paths(troi).preseg`.
 2. **SAM mask generation** — feeds the presegmented image to
    [`segment-geospatial`](https://samgeo.gishub.org/) (default
    backbone: SAM ViT-H, ~2.4 GB checkpoint auto-downloaded to
@@ -137,7 +137,7 @@ Three internal steps:
    `min_compactness`, sorts by area descending, and assigns 1-based
    `paddock` IDs.
 
-The final filtered GeoPackage lives at `Paths(query).sam_paddocks`.
+The final filtered GeoPackage lives at `Paths(troi).sam_paddocks`.
 
 ### Stages 11–14: Per-paddock time series
 
@@ -204,7 +204,7 @@ nothing requires `get_outputs`:
 
 ```python
 from PaddockTS.PaddockSegmentation.get_paddocks import get_paddocks
-gdf = get_paddocks(query)
+gdf = get_paddocks(troi)
 ```
 
 The function loads (and if necessary downloads) its own inputs from

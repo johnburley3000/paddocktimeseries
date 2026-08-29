@@ -1,4 +1,4 @@
-"""Launch the Streamlit viewer for a query's outputs.
+"""Launch the Streamlit viewer for a troi's outputs.
 
 One app, two launch modes:
 
@@ -22,10 +22,10 @@ def _is_ssh() -> bool:
 
 def serve(target, *, port: int = 8501, headless: bool | None = None,
           address: str | None = None):
-    """Launch the Streamlit viewer pointed at a query's output directory.
+    """Launch the Streamlit viewer pointed at a troi's output directory.
 
     Args:
-        target: a :class:`borevitz_lab.query.Query` or a path to an output
+        target: a :class:`troi.troi.Troi` or a path to an output
             directory.
         port: TCP port for the Streamlit server. Default ``8501``.
         headless: If ``None`` (default), auto-detect — headless when running

@@ -6,7 +6,7 @@ pressure). All variables are plotted as daily time-series.
 """
 
 from matplotlib import pyplot as plt
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from os import makedirs
 import pandas as pd
 
@@ -40,23 +40,23 @@ PLOT_GROUPS = {
 }
 
 
-def silo_plot(query: Query, groups: dict = None):
+def silo_plot(troi: Troi, groups: dict = None):
     """Plot SILO climate variables grouped by theme.
 
     Fetches the daily SILO series from the machine-wide ``pysilo`` store
     (downloading only what's missing) and writes one PNG per group to
-    ``{query.out_dir}/{query.stub}_silo_{group}.png``.
+    ``{troi.out_dir}/{troi.stub}_silo_{group}.png``.
 
     Args:
-        query: The :class:`borevitz_lab.query.Query`.
+        troi: The :class:`troi.troi.Troi`.
         groups: Optional override of the default grouping. If ``None``,
             uses :data:`PLOT_GROUPS` (temperature, rainfall, radiation,
             evapotranspiration, humidity).
     """
     from pysilo.store import Store
-    df = Store(config=query.config).get_df_query(query)
+    df = Store(config=troi.config).get_df_troi(troi)
     groups = groups or PLOT_GROUPS
-    makedirs(query.out_dir, exist_ok=True)
+    makedirs(troi.out_dir, exist_ok=True)
 
     for name, cfg in groups.items():
         cols = [c for c in cfg['vars'] if c in df.columns]
@@ -80,15 +80,15 @@ def silo_plot(query: Query, groups: dict = None):
         ax.set_ylabel(cfg['ylabel'])
         ax.set_title(cfg['title'])
         plt.tight_layout()
-        out_path = f'{query.out_dir}/{query.stub}_silo_{name}.png'
+        out_path = f'{troi.out_dir}/{troi.stub}_silo_{name}.png'
         plt.savefig(out_path, dpi=150)
         plt.close()
         print(f'  saved: {out_path}')
 
 
 def test():
-    from PaddockTS.utils import get_example_query
-    silo_plot(get_example_query())
+    from PaddockTS.utils import get_example_troi
+    silo_plot(get_example_troi())
 
 
 if __name__ == '__main__':

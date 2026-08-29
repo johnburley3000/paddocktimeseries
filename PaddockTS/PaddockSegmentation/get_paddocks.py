@@ -26,8 +26,8 @@ import geopandas as gpd
 from datetime import datetime
 from os import makedirs
 from os.path import exists
-from borevitz_lab.query import Query
-from borevitz_lab.config import config
+from troi.troi import Troi
+from troi.config import config
 from PaddockTS.paths import Paths
 from PaddockTS.PaddockSegmentation._presegment import presegment
 from PaddockTS.PaddockSegmentation.check_if_valid_paddocks_exists import check_if_valid_paddocks_exists
@@ -38,7 +38,7 @@ def _log(msg):
 
 
 def get_paddocks(
-    query: Query,
+    troi: Troi,
     ds_sentinel2=None,
     min_area_ha: float = 5,
     max_area_ha: float = 1500,
@@ -53,7 +53,7 @@ def get_paddocks(
     and other stubs over the same bbox x dates reuse the work.
 
     Args:
-        query: The :class:`borevitz_lab.query.Query`.
+        troi: The :class:`troi.troi.Troi`.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset. If ``None``,
             the cloud-masked window is read from the pysentinel2 cube.
         min_area_ha: Minimum polygon area in hectares; smaller polygons
@@ -72,9 +72,9 @@ def get_paddocks(
         geopandas.GeoDataFrame: One row per paddock, sorted by
         ``area_ha`` descending, with columns ``geometry``, ``area_ha``,
         ``compactness``, and a 1-based ``paddock`` integer ID. Also
-        written to ``Paths(query).sam_paddocks``.
+        written to ``Paths(troi).sam_paddocks``.
     """
-    paths = Paths(query)
+    paths = Paths(troi)
     # Cache hit: return previously-segmented paddocks for this (bbox, time)
     if check_if_valid_paddocks_exists(paths.sam_paddocks):
         _log(f"  Paddocks cache hit at {paths.sam_paddocks}")
@@ -83,7 +83,7 @@ def get_paddocks(
     # 1. Presegmentation image
     _log("  Preseg: computing NDWI Fourier features...")
     t0 = time.time()
-    preseg_path = presegment(query, ds_sentinel2=ds_sentinel2)
+    preseg_path = presegment(troi, ds_sentinel2=ds_sentinel2)
     _log(f"  Preseg: done ({time.time() - t0:.1f}s)")
 
     # 2. SAMGeo segmentation
@@ -185,13 +185,13 @@ def test():
     import xarray as xr
     import rioxarray
     import matplotlib.pyplot as plt
-    from PaddockTS.utils import get_example_query
+    from PaddockTS.utils import get_example_troi
 
-    query = get_example_query()
-    paddocks = get_paddocks(query, device="cpu")
+    troi = get_example_troi()
+    paddocks = get_paddocks(troi, device="cpu")
 
     from pysentinel2.cube import Cube
-    ds = Cube(config=query.config).get_ds_query(query, clean=True)
+    ds = Cube(config=troi.config).get_ds_troi(troi, clean=True)
     nir = ds["nbart_nir_1"].transpose("y", "x", "time").values.astype(np.float32)
     red = ds["nbart_red"].transpose("y", "x", "time").values.astype(np.float32)
     nir[nir == 0] = np.nan
@@ -202,7 +202,7 @@ def test():
     x, y = ds.x.values, ds.y.values
     extent = [x.min(), x.max(), y.min(), y.max()]
 
-    preseg = rioxarray.open_rasterio(Paths(query).preseg)
+    preseg = rioxarray.open_rasterio(Paths(troi).preseg)
 
     fig, axes = plt.subplots(1, 3, figsize=(18, 6))
 
@@ -220,7 +220,7 @@ def test():
     axes[2].axis("off")
 
     plt.tight_layout()
-    png_path = f"{query.tmp_dir}/{query.stub}_paddocks.png"
+    png_path = f"{troi.tmp_dir}/{troi.stub}_paddocks.png"
     plt.savefig(png_path, dpi=150, bbox_inches="tight")
     print(f"Saved plot to {png_path}")
     plt.show()

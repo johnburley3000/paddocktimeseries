@@ -18,7 +18,7 @@ ship inside the package as bundled `.tflite` files at
 most complex. `n=4` is the default and most accurate.
 
 Output is per-pixel per-timestep, persisted to
-`query.fractional_cover_path` as Zarr v2 (guarded by a `_SUCCESS`
+`troi.fractional_cover_path` as Zarr v2 (guarded by a `_SUCCESS`
 marker).
 
 ---
@@ -27,10 +27,10 @@ marker).
 
 ```python
 from datetime import date
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.FractionalCover import compute_fractional_cover
 
-q = Query(
+q = Troi(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],
     start=date(2024, 1, 1),
     end=date(2024, 3, 31),

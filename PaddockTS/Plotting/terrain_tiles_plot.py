@@ -23,7 +23,7 @@ import rasterio
 from rasterio.enums import Resampling
 from scipy.ndimage import gaussian_filter
 from PaddockTS.Plotting.terrain_derivatives import pysheds_accumulation, calculate_slope, calculate_twi
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from os import makedirs
 import tempfile
 import os
@@ -41,12 +41,12 @@ def _array_to_tif(array, ref_path, out_path, dtype=None):
         dst.write(array, 1)
 
 
-def terrain_tiles_plot(query: Query, ds_sentinel2=None, sigma: int = 10):
+def terrain_tiles_plot(troi: Troi, ds_sentinel2=None, sigma: int = 10):
     """Plot a 2 × 2 panel of elevation, flow accumulation, aspect, and slope.
 
     Args:
-        query: The :class:`borevitz_lab.query.Query`. Output is written to
-            ``{query.out_dir}/{query.stub}_topography.png``.
+        troi: The :class:`troi.troi.Troi`. Output is written to
+            ``{troi.out_dir}/{troi.stub}_topography.png``.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset, used as the
             spatial reference grid that the terrain tiles are
             reprojected onto. If ``None``, the cloud-masked window is
@@ -59,14 +59,14 @@ def terrain_tiles_plot(query: Query, ds_sentinel2=None, sigma: int = 10):
     Returns:
         str: Filesystem path of the generated PNG.
     """
-    makedirs(query.out_dir, exist_ok=True)
+    makedirs(troi.out_dir, exist_ok=True)
 
     # Elevation window from the machine-wide pycopdem store, materialised to
     # a temp GeoTIFF so the pysheds flow-analysis chain (which reads rasters)
     # is unchanged.
     import rioxarray  # noqa: F401 — registers the .rio accessor
     from pycopdem.store import Store as _DemStore
-    _dem_ds = _DemStore(config=query.config).get_ds_query(query)
+    _dem_ds = _DemStore(config=troi.config).get_ds_troi(troi)
     _dem_tmpdir = tempfile.mkdtemp()
     terrain_path = os.path.join(_dem_tmpdir, 'terrain.tif')
     _dem_da = _dem_ds['elevation']
@@ -108,7 +108,7 @@ def terrain_tiles_plot(query: Query, ds_sentinel2=None, sigma: int = 10):
         tif_paths[name] = path
 
     # Reference grid: the S2 pixel grid, reconstructed deterministically
-    # from the query bbox on pysentinel2's fixed global grid. No cube
+    # from the troi bbox on pysentinel2's fixed global grid. No cube
     # read — loading the cleaned window here materialises the full time
     # range a second time, concurrently with the S2 worker thread, which
     # OOMs 8 GB machines.
@@ -119,7 +119,7 @@ def terrain_tiles_plot(query: Query, ds_sentinel2=None, sigma: int = 10):
         # to every other product — chunk-snapped would pad the topography
         # ~3.6x beyond the bbox the rest of the report covers.
         ds_ref = xr_zeros(
-            s2grid.geobox_for_window(s2grid.tight_window_for_bbox(query.bbox)),
+            s2grid.geobox_for_window(s2grid.tight_window_for_bbox(troi.bbox)),
             dtype='uint8')
     else:
         ds_ref = ds_sentinel2.isel(time=0) if 'time' in ds_sentinel2.dims else ds_sentinel2
@@ -190,7 +190,7 @@ def terrain_tiles_plot(query: Query, ds_sentinel2=None, sigma: int = 10):
         ax.set_ylabel('Latitude')
 
     plt.tight_layout()
-    out_path = f'{query.out_dir}/{query.stub}_topography.png'
+    out_path = f'{troi.out_dir}/{troi.stub}_topography.png'
     plt.savefig(out_path, dpi=300)
     plt.close()
     print(f'  saved: {out_path}')
@@ -198,8 +198,8 @@ def terrain_tiles_plot(query: Query, ds_sentinel2=None, sigma: int = 10):
 
 
 def test():
-    from PaddockTS.utils import get_example_query
-    q = get_example_query()
+    from PaddockTS.utils import get_example_troi
+    q = get_example_troi()
     terrain_tiles_plot(q)
 
 

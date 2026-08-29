@@ -13,8 +13,8 @@ from os.path import exists
 
 import pandas as pd
 
-from borevitz_lab.config import Config, config as default_config
-from borevitz_lab.query import Query
+from troi.config import Config, config as default_config
+from troi.troi import Troi
 
 RENAME = {
     'Pg': 'Precipitation',
@@ -52,8 +52,8 @@ def daesim_forcing_df(lat: float, lon: float, start: date, end: date,
                       config: Config = default_config) -> pd.DataFrame:
     """Build the DAESIM forcing table for a coordinate and date range.
 
-    Query-agnostic — the data-assembly layer. Pipelines that speak
-    :class:`borevitz_lab.query.Query` use :func:`daesim_forcing`, which
+    Troi-agnostic — the data-assembly layer. Pipelines that speak
+    :class:`troi.troi.Troi` use :func:`daesim_forcing`, which
     adds stub-keyed CSV caching on top.
 
     Args:
@@ -95,24 +95,24 @@ def daesim_forcing_df(lat: float, lon: float, start: date, end: date,
     return df.reset_index()
 
 
-def daesim_forcing(query: Query) -> pd.DataFrame:
-    """DAESIM forcing for the centre of ``query.bbox``, cached as
-    ``{query.out_dir}/{query.stub}_DAESim_forcing.csv``.
+def daesim_forcing(troi: Troi) -> pd.DataFrame:
+    """DAESIM forcing for the centre of ``troi.bbox``, cached as
+    ``{troi.out_dir}/{troi.stub}_DAESim_forcing.csv``.
 
     The CSV cache makes the assembled *product* reproducible per stub;
     the underlying observations are cached machine-wide by the stores
     regardless, so even a cache miss here re-downloads nothing already
     held locally.
     """
-    makedirs(query.out_dir, exist_ok=True)
-    filename = get_filename(query)
+    makedirs(troi.out_dir, exist_ok=True)
+    filename = get_filename(troi)
 
     if exists(filename):
         print(f'  cached: {filename}')
         return pd.read_csv(filename, parse_dates=['date'])
 
-    df = daesim_forcing_df(query.centre_lat, query.centre_lon,
-                           query.start, query.end, config=query.config)
+    df = daesim_forcing_df(troi.centre_lat, troi.centre_lon,
+                           troi.start, troi.end, config=troi.config)
     df.to_csv(filename, index=False)
     print(f'  saved: {filename} ({len(df)} days)')
     return df
@@ -123,7 +123,7 @@ def test():
     import tempfile
     tmpdir = tempfile.mkdtemp(prefix='daesim_forcing_test_')
     cfg = Config(out_dir=tmpdir, tmp_dir=tmpdir, email=default_config.email)
-    q = Query(
+    q = Troi(
         bbox=[148.36265, -33.52606, 148.38265, -33.50606],
         start=date(2023, 1, 1), end=date(2023, 12, 31),
         stub='daesim_forcing_test', config=cfg,

@@ -17,7 +17,7 @@ from scipy.interpolate import PchipInterpolator
 from scipy.signal import savgol_filter
 
 
-def make_smoothed_paddock_time_series(query, ds_paddockTS=None, paddocks_filepath=None, days=10, window_length=7, polyorder=2):
+def make_smoothed_paddock_time_series(troi, ds_paddockTS=None, paddocks_filepath=None, days=10, window_length=7, polyorder=2):
     """Resample-then-interpolate-then-smooth all time-dependent variables.
 
     Pipeline applied to each paddock × variable series:
@@ -32,12 +32,12 @@ def make_smoothed_paddock_time_series(query, ds_paddockTS=None, paddocks_filepat
        ``{paddocks_filepath stem}_timeseries_smoothed.zarr``.
 
     Args:
-        query: The :class:`borevitz_lab.query.Query`.
+        troi: The :class:`troi.troi.Troi`.
         ds_paddockTS: Optional in-memory paddockTS dataset. If ``None``,
             opens (or generates, then opens) the cached timeseries zarr.
         paddocks_filepath: Path to the paddocks GeoPackage. Used to derive
             the timeseries zarr path. If ``None``, defaults to
-            ``Paths(query).sam_paddocks``.
+            ``Paths(troi).sam_paddocks``.
         days: Resampling cadence in days. Default 10.
         window_length: Savitzky-Golay window size in number of resampled
             samples. Coerced to the next odd integer if even and clipped
@@ -59,15 +59,15 @@ def make_smoothed_paddock_time_series(query, ds_paddockTS=None, paddocks_filepat
 
     if paddocks_filepath is None:
         from PaddockTS.paths import Paths
-        paddocks_filepath = Paths(query).sam_paddocks
+        paddocks_filepath = Paths(troi).sam_paddocks
 
     paddocks_path = Path(paddocks_filepath)
-    timeseries_zarr = f'{query.tmp_dir}/{paddocks_path.stem}_timeseries.zarr'
+    timeseries_zarr = f'{troi.tmp_dir}/{paddocks_path.stem}_timeseries.zarr'
 
     if ds_paddockTS is None:
         if not check_if_valid_zarr_exists(timeseries_zarr):
             from PaddockTS.Phenology.make_paddock_time_series import make_paddock_time_series
-            make_paddock_time_series(query, paddocks_filepath=paddocks_filepath)
+            make_paddock_time_series(troi, paddocks_filepath=paddocks_filepath)
         ds_paddockTS = xr.open_zarr(timeseries_zarr, chunks=None, decode_coords='all')
 
     ds = ds_paddockTS
@@ -133,8 +133,8 @@ def make_smoothed_paddock_time_series(query, ds_paddockTS=None, paddocks_filepat
         if c not in ds_new.coords:
             ds_new = ds_new.assign_coords({c: ds[c]})
 
-    smoothed_path = f'{query.tmp_dir}/{paddocks_path.stem}_timeseries_smoothed.zarr'
-    makedirs(query.tmp_dir, exist_ok=True)
+    smoothed_path = f'{troi.tmp_dir}/{paddocks_path.stem}_timeseries_smoothed.zarr'
+    makedirs(troi.tmp_dir, exist_ok=True)
     timestamp = datetime.utcnow().isoformat() + 'Z'
     ds_new = ds_new.assign_attrs(smoothed_computed_at=timestamp)
     ds_new.to_zarr(smoothed_path, mode='w', zarr_format=2)
@@ -145,10 +145,10 @@ def make_smoothed_paddock_time_series(query, ds_paddockTS=None, paddocks_filepat
 
 
 def test():
-    from PaddockTS.utils import get_example_query
+    from PaddockTS.utils import get_example_troi
 
-    query = get_example_query()
-    smoothed = make_smoothed_paddock_time_series(query)
+    troi = get_example_troi()
+    smoothed = make_smoothed_paddock_time_series(troi)
     print(smoothed)
     print(f'Time steps: {smoothed.sizes["time"]}')
 

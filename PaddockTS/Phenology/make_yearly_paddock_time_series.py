@@ -37,7 +37,7 @@ def split_paddock_time_series_by_year(ds):
         datasets_by_year[int(year)] = ds_year
     return datasets_by_year
 
-def make_yearly_paddock_time_series(query, ds_paddockTS=None, paddocks_filepath=None):
+def make_yearly_paddock_time_series(troi, ds_paddockTS=None, paddocks_filepath=None):
     """Persist one Zarr per year and return the same data as a dict.
 
     Loads the paddockTS Zarr if not provided, calls
@@ -45,13 +45,13 @@ def make_yearly_paddock_time_series(query, ds_paddockTS=None, paddocks_filepath=
     Zarr v2 to ``{paddocks_filepath stem}_timeseries_{year}.zarr``.
 
     Args:
-        query: The :class:`borevitz_lab.query.Query`.
+        troi: The :class:`troi.troi.Troi`.
         ds_paddockTS: Optional in-memory paddockTS dataset (typically the
             smoothed series). If ``None``, opens (or generates, then
             opens) the cached smoothed timeseries zarr.
         paddocks_filepath: Path to the paddocks GeoPackage. Used to derive
             the timeseries zarr path. If ``None``, defaults to
-            ``Paths(query).sam_paddocks``.
+            ``Paths(troi).sam_paddocks``.
 
     Returns:
         dict[int, xarray.Dataset]: Mapping ``{year: ds_year}``. Each
@@ -64,23 +64,23 @@ def make_yearly_paddock_time_series(query, ds_paddockTS=None, paddocks_filepath=
 
     if paddocks_filepath is None:
         from PaddockTS.paths import Paths
-        paddocks_filepath = Paths(query).sam_paddocks
+        paddocks_filepath = Paths(troi).sam_paddocks
 
     paddocks_path = Path(paddocks_filepath)
-    timeseries_zarr = f'{query.tmp_dir}/{paddocks_path.stem}_timeseries_smoothed.zarr'
+    timeseries_zarr = f'{troi.tmp_dir}/{paddocks_path.stem}_timeseries_smoothed.zarr'
 
     if ds_paddockTS is None:
         if not check_if_valid_zarr_exists(timeseries_zarr):
             from PaddockTS.Phenology.make_smoothed_paddock_time_series import make_smoothed_paddock_time_series
-            make_smoothed_paddock_time_series(query, paddocks_filepath=paddocks_filepath)
+            make_smoothed_paddock_time_series(troi, paddocks_filepath=paddocks_filepath)
         ds_paddockTS = xr.open_zarr(timeseries_zarr, chunks=None, decode_coords='all')
 
     datasets_by_year = split_paddock_time_series_by_year(ds_paddockTS)
 
-    makedirs(query.tmp_dir, exist_ok=True)
+    makedirs(troi.tmp_dir, exist_ok=True)
     timestamp = datetime.utcnow().isoformat() + 'Z'
     for year, ds_year in datasets_by_year.items():
-        year_path = f'{query.tmp_dir}/{paddocks_path.stem}_timeseries_{year}.zarr'
+        year_path = f'{troi.tmp_dir}/{paddocks_path.stem}_timeseries_{year}.zarr'
         ds_year = ds_year.assign_attrs(yearly_split_computed_at=timestamp)
         ds_year.to_zarr(year_path, mode='w', zarr_format=2)
         with open(f'{year_path}/_SUCCESS', 'w') as f:
@@ -91,10 +91,10 @@ def make_yearly_paddock_time_series(query, ds_paddockTS=None, paddocks_filepath=
 
 
 def test():
-    from PaddockTS.utils import get_example_query
+    from PaddockTS.utils import get_example_troi
 
-    query = get_example_query()
-    yearly = make_yearly_paddock_time_series(query)
+    troi = get_example_troi()
+    yearly = make_yearly_paddock_time_series(troi)
     for year, ds in yearly.items():
         print(f'{year}: {ds.sizes["time"]} time steps, doy range {int(ds.doy.min())}-{int(ds.doy.max())}')
 

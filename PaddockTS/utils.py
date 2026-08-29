@@ -1,4 +1,4 @@
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from datetime import date
 from os.path import exists
 from urllib import request
@@ -53,14 +53,14 @@ def load_user_paddocks(paddocks_filepath: str):
     return paddocks
 
 
-get_example_query = lambda: Query(
+get_example_troi = lambda: Troi(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],
     start=date(2020, 1, 1),
     end=date(2021, 12, 31),
     stub='RANDOM_PADDOCKTS_QUERY_2'
 )
 
-get_example_query2 = lambda: Query.from_lat_lon(
+get_example_troi2 = lambda: Troi.from_lat_lon(
     -35.098087,
     148.929983,
     2,
@@ -69,7 +69,7 @@ get_example_query2 = lambda: Query.from_lat_lon(
     stub='EXAMPLE_2'
 )
 
-get_example_query2 = lambda: Query.from_lat_lon(
+get_example_troi2 = lambda: Troi.from_lat_lon(
     -35.098087,
     148.929983,
     2,

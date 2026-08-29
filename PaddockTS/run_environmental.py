@@ -8,7 +8,7 @@ from rich.live import Live
 from rich.table import Table
 from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn
 from rich.console import Console, Group
-from borevitz_lab.query import Query
+from troi.troi import Troi
 
 _console = Console(stderr=True)
 
@@ -48,8 +48,8 @@ def _make_table(statuses, times):
     return table
 
 
-def _run_env_steps(query, statuses, times, log, concurrent, update_callback=None):
-    os.makedirs(query.tmp_dir, exist_ok=True)
+def _run_env_steps(troi, statuses, times, log, concurrent, update_callback=None):
+    os.makedirs(troi.tmp_dir, exist_ok=True)
     step_errors = []
     for i in range(len(STEPS)):
         statuses[i] = 'running'
@@ -60,49 +60,49 @@ def _run_env_steps(query, statuses, times, log, concurrent, update_callback=None
             with redirect_stdout(log):
                 if i == 0:
                     from pycopdem.store import Store as _DemStore
-                    _DemStore(config=query.config).fill_query(query)
+                    _DemStore(config=troi.config).fill_troi(troi)
 
                 elif i == 1:
                     from pyozwald.store import Store as _OzStore
-                    _OzStore(config=query.config).fill_query(query, cadence='daily')
+                    _OzStore(config=troi.config).fill_troi(troi, cadence='daily')
 
                 elif i == 2:
-                    if not query.config.email:
+                    if not troi.config.email:
                         statuses[i] = 'skipped'
                         times[i] = time.time() - t0
                         if update_callback:
                             update_callback()
                         continue
                     from pysilo.store import Store as _SiloStore
-                    _SiloStore(config=query.config).fill_query(query)
+                    _SiloStore(config=troi.config).fill_troi(troi)
 
                 elif i == 3:
-                    if not query.config.tern_api_key:
+                    if not troi.config.tern_api_key:
                         statuses[i] = 'skipped'
                         times[i] = time.time() - t0
                         if update_callback:
                             update_callback()
                         continue
                     from pyslga.store import Store as _SlgaStore
-                    _SlgaStore(config=query.config).fill_query(query)
+                    _SlgaStore(config=troi.config).fill_troi(troi)
 
                 elif i == 4:
                     from PaddockTS.daesim_forcing import daesim_forcing
-                    daesim_forcing(query)
+                    daesim_forcing(troi)
 
                 elif i == 5:
                     from PaddockTS.Plotting.ozwald_plot import ozwald_daily_plot
-                    ozwald_daily_plot(query)
+                    ozwald_daily_plot(troi)
 
                 elif i == 6:
-                    if not query.config.email:
+                    if not troi.config.email:
                         statuses[i] = 'skipped'
                         times[i] = time.time() - t0
                         if update_callback:
                             update_callback()
                         continue
                     from PaddockTS.Plotting.silo_plot import silo_plot
-                    silo_plot(query)
+                    silo_plot(troi)
 
                 elif i == 7:
                     if concurrent:
@@ -113,7 +113,7 @@ def _run_env_steps(query, statuses, times, log, concurrent, update_callback=None
                         if update_callback:
                             update_callback()
                     from PaddockTS.Plotting.terrain_tiles_plot import terrain_tiles_plot
-                    terrain_tiles_plot(query)
+                    terrain_tiles_plot(troi)
 
             statuses[i] = 'done'
         except Exception as e:
@@ -132,7 +132,7 @@ def _run_env_steps(query, statuses, times, log, concurrent, update_callback=None
         raise step_errors[0][1]
 
 
-def run_environmental(query: Query, reload: bool = False, concurrent: bool = False):
+def run_environmental(troi: Troi, reload: bool = False, concurrent: bool = False):
     """Download environmental data and produce plots.
 
     Parameters
@@ -144,10 +144,10 @@ def run_environmental(query: Query, reload: bool = False, concurrent: bool = Fal
         available (for when running concurrently with sentinel2_to_paddockTS).
     """
     if reload:
-        if exists(query.tmp_dir):
-            shutil.rmtree(query.tmp_dir)
-        if exists(query.out_dir):
-            shutil.rmtree(query.out_dir)
+        if exists(troi.tmp_dir):
+            shutil.rmtree(troi.tmp_dir)
+        if exists(troi.out_dir):
+            shutil.rmtree(troi.out_dir)
 
     statuses = ['pending'] * len(STEPS)
     times = [None] * len(STEPS)
@@ -161,20 +161,20 @@ def run_environmental(query: Query, reload: bool = False, concurrent: bool = Fal
     )
     task_id = progress.add_task('Environmental', total=len(STEPS))
 
-    os.makedirs(query.tmp_dir, exist_ok=True)
-    log = open(f'{query.tmp_dir}/{query.stub}_environmental.log', 'w')
+    os.makedirs(troi.tmp_dir, exist_ok=True)
+    log = open(f'{troi.tmp_dir}/{troi.stub}_environmental.log', 'w')
 
     with Live(Group(_make_table(statuses, times), progress), console=_console, refresh_per_second=4) as live:
         def update_display():
             progress.update(task_id, completed=sum(1 for s in statuses if s in ['done', '[red]error[/red]']))
             live.update(Group(_make_table(statuses, times), progress))
 
-        _run_env_steps(query, statuses, times, log, concurrent, update_callback=update_display)
+        _run_env_steps(troi, statuses, times, log, concurrent, update_callback=update_display)
 
     log.close()
 
 
 if __name__ == '__main__':
     import sys
-    from PaddockTS.utils import get_example_query
-    run_environmental(get_example_query(), reload='--reload' in sys.argv)
+    from PaddockTS.utils import get_example_troi
+    run_environmental(get_example_troi(), reload='--reload' in sys.argv)

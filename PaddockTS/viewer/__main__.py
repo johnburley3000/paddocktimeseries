@@ -1,9 +1,9 @@
 """``python -m PaddockTS.viewer <output_dir> [port]`` — launch the viewer.
 
-For a Query, prefer the Python API::
+For a Troi, prefer the Python API::
 
     from PaddockTS.viewer import serve
-    serve(query)
+    serve(troi)
 """
 import sys
 

@@ -2,7 +2,7 @@
 
 Produces one page per paddock (largest area first), so each paddock
 starts on a fresh page and can be compared across years. Rows are the
-years in the query; columns are 48 evenly-spaced slots across the year
+years in the troi; columns are 48 evenly-spaced slots across the year
 (4 per month). Each cell shows the Sentinel-2 RGB thumbnail of that
 paddock at the observation closest to the slot's day-of-year, with
 non-paddock pixels masked black.
@@ -22,7 +22,7 @@ at ~13 pt in the previous PIL-composited version.
 Public entry points:
 
 - :func:`calendar_plot` — saves one PNG per paddock (matplotlib raster
-  output) under ``query.out_dir``.
+  output) under ``troi.out_dir``.
 - :func:`iter_calendar_figures` — generator yielding ``(paddock_id,
   fig)`` tuples without writing anything to disk. Used by
   :mod:`PaddockTS.Plotting.make_pdf` to embed pages as vector-text PDF
@@ -41,7 +41,7 @@ import xarray as xr
 import matplotlib.pyplot as plt
 from rasterio.features import rasterize
 
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.paths import Paths
 
 
@@ -85,10 +85,10 @@ def _to_rgb(ds, time_idx):
 _CALENDAR_BANDS = ('nbart_red', 'nbart_green', 'nbart_blue')
 
 
-def _iter_year_datasets(query: Query, ds_sentinel2):
+def _iter_year_datasets(troi: Troi, ds_sentinel2):
     """Yield ``(year, cleaned RGB dataset)`` one year at a time.
 
-    Materialising the full query window at once is a memory hazard: an
+    Materialising the full troi window at once is a memory hazard: an
     8-year, 11-band window is several GB after cleaning promotes to
     float, which OOM-kills 8 GB machines. Reading per year and only the
     RGB bands the calendar uses bounds the peak to a few hundred MB.
@@ -105,16 +105,16 @@ def _iter_year_datasets(query: Query, ds_sentinel2):
 
     from datetime import date as _date
     from pysentinel2.cube import Cube
-    cube = Cube(config=query.config)
-    for year in range(query.start.year, query.end.year + 1):
-        y0 = max(query.start, _date(year, 1, 1))
-        y1 = min(query.end, _date(year, 12, 31))
-        ds_year = cube.get_ds(query.bbox, y0, y1, clean=True, bands=_CALENDAR_BANDS)
+    cube = Cube(config=troi.config)
+    for year in range(troi.start.year, troi.end.year + 1):
+        y0 = max(troi.start, _date(year, 1, 1))
+        y1 = min(troi.end, _date(year, 12, 31))
+        ds_year = cube.get_ds(troi.bbox, y0, y1, clean=True, bands=_CALENDAR_BANDS)
         if ds_year.sizes['time']:
             yield int(year), ds_year
 
 
-def _prepare_thumbnails(query: Query, paddocks_filepath: str,
+def _prepare_thumbnails(troi: Troi, paddocks_filepath: str,
                         ds_sentinel2, thumb_size: int):
     """Compute the per-paddock thumbnails once, reused across all pages.
 
@@ -143,10 +143,10 @@ def _prepare_thumbnails(query: Query, paddocks_filepath: str,
 
     # Years stream through one at a time (see _iter_year_datasets); the
     # first year supplies the grid, which is identical across years.
-    year_iter = _iter_year_datasets(query, ds_sentinel2)
+    year_iter = _iter_year_datasets(troi, ds_sentinel2)
     first = next(year_iter, None)
     if first is None:
-        raise ValueError('No Sentinel-2 observations in the query window.')
+        raise ValueError('No Sentinel-2 observations in the troi window.')
     ref = first[1]
 
     paddocks = load_user_paddocks(paddocks_filepath)
@@ -413,14 +413,14 @@ def _build_paddock_figure(stub: str, paddock_id: int, label_text: str,
 
 # --- public API ------------------------------------------------------------
 
-def iter_calendar_figures(query: Query, paddocks_filepath: str | None = None,
+def iter_calendar_figures(troi: Troi, paddocks_filepath: str | None = None,
                           ds_sentinel2: xr.Dataset | None = None,
                           thumb_size: int = 64,
                           label_col: str | None = None,
                           ) -> Iterator[tuple[int, plt.Figure]]:
     """Yield ``(paddock_id, fig)`` — one page per paddock.
 
-    Each figure shows that paddock across every year in the query (years
+    Each figure shows that paddock across every year in the troi (years
     as rows, months as columns), so the same paddock can be compared
     year-over-year, and every paddock starts on a fresh page. Paddocks
     are yielded largest-area first.
@@ -431,12 +431,12 @@ def iter_calendar_figures(query: Query, paddocks_filepath: str | None = None,
     consuming each Figure.
     """
     if paddocks_filepath is None:
-        paddocks_filepath = Paths(query).sam_paddocks
+        paddocks_filepath = Paths(troi).sam_paddocks
 
     # ds_sentinel2 may be None: _prepare_thumbnails then streams the
     # cleaned RGB window from the cube one year at a time (memory-bounded).
     paddocks_sorted, paddock_ids, years_data = _prepare_thumbnails(
-        query, paddocks_filepath, ds_sentinel2, thumb_size,
+        troi, paddocks_filepath, ds_sentinel2, thumb_size,
     )
     years_sorted = sorted(years_data)
 
@@ -447,7 +447,7 @@ def iter_calendar_figures(query: Query, paddocks_filepath: str | None = None,
         else:
             label_text = f'Paddock {row["paddock"]}'
         fig = _build_paddock_figure(
-            stub=query.stub, paddock_id=pid, label_text=label_text,
+            stub=troi.stub, paddock_id=pid, label_text=label_text,
             area_ha=float(row['area_ha']),
             years_sorted=years_sorted, years_data=years_data,
             thumb_size=thumb_size,
@@ -455,24 +455,24 @@ def iter_calendar_figures(query: Query, paddocks_filepath: str | None = None,
         yield pid, fig
 
 
-def calendar_plot(query: Query, ds_sentinel2: xr.Dataset | None = None,
+def calendar_plot(troi: Troi, ds_sentinel2: xr.Dataset | None = None,
                   paddocks_filepath: str | None = None,
                   thumb_size: int = 64,
                   label_col: str | None = None) -> list[str]:
     """Render and save one calendar PNG per paddock.
 
-    Each PNG shows that paddock across every year in the query. They are
+    Each PNG shows that paddock across every year in the troi. They are
     matplotlib-rasterized at 200 dpi for standalone viewing; for the PDF
     report, :mod:`PaddockTS.Plotting.make_pdf` calls
     :func:`iter_calendar_figures` directly so the text stays vector.
 
     Args:
-        query: The :class:`borevitz_lab.query.Query`.
+        troi: The :class:`troi.troi.Troi`.
         ds_sentinel2: Optional in-memory cleaned Sentinel-2 dataset. If
             ``None``, opened (or downloaded + cleaned) from
             the pysentinel2 cube (cloud-masked, on read).
         paddocks_filepath: Path to the paddocks file. If ``None``,
-            defaults to ``Paths(query).sam_paddocks``.
+            defaults to ``Paths(troi).sam_paddocks``.
         thumb_size: Edge length of each thumbnail in pixels (input
             resolution; matplotlib resizes for display). Default 64.
         label_col: Column in the paddocks GeoDataFrame to use for the
@@ -482,21 +482,21 @@ def calendar_plot(query: Query, ds_sentinel2: xr.Dataset | None = None,
         list[str]: Paths of the generated PNGs (one per paddock).
     """
     if paddocks_filepath is None:
-        paddocks_filepath = Paths(query).sam_paddocks
+        paddocks_filepath = Paths(troi).sam_paddocks
 
     out_stem = Path(paddocks_filepath).stem
-    os.makedirs(query.out_dir, exist_ok=True)
+    os.makedirs(troi.out_dir, exist_ok=True)
 
     # Clean up any existing calendar PNGs for this stem first.
-    for old in glob.glob(f'{query.out_dir}/{out_stem}_calendar_*.png'):
+    for old in glob.glob(f'{troi.out_dir}/{out_stem}_calendar_*.png'):
         os.remove(old)
 
     out_paths: list[str] = []
     for pid, fig in iter_calendar_figures(
-        query, paddocks_filepath=paddocks_filepath, ds_sentinel2=ds_sentinel2,
+        troi, paddocks_filepath=paddocks_filepath, ds_sentinel2=ds_sentinel2,
         thumb_size=thumb_size, label_col=label_col,
     ):
-        out_path = f'{query.out_dir}/{out_stem}_calendar_p{pid:02d}.png'
+        out_path = f'{troi.out_dir}/{out_stem}_calendar_p{pid:02d}.png'
         fig.savefig(out_path, dpi=200)
         plt.close(fig)
         print(f'Saved to {out_path}')
@@ -505,9 +505,9 @@ def calendar_plot(query: Query, ds_sentinel2: xr.Dataset | None = None,
 
 
 def test():
-    from PaddockTS.utils import get_example_query
-    query = get_example_query()
-    calendar_plot(query)
+    from PaddockTS.utils import get_example_troi
+    troi = get_example_troi()
+    calendar_plot(troi)
 
 
 if __name__ == '__main__':

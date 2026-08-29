@@ -1,7 +1,7 @@
 # Getting started
 
 This page takes you from a fresh checkout to a first paddock-scale
-analysis. It covers installation, configuration, constructing a `Query`,
+analysis. It covers installation, configuration, constructing a `Troi`,
 running the full pipeline, and the layout of the outputs on disk.
 
 ## Requirements
@@ -28,17 +28,17 @@ A single environment file installs the geospatial native stack (GDAL,
 PROJ, GEOS), the ML stack (PyTorch, TensorFlow), and PaddockTS itself.
 
 PaddockTS depends on the shared
-[`borevitz-lab`](https://github.com/thestochasticman/borevitz_lab)
-core package (the `Query` / `Config` primitives) — clone it alongside
+[`troi`](https://github.com/thestochasticman/troi)
+core package (the `Troi` / `Config` primitives) — clone it alongside
 and install it first.
 
 ```bash
-git clone https://github.com/thestochasticman/borevitz_lab.git
+git clone https://github.com/thestochasticman/troi.git
 git clone https://github.com/thestochasticman/paddocktimeseries.git
 cd paddocktimeseries
-conda env update -n borevitz_lab -f environment.yml
-conda activate borevitz_lab
-pip install -e ../borevitz_lab
+conda env update -n troi -f environment.yml
+conda activate troi
+pip install -e ../troi
 pip install -e .
 ```
 
@@ -48,31 +48,31 @@ If you already have GDAL, PROJ, GEOS, and (optionally) CUDA installed
 system-wide:
 
 ```bash
-pip install -e ../borevitz_lab
+pip install -e ../troi
 pip install -e .
 ```
 
 Confirm the install:
 
 ```bash
-python -c "from borevitz_lab.query import Query; print(Query.__module__)"
-# -> borevitz_lab.query
+python -c "from troi.troi import Troi; print(Troi.__module__)"
+# -> troi.troi
 ```
 
 ## Configure
 
-PaddockTS reads optional configuration from `~/.config/BorevitzLab.json`.
+PaddockTS reads optional configuration from `~/.config/Troi.json`.
 Defaults are sensible for a single-user laptop, so this step is
 optional — only the SILO and SLGA stages require credentials.
 
 | Setting | Default | Required for |
 |---|---|---|
-| `out_dir` | `~/Documents/BorevitzLab-Outputs` | final outputs |
-| `tmp_dir` | `~/Downloads/BorevitzLab-Tmp` | intermediates + caches |
+| `out_dir` | `~/Documents/Troi-Outputs` | final outputs |
+| `tmp_dir` | `~/Downloads/Troi-Tmp` | intermediates + caches |
 | `email` | unset | SILO climate stage |
 | `tern_api_key` | unset | SLGA soils stage |
 
-Example `~/.config/BorevitzLab.json`:
+Example `~/.config/Troi.json`:
 
 ```json
 {
@@ -84,8 +84,8 @@ Example `~/.config/BorevitzLab.json`:
 ```
 
 Settings can also come from environment variables
-(`BOREVITZ_LAB_OUTDIR`, `BOREVITZ_LAB_TMPDIR`, `BOREVITZ_LAB_EMAIL`,
-`BOREVITZ_LAB_TERN_KEY`).
+(`TROI_OUTDIR`, `TROI_TMPDIR`, `TROI_EMAIL`,
+`TROI_TERN_KEY`).
 
 - **SILO email** is registered with the upstream service; any working
   address is fine.
@@ -96,12 +96,12 @@ The Sentinel-2 → PaddockTS chain itself works without any credentials.
 ### Pass a custom config from code
 
 If you'd rather not write to `~/.config`, build a `Config` and pass it
-to your `Query`:
+to your `Troi`:
 
 ```python
 from datetime import date
-from borevitz_lab.config import Config
-from borevitz_lab.query import Query
+from troi.config import Config
+from troi.troi import Troi
 
 cfg = Config(
     out_dir="/data/paddockts/outputs",
@@ -110,7 +110,7 @@ cfg = Config(
     tern_api_key="<your-tern-key>",
 )
 
-query = Query(
+troi = Troi(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],
     start=date(2020, 1, 1),
     end=date(2021, 12, 31),
@@ -119,18 +119,18 @@ query = Query(
 )
 ```
 
-## Construct a `Query`
+## Construct a `Troi`
 
-`Query` is the immutable, content-addressed object that flows through
+`Troi` is the immutable, content-addressed object that flows through
 every stage. There are three ways to build one.
 
 ### From a bounding box
 
 ```python
 from datetime import date
-from borevitz_lab.query import Query
+from troi.troi import Troi
 
-query = Query(
+troi = Troi(
     bbox=[148.36265, -33.52606, 148.38265, -33.50606],  # [W, S, E, N]
     start=date(2020, 1, 1),
     end=date(2021, 12, 31),
@@ -145,7 +145,7 @@ share their downloaded Sentinel-2 cube.
 ### From a centre point + buffer in km
 
 ```python
-query = Query.from_lat_lon(
+troi = Troi.from_lat_lon(
     lat=-35.098087,
     lon=148.929983,
     buffer_km=2.0,            # ±2 km from centre on each axis (≈ 4×4 km AOI)
@@ -160,7 +160,7 @@ query = Query.from_lat_lon(
 If you already have field boundaries (GeoPackage, Shapefile, or GeoJSON):
 
 ```python
-query = Query.build_from_paddocks(
+troi = Troi.build_from_paddocks(
     paddocks_filepath="/path/to/paddocks.gpkg",
     start=date(2024, 1, 1),
     end=date(2024, 12, 31),
@@ -176,7 +176,7 @@ The bbox is the envelope of all geometries (reprojected to EPSG:4326).
 If you omit `stub`, a SHA-256 hash of `(bbox, start, end)` is used —
 two queries with identical inputs share outputs on disk. Pass an
 explicit string for human-readable filenames. Stubs are registered in
-`{config.hash_file}` and must uniquely identify a `Query`; reusing a
+`{config.hash_file}` and must uniquely identify a `Troi`; reusing a
 stub for a different `(bbox, start, end)` raises `ValueError`.
 
 ## Run the pipeline
@@ -190,16 +190,16 @@ dashboard:
 ```python
 from PaddockTS.get_outputs import get_outputs
 
-get_outputs(query)
+get_outputs(troi)
 ```
 
 Common options:
 
 ```python
-get_outputs(query, reload=True)        # delete tmp_dir + out_dir, then rerun
-get_outputs(query, show_log=True)      # render a tail-of-log panel
+get_outputs(troi, reload=True)        # delete tmp_dir + out_dir, then rerun
+get_outputs(troi, show_log=True)      # render a tail-of-log panel
 get_outputs(                           # skip SAM, use user-provided paddocks
-    query,
+    troi,
     paddocks_filepath="/path/to/paddocks.gpkg",
     skip_sam=True,
     label_col="paddock_name",
@@ -216,10 +216,10 @@ from pysentinel2.cube import Cube
 from PaddockTS.FractionalCover import compute_fractional_cover
 from PaddockTS.PaddockSegmentation.get_paddocks import get_paddocks
 
-cube = Cube(config=query.config)
-ds = cube.get_ds_query(query, indices=('NDVI', 'CFI', 'NIRv', 'NDTI', 'CAI'))
-fc = compute_fractional_cover(query, ds_sentinel2=ds)  # bg / pv / npv
-paddocks = get_paddocks(query, ds_sentinel2=ds)     # GeoDataFrame
+cube = Cube(config=troi.config)
+ds = cube.get_ds_troi(troi, indices=('NDVI', 'CFI', 'NIRv', 'NDTI', 'CAI'))
+fc = compute_fractional_cover(troi, ds_sentinel2=ds)  # bg / pv / npv
+paddocks = get_paddocks(troi, ds_sentinel2=ds)     # GeoDataFrame
 ```
 
 Every stage either accepts its inputs as a kwarg or loads them from
@@ -227,7 +227,7 @@ the cache; you can call any subset, in any order.
 
 ## Outputs
 
-Per-query outputs land under `out_dir/<stub>/` and intermediates under
+Per-troi outputs land under `out_dir/<stub>/` and intermediates under
 `tmp_dir/<stub>/`. Final outputs include:
 
 | File | What's in it |

@@ -14,7 +14,7 @@ Output bands:
 - ``npv`` — non-green (non-photosynthetic) vegetation fraction
 
 Fractions are produced per-pixel per-timestep and persisted to
-``Paths(query).fractional_cover`` as Zarr v2. Input reflectance comes
+``Paths(troi).fractional_cover`` as Zarr v2. Input reflectance comes
 from the machine-wide pysentinel2 cube (cloud-masked, on read).
 """
 
@@ -31,7 +31,7 @@ from os import makedirs
 from os.path import exists
 from datetime import datetime
 from xarray import Dataset
-from borevitz_lab.query import Query
+from troi.troi import Troi
 from PaddockTS.paths import Paths
 from PaddockTS.FractionalCover.check_if_valid_fractional_cover_exists import check_if_valid_fractional_cover_exists
 
@@ -39,18 +39,18 @@ from PaddockTS.FractionalCover.check_if_valid_fractional_cover_exists import che
 BANDS = ['nbart_blue', 'nbart_green', 'nbart_red', 'nbart_nir_1', 'nbart_swir_2', 'nbart_swir_3']
 
 
-def compute_fractional_cover(query: Query, ds_sentinel2=None, model_n: int = 4, correction: bool = False):
+def compute_fractional_cover(troi: Troi, ds_sentinel2=None, model_n: int = 4, correction: bool = False):
     """Run the TFLite unmixing model over every Sentinel-2 timestep.
 
     Stacks the six Sentinel-2 SR bands into a ``(time, band, y, x)``
     tensor, scales reflectance, and invokes the chosen model variant
     once per timestep. The result is written to
-    ``Paths(query).fractional_cover`` and returned as an xarray Dataset
+    ``Paths(troi).fractional_cover`` and returned as an xarray Dataset
     with ``bg``, ``pv``, ``npv`` data variables on dims
     ``(time, y, x)``.
 
     Args:
-        query: The :class:`borevitz_lab.query.Query`.
+        troi: The :class:`troi.troi.Troi`.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset. If ``None``,
             the cloud-masked window is read from the machine-wide
             pysentinel2 cube (downloading only what's missing). Must
@@ -66,11 +66,11 @@ def compute_fractional_cover(query: Query, ds_sentinel2=None, model_n: int = 4, 
     Returns:
         xarray.Dataset: Dataset with variables ``bg``, ``pv``, ``npv``
         on dims ``(time, y, x)``. Also persisted to
-        ``Paths(query).fractional_cover``.
+        ``Paths(troi).fractional_cover``.
     """
     from PaddockTS.FractionalCover._unmix import unmix_fractional_cover, get_model
 
-    fractional_cover_path = Paths(query).fractional_cover
+    fractional_cover_path = Paths(troi).fractional_cover
     if check_if_valid_fractional_cover_exists(fractional_cover_path):
         try:
             return xr.open_zarr(fractional_cover_path, chunks=None, decode_coords='all')
@@ -79,7 +79,7 @@ def compute_fractional_cover(query: Query, ds_sentinel2=None, model_n: int = 4, 
 
     if ds_sentinel2 is None:
         from pysentinel2.cube import Cube
-        ds = Cube(config=query.config).get_ds_query(query, clean=True)
+        ds = Cube(config=troi.config).get_ds_troi(troi, clean=True)
     else:
         ds = ds_sentinel2
 
@@ -92,7 +92,7 @@ def compute_fractional_cover(query: Query, ds_sentinel2=None, model_n: int = 4, 
 
     # Stream in small time batches, appending each to the zarr as it's
     # unmixed. Materialising the whole window at once — six bands x every
-    # timestep as float — needs >10 GB for a multi-year query and OOMs
+    # timestep as float — needs >10 GB for a multi-year troi and OOMs
     # 8 GB machines; a 32-frame batch stays around 200 MB regardless of
     # the time range. The model is loaded once, not per timestep.
     #
@@ -147,13 +147,13 @@ def compute_fractional_cover(query: Query, ds_sentinel2=None, model_n: int = 4, 
     return xr.open_zarr(fractional_cover_path, chunks=None, decode_coords='all')
 
 
-def _temp_query():
+def _temp_troi():
     import tempfile
     from datetime import date
-    from borevitz_lab.config import Config
+    from troi.config import Config
     tmpdir = tempfile.mkdtemp(prefix='paddockts_fc_test_')
     cfg = Config(out_dir=tmpdir, tmp_dir=tmpdir)
-    return Query(
+    return Troi(
         bbox=[148.36265, -33.52606, 148.38265, -33.50606],
         start=date(2024, 1, 1), end=date(2024, 1, 21),
         stub=f'fc_{os.path.basename(tmpdir)}', config=cfg,
@@ -162,7 +162,7 @@ def _temp_query():
 
 def test_compute_writes_zarr_and_marker():
     """First call computes, writes fractional_cover.zarr, and touches _SUCCESS."""
-    q = _temp_query()
+    q = _temp_troi()
     ds = compute_fractional_cover(q)
     fc = Paths(q).fractional_cover
     if not exists(fc):
@@ -173,8 +173,8 @@ def test_compute_writes_zarr_and_marker():
 
 
 def test_repeated_call_uses_cache():
-    """Second call with same query reuses the zarr (no rewrite)."""
-    q = _temp_query()
+    """Second call with same troi reuses the zarr (no rewrite)."""
+    q = _temp_troi()
     compute_fractional_cover(q)
     fc = Paths(q).fractional_cover
     mtime_before = os.path.getmtime(fc)
@@ -185,7 +185,7 @@ def test_repeated_call_uses_cache():
 
 def test_missing_marker_triggers_recompute():
     """A cache with the zarr present but no _SUCCESS file is recomputed."""
-    q = _temp_query()
+    q = _temp_troi()
     compute_fractional_cover(q)
     fc = Paths(q).fractional_cover
     marker = f'{fc}/_SUCCESS'

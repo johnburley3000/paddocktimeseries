@@ -9,7 +9,7 @@ downstream stages (yearly split, smoothing, phenology, plotting) consume.
 import warnings
 import numpy as np
 import xarray as xr
-from borevitz_lab.query import Query
+from troi.troi import Troi
 
 def _band_medians(band_array, paddock_pixel_idx):
     """Per-paddock NaN-aware median across pixels, for every timestep.
@@ -37,7 +37,7 @@ def _band_medians(band_array, paddock_pixel_idx):
 
     return out
 
-def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=None, crs="epsg:6933"):
+def make_paddock_time_series(troi: Troi, ds_sentinel2=None, paddocks_filepath=None, crs="epsg:6933"):
     """Compute per-paddock medians for every band at every timestep.
 
     Steps:
@@ -53,14 +53,14 @@ def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=
        ``{paddocks_filepath stem}_timeseries.zarr``.
 
     Args:
-        query: The :class:`borevitz_lab.query.Query`.
+        troi: The :class:`troi.troi.Troi`.
         ds_sentinel2: Optional in-memory Sentinel-2 dataset (with the five
             indices already added, or they will be computed). If ``None``,
             the cloud-masked window with indices comes from the
             pysentinel2 cube.
         paddocks_filepath: Path to a GeoPackage (.gpkg) containing paddock
             polygons (must include a ``paddock`` column for IDs). If
-            ``None``, defaults to ``Paths(query).sam_paddocks`` (loaded or
+            ``None``, defaults to ``Paths(troi).sam_paddocks`` (loaded or
             generated via :func:`PaddockTS.PaddockSegmentation.get_paddocks`).
         crs: Equal-area CRS to write onto the dataset for
             georeferencing the rasterised mask. Defaults to EPSG:6933
@@ -83,17 +83,17 @@ def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=
 
     if ds_sentinel2 is None:
         from pysentinel2.cube import Cube
-        ds_sentinel2 = Cube(config=query.config).get_ds_query(query)
+        ds_sentinel2 = Cube(config=troi.config).get_ds_troi(troi)
     # Indices are NOT materialised onto the dataset: five float32
-    # full-window arrays are ~3.5 GB for a multi-year query. Each index
+    # full-window arrays are ~3.5 GB for a multi-year troi. Each index
     # is computed transiently in the median loop below and freed.
 
     if paddocks_filepath is None:
         from PaddockTS.paths import Paths
-        paddocks_filepath = Paths(query).sam_paddocks
+        paddocks_filepath = Paths(troi).sam_paddocks
         if not exists(paddocks_filepath):
             from PaddockTS.PaddockSegmentation.get_paddocks import get_paddocks
-            get_paddocks(query)
+            get_paddocks(troi)
 
     # Use load_user_paddocks to ensure 'paddock' column exists
     from PaddockTS.utils import load_user_paddocks
@@ -173,13 +173,13 @@ def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=
         if name not in results:
             results[name] = _band_medians(fn(ds), paddock_pixel_idx)
 
-    # Fractional cover per-paddock medians, from the per-query FC zarr
+    # Fractional cover per-paddock medians, from the per-troi FC zarr
     # (computed earlier in the pipeline from this same cleaned window, so
     # the time axes match; guarded in case a caller mixes windows). Was
     # lost in the store refactor — the manuscript's drought-exposure
     # analysis reads ``bg`` from the smoothed series.
     from PaddockTS.paths import Paths as _Paths
-    fc_path = _Paths(query).fractional_cover
+    fc_path = _Paths(troi).fractional_cover
     if exists(fc_path):
         fc = xr.open_zarr(fc_path, chunks=None, decode_coords='all')
         if (fc.time.size == ds.sizes['time']
@@ -205,8 +205,8 @@ def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=
     result = xr.Dataset(data_vars, coords=coords)
 
     paddocks_path = Path(paddocks_filepath)
-    zarr_path = f'{query.tmp_dir}/{paddocks_path.stem}_timeseries.zarr'
-    makedirs(query.tmp_dir, exist_ok=True)
+    zarr_path = f'{troi.tmp_dir}/{paddocks_path.stem}_timeseries.zarr'
+    makedirs(troi.tmp_dir, exist_ok=True)
     timestamp = datetime.utcnow().isoformat() + 'Z'
     result = result.assign_attrs(paddock_timeseries_computed_at=timestamp)
     result.to_zarr(zarr_path, mode='w', zarr_format=2)
@@ -219,10 +219,10 @@ def make_paddock_time_series(query: Query, ds_sentinel2=None, paddocks_filepath=
 
 
 def test():
-    from PaddockTS.utils import get_example_query
+    from PaddockTS.utils import get_example_troi
 
-    query = get_example_query()
-    result = make_paddock_time_series(query)
+    troi = get_example_troi()
+    result = make_paddock_time_series(troi)
     print(result)
     for var in result.data_vars:
         print(f'{var}: {float(result[var].mean()):.3f}')

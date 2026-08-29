@@ -8,7 +8,7 @@ stored):
 ```python
 from pysentinel2.cube import Cube
 
-ds = Cube(config=q.config).get_ds_query(
+ds = Cube(config=q.config).get_ds_troi(
     q, indices=('NDVI', 'CFI', 'NIRv', 'NDTI', 'CAI'))
 ds['NDVI']   # (time, y, x) float32, NaN where cloudy / nodata
 ```
