@@ -113,14 +113,14 @@ ds['Clay_5-15cm']   # (lat, lon), percent
 
 ## DAESIM forcing
 
-`PaddockTS.Environmental.daesim_forcing` assembles the DAESIM
+`PaddockTS.daesim_forcing` assembles the DAESIM
 climate-forcing table (SILO radiation + OzWALD daily meteorology +
 8-day biophysical series forward-filled to daily, renamed to DAESIM's
 vocabulary) from the stores, cached per stub as
 `{out_dir}/{stub}_DAESim_forcing.csv`:
 
 ```python
-from PaddockTS.Environmental.daesim_forcing import daesim_forcing
+from PaddockTS.daesim_forcing import daesim_forcing
 
 df = daesim_forcing(q)   # date + 10 DAESIM columns, one row per day
 ```
@@ -135,4 +135,4 @@ module docstrings.
 
 ### `daesim_forcing`
 
-::: PaddockTS.Environmental.daesim_forcing.daesim_forcing
+::: PaddockTS.daesim_forcing.daesim_forcing

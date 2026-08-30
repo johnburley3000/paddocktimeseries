@@ -125,18 +125,22 @@ def calculate_hli(slope, aspect, latitude):
 def test():
     """Test terrain calculations and plot results."""
     import matplotlib.pyplot as plt
-    from os.path import exists
+    import os
+    import tempfile
 
+    import rioxarray  # noqa: F401 — registers the .rio accessor
+    from pycopdem.store import Store
     from PaddockTS.utils import get_example_troi
-    from PaddockTS.Environmental.TerrainTiles.download_terrain_tiles import download_terrain
 
     q = get_example_troi()
-    terrain_tif = q.terrain_path
-
-    # Download if needed
-    if not exists(terrain_tif):
-        print('Downloading terrain...')
-        download_terrain(q)
+    # Elevation window from the machine-wide pycopdem store, materialised
+    # to a temp GeoTIFF for the raster-based derivative functions.
+    ds = Store(config=q.config).get_ds_troi(q)
+    da = (ds['elevation']
+          .rio.write_crs('EPSG:4326')
+          .rio.set_spatial_dims(x_dim='lon', y_dim='lat'))
+    terrain_tif = os.path.join(tempfile.mkdtemp(), 'terrain.tif')
+    da.rio.to_raster(terrain_tif)
 
     print(f'Terrain file: {terrain_tif}')
 

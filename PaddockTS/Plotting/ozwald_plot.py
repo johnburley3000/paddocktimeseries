@@ -92,8 +92,7 @@ def _plot_groups(df, time_col, groups, troi, prefix):
 def ozwald_daily_plot(troi: Troi, groups: dict = None):
     """Plot OzWALD daily climate variables grouped by theme.
 
-    Reads the cached daily CSV (downloaded by
-    :func:`PaddockTS.Environmental.OzWALD.download_ozwald_daily.download_ozwald_daily`)
+    Reads the daily series from the machine-wide :mod:`pyozwald` store
     and writes one PNG per group to
     ``{troi.out_dir}/{troi.stub}_ozwald_daily_{group}.png``.
 
@@ -113,8 +112,7 @@ def ozwald_daily_plot(troi: Troi, groups: dict = None):
 def ozwald_8day_plot(troi: Troi, groups: dict = None):
     """Plot OzWALD 8-day vegetation / water variables grouped by theme.
 
-    Reads the cached 8-day CSV (downloaded by
-    :func:`PaddockTS.Environmental.OzWALD.download_ozwald_8day.download_ozwald_8day`)
+    Reads the 8-day series from the machine-wide :mod:`pyozwald` store
     and writes one PNG per group to
     ``{troi.out_dir}/{troi.stub}_ozwald_8day_{group}.png``.
 

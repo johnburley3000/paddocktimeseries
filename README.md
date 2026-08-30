@@ -285,13 +285,13 @@ for the full call-graph and per-stage caching behaviour.
 ## Calling individual stages
 
 ```python
-from PaddockTS.Sentinel2.download_sentinel2 import download_sentinel2
-from PaddockTS.SpectralIndices.indices import compute_indices
+from pysentinel2.cube import Cube
 from PaddockTS.FractionalCover import compute_fractional_cover
 from PaddockTS.PaddockSegmentation.get_paddocks import get_paddocks
 
-ds = download_sentinel2(troi)                          # Zarr cube on disk
-ds = compute_indices(troi, ds_sentinel2=ds)            # NDVI, CFI, NIRv, NDTI, CAI
+cube = Cube(config=troi.config)
+ds = cube.get_ds_troi(troi, clean=True,                # cloud-masked window
+                      indices=("NDVI", "CFI", "NIRv", "NDTI", "CAI"))
 fc = compute_fractional_cover(troi, ds_sentinel2=ds)   # bg / pv / npv
 paddocks = get_paddocks(troi, ds_sentinel2=ds)         # GeoDataFrame
 ```
@@ -341,8 +341,9 @@ Third-party code shipped inside the package; see
   `PaddockTS.Phenology.estimate_phenology`.
 - [`DAESIM_preprocess`](https://github.com/ChristopherBradley/DAESIM_preprocess) by
   Christopher Bradley — MIT. Environmental data harvesting functions
-  adapted in `PaddockTS.Environmental` for downloading and processing
-  climate, vegetation, soil, and topographic datasets.
+  adapted in the pyozwald / pysilo / pyslga / pycopdem stores for
+  downloading and processing climate, vegetation, soil, and
+  topographic datasets.
 
 ### Key runtime dependencies
 
