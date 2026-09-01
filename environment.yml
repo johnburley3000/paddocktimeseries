@@ -1,13 +1,13 @@
-# Augments (or creates) the shared troi conda environment with
+# Augments (or creates) the paddockts conda environment with
 # PaddockTS's full stack (geospatial natives, SAM/samgeo, PyTorch,
 # TensorFlow, ffmpeg):
 #
-#   conda env update -n troi -f environment.yml
-#   conda activate troi
-#   pip install -e ../troi && pip install -e ../pysentinel2 && pip install -e .
+#   conda env update -n paddockts -f environment.yml
+#   conda activate paddockts
+#   pip install .        # pulls troi + the data stores from GitHub
 #
-# Never use --prune: the env is shared across lab repos.
-name: troi
+# Never use --prune: the env may be shared across lab repos.
+name: paddockts
 channels:
   - conda-forge
   - pytorch
@@ -15,6 +15,7 @@ channels:
 dependencies:
   - python=3.11
   - pip
+  - ffmpeg
   - samgeo
   - numpy
   - xarray

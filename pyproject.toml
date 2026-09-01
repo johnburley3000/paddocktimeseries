@@ -37,15 +37,16 @@ classifiers = [
 ]
 # The scientific / geospatial / ML stack (GDAL, rasterio, samgeo, torch,
 # tensorflow, datacube, …) is provided by conda via environment.yml.
-# Only the lab packages are declared here so `pip install -e .` is fast
-# and doesn't re-resolve the native stack.
+# Only the lab packages are declared here, pinned to their GitHub
+# repositories so a plain `pip install .` pulls them without any extra
+# channel or checkout.
 dependencies = [
-  "troi",
-  "pysentinel2",
-  "pysilo",
-  "pyozwald",
-  "pycopdem",
-  "pyslga",
+  "troi @ git+https://github.com/thestochasticman/troi.git",
+  "pysentinel2 @ git+https://github.com/thestochasticman/pysentinel2.git",
+  "pysilo @ git+https://github.com/thestochasticman/pysilo.git",
+  "pyozwald @ git+https://github.com/thestochasticman/pyozwald.git",
+  "pycopdem @ git+https://github.com/thestochasticman/pycopdem.git",
+  "pyslga @ git+https://github.com/thestochasticman/pyslga.git",
 ]
 
 [project.optional-dependencies]

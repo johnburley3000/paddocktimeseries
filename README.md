@@ -57,16 +57,19 @@ automatically detected and re-fetched on the next run.
 
 ## Install
 
-### Conda (recommended)
+### Conda + pip (recommended)
 
-One command pulls the whole ecosystem — the `troi` core, the
-five data-store packages, PaddockTS itself, and the full native stack
-(GDAL/PROJ/GEOS, PyTorch, TensorFlow, Segment Anything) — from the lab
-channel plus conda-forge:
+The conda environment provides the native stack (GDAL/PROJ/GEOS,
+PyTorch, TensorFlow, Segment Anything); `pip install .` then pulls the
+lab packages — the `troi` core and the five data stores — straight
+from their GitHub repositories:
 
 ```bash
-conda create -n paddockts -c conda-forge -c pytorch -c thestochasticman paddocktimeseries
+git clone https://github.com/thestochasticman/paddocktimeseries.git
+cd paddocktimeseries
+conda env update -n paddockts -f environment.yml   # creates the env if missing
 conda activate paddockts
+pip install .
 ```
 
 PaddockTS targets Python ≥ 3.11.
@@ -96,9 +99,9 @@ git clone https://github.com/thestochasticman/pycopdem.git
 git clone https://github.com/thestochasticman/pyslga.git
 git clone https://github.com/thestochasticman/paddocktimeseries.git
 cd paddocktimeseries
-conda env update -n troi -f environment.yml   # native + scientific stack
-conda activate troi
-pip install -e ../troi -e ../pysentinel2 -e ../pysilo \
+conda env update -n paddockts -f environment.yml   # native + scientific stack
+conda activate paddockts
+pip install --no-deps -e ../troi -e ../pysentinel2 -e ../pysilo \
             -e ../pyozwald -e ../pycopdem -e ../pyslga -e .
 ```
 
