@@ -9,3 +9,14 @@ site/
 gdalwmscache/
 terrain_tiles.xml
 .claude/settings.local.json
+
+# Jupyter working files
+.ipynb_checkpoints/
+
+# Generated manuscript outputs
+manuscript/paper.pdf
+manuscript/*preprint*.pdf
+manuscript/jats/
+
+# extra figures:
+manuscript/figures_extra/*
