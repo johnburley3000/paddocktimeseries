@@ -353,8 +353,24 @@ demand:
   (TERN API key required).
 
 If you publish work that uses PaddockTS, please cite the upstream data
-sources, the third-party libraries listed below, and the PaddockTS
-repository.
+sources, the relevant third-party libraries listed below, and the
+PaddockTS preprint.
+
+---
+
+## Citation
+
+Please cite the associated EarthArXiv preprint when using PaddockTS in
+research:
+
+> Burley, J. T., Ansari, Y. A., Bradley, C., Norton, A., & Borevitz, J.
+> (2026). *PaddockTS: paddock-level satellite time series analysis of
+> agroecosystem dynamics*. EarthArXiv.
+> <https://doi.org/10.31223/X5821Z>
+
+Machine-readable citation metadata is provided in
+[`CITATION.cff`](CITATION.cff). Please also cite the upstream datasets
+and methods relevant to your analysis.
 
 ---
 
@@ -404,4 +420,5 @@ relevant to your work:
   <https://johnburley3000.github.io/paddocktimeseries/>
 - **Known failure modes:** [`diagnostics.md`](diagnostics.md) (DEA STAC
   cold-start, GDAL HTTP auth)
-- **Maintainers:** Borevitz Lab, Australian National University
+- **Maintainers:** [John T. Burley](https://github.com/johnburley3000)
+  and [Yasar Adeel Ansari](https://github.com/thestochasticman)
