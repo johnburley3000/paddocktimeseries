@@ -2,7 +2,7 @@ name: tests
 
 on:
   push:
-    branches: [main, refactor/move-query-to-borevitz-lab]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
