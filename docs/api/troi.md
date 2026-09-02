@@ -1,6 +1,6 @@
 # Troi & Config
 
-The `Troi` is the immutable, content-addressed object that flows
+The `Troi` (Time and Region Of Interest) is the immutable, content-addressed object that flows
 through every stage of the pipeline. A `Troi` describes a region
 (bounding box, EPSG:4326) and a time window; every stage derives its
 input and output paths from it.
