@@ -19,22 +19,15 @@ phenology.
 
 ## What you get
 
-Given a `Troi` (a bounding box + date range), PaddockTS produces:
-
-| Output | What it is |
-|---|---|
-| **Paddock polygons** | Automatic field-boundary detection via [Segment Anything](https://segment-anything.com/) on an NDWI Fourier presegmentation image. A clean GeoPackage with per-paddock geometry, `area_ha`, and `compactness`. |
-| **Per-paddock time series** | For every Sentinel-2 acquisition, the median reflectance and the median NDVI / CFI / NIRv / NDTI / CAI inside each paddock, persisted as a Zarr cube on `(paddock, time)`. |
-| **Fractional cover** | Per-pixel unmixing of S2 reflectance into bare ground (`bg`), green vegetation (`pv`), and non-green vegetation (`npv`) via a TFLite MLP adapted from [`fractionalcover3`](https://github.com/jrsrp/fractionalcover3). |
-| **Phenology metrics** | Per paddock per year: start/peak/end of season DOY, amplitudes, integrals — via a vendored [`phenolopy`](https://github.com/lewistrotter/phenolopy). |
-| **Environmental context** | Copernicus 30 m DEM (with derived slope, aspect, flow accumulation, TWI), [OzWALD](https://www.wenfo.org/ozwald/) and [SILO](https://www.longpaddock.qld.gov.au/silo/) daily climate, and [SLGA](https://esoil.io/TERNLandscapes/Public/Pages/SLGA/index.html) 90 m soil texture / properties, all clipped to the same AOI. |
-| **Plots & videos** | True-colour and false-colour MP4 timelines, per-paddock thumbnail calendars, phenology curves with SoS / PoS / EoS markers, climate diagnostic panels, and a stitched PDF report. |
+Given a `Troi` (a bounding box + date range), PaddockTS produces a
+complete paddock-scale picture of the landscape. Here is eight years
+of the Milgadara farm, produced by one `get_outputs(troi)` call:
 
 <div class="grid" markdown>
 
 <figure markdown>
   ![Eight years of Sentinel-2 over the Milgadara farm](assets/milgadara_sentinel2.gif)
-  <figcaption>Eight years (2018–2025) of true-colour Sentinel-2 over the Milgadara farm, with its 60+ SAM-segmented paddocks</figcaption>
+  <figcaption>2018–2025 true-colour Sentinel-2, with 60+ automatically segmented paddocks</figcaption>
 </figure>
 
 <figure markdown>
@@ -44,10 +37,108 @@ Given a `Troi` (a bounding box + date range), PaddockTS produces:
 
 </div>
 
+### Paddock polygons — no digitising
+
+Field boundaries are detected automatically: the full Sentinel-2 stack
+is condensed into a single NDWI Fourier-feature image (stable
+boundaries persist across seasons; transient patterns wash out), and
+[Segment Anything](https://segment-anything.com/) segments it. The raw
+masks are exploded, reprojected, and filtered by area and
+isoperimetric compactness, leaving a clean GeoPackage with per-paddock
+geometry, `area_ha`, and `compactness`. Already have boundaries from a
+survey or cadastral layer? [Bring your own](#bring-your-own-paddocks)
+and skip SAM entirely.
+
+<div class="grid" markdown>
+
+<figure markdown>
+  ![NDWI Fourier presegmentation image](assets/preseg.png)
+  <figcaption>The presegmentation image SAM sees</figcaption>
+</figure>
+
+<figure markdown>
+  ![SAM-segmented paddocks over Sentinel-2 imagery](assets/segmentation.png)
+  <figcaption>The filtered result over true colour</figcaption>
+</figure>
+
+</div>
+
+### Per-paddock time series
+
+The pivot from pixels to paddocks: for every clear acquisition, the
+NaN-aware median of every Sentinel-2 band — plus NDVI, CFI, NIRv,
+NDTI, and CAI, and the fractional-cover fractions — inside each
+polygon, persisted as a Zarr cube on `(paddock, time)`. A resampled,
+gap-filled, Savitzky-Golay-smoothed variant feeds phenology and
+plotting.
+
+<figure markdown>
+  ![Smoothed per-paddock NDVI, 2018–2025](assets/timeseries.png)
+  <figcaption>Eight seasons of smoothed NDVI for six paddocks — droughts (2018–19) and wet years (2020–22) read straight off the chart</figcaption>
+</figure>
+
+### Fractional ground cover
+
+Every pixel of every scene unmixed into bare ground (`bg`), green
+vegetation (`pv`), and non-green vegetation (`npv`) with a TFLite MLP
+adapted from [`fractionalcover3`](https://github.com/jrsrp/fractionalcover3) —
+the standard triple for grazing and stubble management, and the basis
+of the false-colour timelines above.
+
+### Seasonal phenology
+
+Start, peak, and end of season (DOY and value), amplitudes,
+length-of-season, integrals-under-the-curve, and an independent peak
+count — per paddock, per year, via a vendored
+[`phenolopy`](https://github.com/lewistrotter/phenolopy). Returned as
+tidy DataFrames and written to a single CSV across all years.
+
+<figure markdown>
+  ![Phenology curves with SoS / PoS / EoS markers](assets/phenology.png)
+  <figcaption>Detected season markers on the smoothed curves, one panel per year</figcaption>
+</figure>
+
+### The paddock calendar
+
+The whole archive at a glance: one page per paddock, one row per
+year, 48 thumbnail slots across the season. Cloudy gaps are
+interpolated and outlined in red, so data quality is visible next to
+the phenology it feeds.
+
 <figure markdown>
   ![Per-paddock thumbnail calendar](assets/calendar.png)
-  <figcaption>Eight seasons of one Milgadara paddock at a glance — red boxes mark interpolated (cloudy) slots</figcaption>
+  <figcaption>Eight seasons of one Milgadara paddock — red boxes mark interpolated (cloudy) slots</figcaption>
 </figure>
+
+### Environmental context
+
+The same AOI, co-registered: Copernicus 30 m DEM with derived slope,
+aspect, flow accumulation, and TWI;
+[OzWALD](https://www.wenfo.org/ozwald/) and
+[SILO](https://www.longpaddock.qld.gov.au/silo/) daily climate; and
+[SLGA](https://esoil.io/TERNLandscapes/Public/Pages/SLGA/index.html)
+90 m soil properties. All served from machine-wide caching stores, so
+neighbouring projects never re-download.
+
+<div class="grid" markdown>
+
+<figure markdown>
+  ![Topography panel](assets/topography.png)
+  <figcaption>DEM-derived terrain panel on the Sentinel-2 grid</figcaption>
+</figure>
+
+<figure markdown>
+  ![SILO climate panel](assets/silo.png)
+  <figcaption>Daily climate diagnostics</figcaption>
+</figure>
+
+</div>
+
+### One PDF to review it all
+
+Everything above — topography, climate, calendars, phenology — is
+stitched into a single landscape-A4 report per run, with vector text
+that stays readable at any zoom.
 
 ---
 
