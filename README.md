@@ -17,7 +17,7 @@ phenology.
 
 📚 **Documentation:** <https://johnburley3000.github.io/paddocktimeseries/>
 
-ðŸ“„ **Preprint:** [Burley et al. (2026), EarthArXiv](https://doi.org/10.31223/X5821Z)
+**Preprint:** [Burley et al. (2026), EarthArXiv](https://doi.org/10.31223/X5821Z)
 
 
 
