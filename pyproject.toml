@@ -14,15 +14,16 @@ authors = [
 license = { text = "MIT" }
 requires-python = ">=3.11"
 keywords = [
-  "remote-sensing",
+  "remote sensing",
+  "Earth observation",
   "sentinel-2",
-  "agriculture",
-  "phenology",
-  "segmentation",
-  "fractional-cover",
-  "time-series",
+  "satellite time series",
+  "agricultural field boundaries",
+  "field-level analysis",
+  "vegetation phenology",
+  "agroecosystem",
+  "agricultural monitoring",
   "geospatial",
-  "paddock",
 ]
 classifiers = [
   "Development Status :: 4 - Beta",
