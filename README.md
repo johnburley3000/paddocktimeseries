@@ -352,10 +352,6 @@ demand:
 - **SLGA** — TERN / CSIRO Soil and Landscape Grid of Australia
   (TERN API key required).
 
-If you publish work that uses PaddockTS, please cite the upstream data
-sources, the relevant third-party libraries listed below, and the
-PaddockTS preprint.
-
 ---
 
 ## Citation
@@ -369,8 +365,9 @@ research:
 > <https://doi.org/10.31223/X5821Z>
 
 Machine-readable citation metadata is provided in
-[`CITATION.cff`](CITATION.cff). Please also cite the upstream datasets
-and methods relevant to your analysis.
+[`CITATION.cff`](CITATION.cff). 
+
+Please also cite the upstream datasets and methods relevant to your analysis.
 
 ---
 
