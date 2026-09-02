@@ -1,0 +1,54 @@
+cff-version: 1.2.0
+message: >-
+  If you use PaddockTS in your research, please cite the associated
+  preprint.
+title: "PaddockTS: Paddock-level satellite time-series analysis of agroecosystem dynamics"
+type: software
+authors:
+  - family-names: Burley
+    given-names: John T.
+    orcid: "https://orcid.org/0000-0003-4702-5056"
+  - family-names: Ansari
+    given-names: Yasar Adeel
+  - family-names: Bradley
+    given-names: Christopher
+    orcid: "https://orcid.org/0009-0008-2291-8433"
+  - family-names: Norton
+    given-names: Alex
+    orcid: "https://orcid.org/0000-0001-7708-3914"
+  - family-names: Borevitz
+    given-names: Justin
+    orcid: "https://orcid.org/0000-0001-8408-3699"
+version: 0.8.0
+license: MIT
+repository-code: "https://github.com/johnburley3000/paddocktimeseries"
+url: "https://www.paddocktimeseries.net/"
+keywords:
+  - remote sensing
+  - Earth observation
+  - Sentinel-2
+  - satellite time series
+  - agricultural field boundaries
+  - vegetation phenology
+  - agroecosystems
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Burley
+      given-names: John T.
+      orcid: "https://orcid.org/0000-0003-4702-5056"
+    - family-names: Ansari
+      given-names: Yasar Adeel
+    - family-names: Bradley
+      given-names: Christopher
+      orcid: "https://orcid.org/0009-0008-2291-8433"
+    - family-names: Norton
+      given-names: Alex
+      orcid: "https://orcid.org/0000-0001-7708-3914"
+    - family-names: Borevitz
+      given-names: Justin
+      orcid: "https://orcid.org/0000-0001-8408-3699"
+  title: "PaddockTS: paddock-level satellite time series analysis of agroecosystem dynamics"
+  year: 2026
+  doi: "10.31223/X5821Z"
+  url: "https://doi.org/10.31223/X5821Z"

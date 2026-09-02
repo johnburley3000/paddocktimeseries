@@ -5,9 +5,9 @@ end-to-end from a single bounding box.**
 
 Built at the [Borevitz Lab, Australian National
 University](https://borevitzlab.anu.edu.au/) for ecologists, agronomists,
-and remote-sensing researchers who want a reproducible analysis pipeline from raw
-Sentinel-2 data to paddock-level summaries of greenness, ground cover, and
-phenology.
+and remote-sensing researchers who want a reproducible pipeline for
+Sentinel-2 imagery to paddock (or field) boundaries and paddock-level
+summaries of greenness, ground cover, and phenology.
 
 [![Tests](https://github.com/johnburley3000/paddocktimeseries/actions/workflows/tests.yml/badge.svg)](https://github.com/johnburley3000/paddocktimeseries/actions/workflows/tests.yml)
 [![Docs](https://img.shields.io/badge/docs-johnburley3000.github.io-2ea44f)](https://johnburley3000.github.io/paddocktimeseries/)

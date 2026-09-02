@@ -11,6 +11,10 @@ authors = [
   { name = "John Burley", email = "john.burley@anu.edu.au" },
   { name = "Yasar Adeel Ansari", email = "u6737670@anu.edu.au" },
 ]
+maintainers = [
+  { name = "John T. Burley", email = "john.burley@anu.edu.au" },
+  { name = "Yasar Adeel Ansari", email = "u6737670@anu.edu.au" },
+]
 license = { text = "MIT" }
 requires-python = ">=3.11"
 keywords = [
@@ -68,6 +72,8 @@ viewer = [
 Homepage = "https://github.com/johnburley3000/paddocktimeseries"
 Repository = "https://github.com/johnburley3000/paddocktimeseries"
 Issues = "https://github.com/johnburley3000/paddocktimeseries/issues"
+Documentation = "https://johnburley3000.github.io/paddocktimeseries/"
+Preprint = "https://doi.org/10.31223/X5821Z"
 
 [tool.pytest.ini_options]
 # The offline unit suite lives in tests/. The scripts in test/ are
