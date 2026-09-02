@@ -8,7 +8,7 @@ tags:
   - agricultural field boundaries
   - field-level analysis
   - vegetation phenology
-  - agroecosystems
+  - agroecosystem
   - agricultural monitoring
 authors:
   - name: John T. Burley
@@ -55,7 +55,7 @@ gradients and provide analysis-ready inputs for agroecosystem modelling and mach
 prediction tasks. PaddockTS can be used as a programmable Python workflow for reproducible
 research or through a web interface for exploratory analysis without coding.
 
-Software repository: [https://github.com/thestochasticman/paddocktimeseries](https://github.com/thestochasticman/paddocktimeseries)  
+Software repository: [https://github.com/johnburley3000/paddocktimeseries](https://github.com/johnburley3000/paddocktimeseries)  
 Interactive web tool: [https://www.paddocktimeseries.net/](https://www.paddocktimeseries.net/)
 
 # Statement of need

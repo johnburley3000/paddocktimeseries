@@ -38,9 +38,9 @@ printf '%s\n' \
   '\setlength{\headheight}{14pt}' \
   '\pagestyle{fancy}' \
   '\fancyhf{}' \
-  '\fancyhead[C]{\scriptsize Non-peer-reviewed preprint submitted to EarthArXiv; submitted to the Journal of Open Source Software}' \
+  '\fancyhead[C]{\scriptsize Non-peer-reviewed preprint submitted to EarthArXiv}' \
   '\fancyfoot[C]{\thepage}' \
-  '\fancypagestyle{plain}{\fancyhf{}\fancyhead[C]{\scriptsize Non-peer-reviewed preprint submitted to EarthArXiv; submitted to the Journal of Open Source Software}\fancyfoot[C]{\thepage}}' \
+  '\fancypagestyle{plain}{\fancyhf{}\fancyhead[C]{\scriptsize Non-peer-reviewed preprint submitted to EarthArXiv}\fancyfoot[C]{\thepage}}' \
   > "$HEADER_TEX"
 
 TEMP_MD_NAME="$(basename "$TEMP_MD")"
