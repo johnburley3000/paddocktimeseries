@@ -4,6 +4,12 @@ Sentinel-2 lives in its own package now:
 [`pysentinel2`](https://github.com/thestochasticman/pysentinel2), a
 machine-wide self-filling datacube. PaddockTS consumes it directly:
 
+<figure markdown>
+  ![True-colour timeline read from the machine-wide cube](../assets/sentinel2.gif)
+  <figcaption>True-colour timeline read from the machine-wide cube</figcaption>
+</figure>
+
+
 - `Cube.get_ds_troi(troi)` — the **raw** ARD window (including the
   fmask quality band), downloading only the (day × chunk) cells no
   previous troi has fetched. The default source is Geoscience

@@ -6,6 +6,17 @@ machine-wide, self-filling store — nothing is ever downloaded twice,
 and overlapping queries share every byte already fetched. PaddockTS
 calls the stores directly; the packages are equally usable standalone.
 
+<figure markdown>
+  ![Topography panel from the Copernicus DEM](../assets/topography.png)
+  <figcaption>Topography panel from the Copernicus DEM</figcaption>
+</figure>
+
+<figure markdown>
+  ![SILO daily climate diagnostic](../assets/silo.png)
+  <figcaption>SILO daily climate diagnostic</figcaption>
+</figure>
+
+
 | Source | Package | What it provides | Auth required |
 |---|---|---|---|
 | **Copernicus DEM 30 m** | [`pycopdem`](https://github.com/thestochasticman/pycopdem) | elevation + on-read slope / aspect / flow accumulation / TWI / HLI | none |

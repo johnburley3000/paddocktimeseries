@@ -3,6 +3,12 @@
 Static plots, animation videos, and a stitched PDF report — every
 review-grade output PaddockTS produces.
 
+<figure markdown>
+  ![Per-paddock thumbnail calendar — red boxes mark interpolated slots](../assets/calendar.png)
+  <figcaption>Per-paddock thumbnail calendar — red boxes mark interpolated slots</figcaption>
+</figure>
+
+
 | Function | Output | What it shows |
 |---|---|---|
 | `sentinel2_video` | `{stub}_sentinel2.mp4` | True-colour Sentinel-2 timeline, date stamped per frame. |

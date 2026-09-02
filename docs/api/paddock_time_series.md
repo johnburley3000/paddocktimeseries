@@ -3,6 +3,12 @@
 Three closely-related functions that turn per-pixel rasters into
 per-paddock summaries:
 
+<figure markdown>
+  ![Smoothed per-paddock NDVI medians on (paddock, time)](../assets/timeseries.png)
+  <figcaption>Smoothed per-paddock NDVI medians on (paddock, time)</figcaption>
+</figure>
+
+
 | Function | What it produces |
 |---|---|
 | `make_paddock_time_series` | Per-paddock medians for every band + index at every timestep, on dims `(paddock, time)`. |

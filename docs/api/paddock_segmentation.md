@@ -4,6 +4,17 @@ SAM-based segmentation pipeline that turns a multi-temporal Sentinel-2
 stack into a `geopandas.GeoDataFrame` of paddock polygons, with
 `area_ha`, `compactness`, and a 1-based `paddock` integer ID.
 
+<figure markdown>
+  ![NDWI Fourier presegmentation image fed to SAM](../assets/preseg.png)
+  <figcaption>NDWI Fourier presegmentation image fed to SAM</figcaption>
+</figure>
+
+<figure markdown>
+  ![Filtered SAM paddocks over the Sentinel-2 window](../assets/segmentation.png)
+  <figcaption>Filtered SAM paddocks over the Sentinel-2 window</figcaption>
+</figure>
+
+
 Three internal stages:
 
 1. **Presegmentation** — derives a single grayscale image from the

@@ -3,6 +3,12 @@
 Per-pixel spectral unmixing of Sentinel-2 surface reflectance into
 three ground-cover fractions:
 
+<figure markdown>
+  ![Bare (red) / green (green) / non-green (blue) fractions through time](../assets/fractional_cover_paddocks.gif)
+  <figcaption>Bare (red) / green (green) / non-green (blue) fractions through time</figcaption>
+</figure>
+
+
 | Band | Meaning |
 |---|---|
 | `bg`  | bare ground / soil |

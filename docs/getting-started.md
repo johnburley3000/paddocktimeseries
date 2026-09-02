@@ -255,6 +255,62 @@ run over the same troi never collide:
 | `{stub}_topography.png` | Elevation, slope, aspect, flow accumulation |
 | `{stub}_silo_*.png`, `{stub}_ozwald_daily_*.png` | Climate diagnostic panels |
 
+### What each product looks like
+
+<div class="grid" markdown>
+
+<figure markdown>
+  ![Stitched PDF report](assets/report.png)
+  <figcaption>`{stub}_report.pdf` — the stitched report</figcaption>
+</figure>
+
+<figure markdown>
+  ![True-colour Sentinel-2 timeline](assets/sentinel2.gif)
+  <figcaption>`{stub}_sentinel2.mp4` — true-colour timeline</figcaption>
+</figure>
+
+<figure markdown>
+  ![Fractional-cover timeline with boundaries](assets/fractional_cover_paddocks.gif)
+  <figcaption>`sam_paddocks_fractional_cover_paddocks.mp4` — fractional cover with boundaries</figcaption>
+</figure>
+
+<figure markdown>
+  ![Sentinel-2 timeline with paddock boundaries](assets/sentinel2_paddocks.gif)
+  <figcaption>`sam_paddocks_sentinel2_paddocks.mp4` — true colour with boundaries</figcaption>
+</figure>
+
+<figure markdown>
+  ![Per-paddock calendar page](assets/calendar.png)
+  <figcaption>`sam_paddocks_calendar_p<NN>.png` — one paddock per page</figcaption>
+</figure>
+
+<figure markdown>
+  ![Phenology page](assets/phenology.png)
+  <figcaption>`sam_paddocks_phenology_p<NN>.png` — SoS / PoS / EoS per year</figcaption>
+</figure>
+
+<figure markdown>
+  ![Per-paddock time series](assets/timeseries.png)
+  <figcaption>`sam_paddocks_timeseries*.zarr` — the central (paddock, time) product</figcaption>
+</figure>
+
+<figure markdown>
+  ![Topography panel](assets/topography.png)
+  <figcaption>`{stub}_topography.png` — DEM-derived terrain panel</figcaption>
+</figure>
+
+<figure markdown>
+  ![SILO climate panel](assets/silo.png)
+  <figcaption>`{stub}_silo_*.png` — climate diagnostics</figcaption>
+</figure>
+
+<figure markdown>
+  ![OzWALD climate panel](assets/climate.png)
+  <figcaption>`{stub}_ozwald_daily_*.png` — daily meteorology</figcaption>
+</figure>
+
+</div>
+
 Intermediates live in two places, both safe to delete between runs:
 
 - `tmp_dir/<stub>/` — the per-paddock time-series Zarrs

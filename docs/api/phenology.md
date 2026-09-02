@@ -4,6 +4,12 @@ Per-paddock seasonal phenology metrics — start, peak, and end of
 season DOY plus amplitudes, length-of-season, and integrals — computed
 from a single vegetation-index time series.
 
+<figure markdown>
+  ![SoS / PoS / EoS per paddock per year](../assets/phenology.png)
+  <figcaption>SoS / PoS / EoS per paddock per year</figcaption>
+</figure>
+
+
 The implementation wraps a vendored copy of
 [`phenolopy`](https://github.com/lewistrotter/phenolopy) by Lewis
 Trotter (Apache 2.0-licensed; see `PaddockTS/LICENSES/phenolopy.LICENSE`).

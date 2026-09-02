@@ -5,6 +5,12 @@ The five indices — NDVI, CFI, NIRv, NDTI, CAI — live in
 and are computed **on read** from cloud-masked reflectance (nothing is
 stored):
 
+<figure markdown>
+  ![Median NDVI over a window, computed on read](../assets/ndvi.png)
+  <figcaption>Median NDVI over a window, computed on read</figcaption>
+</figure>
+
+
 ```python
 from pysentinel2.cube import Cube
 
