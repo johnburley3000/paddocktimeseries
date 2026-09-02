@@ -1,20 +1,25 @@
-# PaddockTS
+# PaddockTimeSeries (PaddockTS)
 
 **Paddock-scale time-series analysis of Australian agricultural land,
 end-to-end from a single bounding box.**
 
 Built at the [Borevitz Lab, Australian National
 University](https://borevitzlab.anu.edu.au/) for ecologists, agronomists,
-and remote-sensing researchers who want a reproducible path from raw
-Sentinel-2 imagery to per-paddock greenness, ground cover, and
+and remote-sensing researchers who want a reproducible analysis pipeline from raw
+Sentinel-2 data to paddock-level summaries of greenness, ground cover, and
 phenology.
 
 [![Tests](https://github.com/johnburley3000/paddocktimeseries/actions/workflows/tests.yml/badge.svg)](https://github.com/johnburley3000/paddocktimeseries/actions/workflows/tests.yml)
 [![Docs](https://img.shields.io/badge/docs-johnburley3000.github.io-2ea44f)](https://johnburley3000.github.io/paddocktimeseries/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
+[![EarthArXiv preprint](https://img.shields.io/badge/EarthArXiv-10.31223%2FX5821Z-b31b1b)](https://doi.org/10.31223/X5821Z)
 
 📚 **Documentation:** <https://johnburley3000.github.io/paddocktimeseries/>
+
+ðŸ“„ **Preprint:** [Burley et al. (2026), EarthArXiv](https://doi.org/10.31223/X5821Z)
+
+
 
 ---
 
