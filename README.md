@@ -19,45 +19,54 @@ phenology.
 
 **Preprint:** [Burley et al. (2026), EarthArXiv](https://doi.org/10.31223/X5821Z)
 
-**Code-free web tool** [paddocktimeseries.net](https://paddocktimeseries.net) by Yasar Adeel Ansari
+**Code-free web tool:** [paddocktimeseries.net](https://paddocktimeseries.net) by Yasar Adeel Ansari
 
 ---
 
 ## What it does
 
-Give PaddockTS a bounding box and a date range. It returns:
+Give PaddockTS a time and region of interest ['troi'](https://github.com/thestochasticman/troi). It produces:
 
-- **Segmented paddock polygons** — automatic field-boundary detection
-  via [Segment Anything](https://segment-anything.com/), driven through
-  [`segment-geospatial`](https://samgeo.gishub.org/) (`samgeo`) by
-  Qiusheng Wu, over an NDWI Fourier-feature presegmentation image.
-  Produces a clean GeoPackage of per-paddock geometry, area (ha), and
-  shape compactness.
-- **Per-paddock time series** — for every Sentinel-2 acquisition in
-  your window, the median reflectance and the median NDVI / CFI /
-  NIRv / NDTI / CAI inside each paddock, written as a single Zarr cube
-  on `(paddock, time)`.
-- **Fractional cover** — pixel-level unmixing of Sentinel-2 surface
-  reflectance into bare ground (`bg`), green vegetation (`pv`), and
-  non-green vegetation (`npv`), via a TFLite MLP adapted from
+- **Reusable Sentinel-2 raster time series** — multispectral observations
+  are stored in a spatial, time-indexed cache managed by
+  [`pysentinel2`](https://github.com/thestochasticman/pysentinel2).
+  The raster stack can be reopened for other analyses, with cloud masking
+  and spectral indices applied on read.
+- **Paddock boundaries** — automatic field-boundary detection using
+  [Segment Anything](https://segment-anything.com/) through
+  [`segment-geospatial`](https://samgeo.gishub.org/) (`samgeo`), applied
+  to an NDWI Fourier-feature image. The resulting GeoPackage contains
+  paddock geometries, identifiers, areas, and shape compactness.
+- **Compact paddock-level time series** — median surface reflectance,
+  spectral indices, and fractional cover for each paddock and observation
+  date, stored as Zarr datasets on `(paddock, time)`. PaddockTS also
+  produces resampled, gap-filled, and smoothed time series.
+- **Spectral indices and fractional cover** — PaddockTS computes NDVI,
+  CFI, NIRv, NDTI, and CAI. It also estimates bare ground (`bg`), green
+  vegetation (`pv`), and non-green vegetation (`npv`) using a TFLite
+  model adapted from
   [`fractionalcover3`](https://github.com/jrsrp/fractionalcover3).
-- **Phenology metrics** — start, peak, and end of season DOY plus
-  amplitudes and integrals, computed per paddock per year through a
-  vendored [`phenolopy`](https://github.com/lewistrotter/phenolopy).
-- **Environmental context** — Copernicus 30 m DEM (with derived slope,
-  aspect, flow accumulation, TWI),
-  [OzWALD](https://www.wenfo.org/ozwald/) and
-  [SILO](https://www.longpaddock.qld.gov.au/silo/) daily climate, and
-  [SLGA](https://esoil.io/TERNLandscapes/Public/Pages/SLGA/index.html)
-  90 m soil texture / properties, all clipped to the same AOI.
-- **Plots, videos, and a stitched PDF report** — true-colour and
-  false-colour MP4 timelines, per-paddock thumbnail calendars,
-  phenology curves with SoS / PoS / EoS markers, climate diagnostic
-  panels.
+- **Phenology metrics** — start, peak, and end of season, together with
+  seasonal amplitudes and integrals, calculated for each paddock and
+  year using a vendored version of
+  [`phenolopy`](https://github.com/lewistrotter/phenolopy).
+- **Environmental context** — Copernicus 30 m elevation and derived
+  terrain variables; [OzWALD](https://www.wenfo.org/ozwald/) and
+  [SILO](https://www.longpaddock.qld.gov.au/silo/) daily climate data;
+  and [SLGA](https://esoil.io/TERNLandscapes/Public/Pages/SLGA/index.html)
+  90 m soil properties, all matched to the same area of interest.
+- **Plots, videos, and reports** — true-colour and fractional-cover
+  time-lapse videos, paddock calendar plots, phenology curves, climate
+  and terrain panels, and a combined PDF report.
 
-Every output is cache-aware: rerunning the same `Troi` is a no-op,
-and partial writes (interrupted by OOM, kill, network drop) are
-automatically detected and re-fetched on the next run.
+Alternatively, supply your own paddock boundaries, optionally labelled
+with management categories or outcomes. PaddockTS can analyse these
+instead of, or alongside, automatically segmented paddocks.
+
+Shared data stores reuse previously downloaded observations across
+overlapping areas and dates. Derived PaddockTS intermediates are reused
+when the area and date range match. Incomplete cached writes are detected
+and rebuilt on the next run.
 
 ---
 
