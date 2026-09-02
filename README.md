@@ -25,7 +25,7 @@ phenology.
 
 ## What it does
 
-Give PaddockTS a time and region of interest ['troi'](https://github.com/thestochasticman/troi). It produces:
+Give PaddockTS a time and region of interest [`troi`](https://github.com/thestochasticman/troi). It produces:
 
 - **Reusable Sentinel-2 raster time series** — multispectral observations
   are stored in a spatial, time-indexed cache managed by
