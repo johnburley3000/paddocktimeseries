@@ -191,7 +191,7 @@ the live data services live in [`test/`](test/) — see
 
 ```python
 from datetime import date
-from PaddockTS.troi import Troi
+from troi.troi import Troi
 from PaddockTS.get_outputs import get_outputs
 
 troi = Troi(
@@ -231,7 +231,7 @@ previous run), skip SAM segmentation and use them directly:
 
 ```python
 from datetime import date
-from PaddockTS.troi import Troi
+from troi.troi import Troi
 from PaddockTS.get_outputs import get_outputs
 
 paddocks_fp = "/path/to/paddocks.gpkg"  # .gpkg, .shp, or .geojson
