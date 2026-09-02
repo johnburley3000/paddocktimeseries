@@ -95,7 +95,7 @@ get_outputs(
   reads, what it caches, and how to skip or replace any of it.
 - **[API reference](api/index.md)** — full signatures and runnable
   examples for every public function.
-- **[Demo notebooks](https://github.com/thestochasticman/paddocktimeseries/tree/main/demo)** —
+- **[Demo notebooks](https://github.com/johnburley3000/paddocktimeseries/tree/main/demo)** —
   three runnable Jupyter notebooks: the quickstart, calling stages
   individually, and using your own paddock boundaries.
 
@@ -103,10 +103,10 @@ get_outputs(
 
 ## License
 
-PaddockTS is **MIT-licensed** — see [LICENSE](https://github.com/thestochasticman/paddocktimeseries/blob/main/LICENSE).
+PaddockTS is **MIT-licensed** — see [LICENSE](https://github.com/johnburley3000/paddocktimeseries/blob/main/LICENSE).
 
 It vendors third-party code under permissive licenses (see
-[`PaddockTS/LICENSES/`](https://github.com/thestochasticman/paddocktimeseries/tree/main/PaddockTS/LICENSES)):
+[`PaddockTS/LICENSES/`](https://github.com/johnburley3000/paddocktimeseries/tree/main/PaddockTS/LICENSES)):
 
 - [`fractionalcover3`](https://github.com/jrsrp/fractionalcover3) — Robert Denham, MIT
 - [`phenolopy`](https://github.com/lewistrotter/phenolopy) — Lewis Trotter, Apache 2.0

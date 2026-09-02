@@ -30,7 +30,7 @@ content-addressed cache means rerunning is instant.
   Australia's STAC.
 - **No** credentials needed for the Sentinel-2 chain. SILO needs an
   email (any working address registered with the service) and SLGA
-  needs a TERN API key — see the [Getting Started docs](https://thestochasticman.github.io/paddocktimeseries/getting-started/)
+  needs a TERN API key — see the [Getting Started docs](https://johnburley3000.github.io/paddocktimeseries/getting-started/)
   if you plan to use those environmental layers.
 
 ## What gets written to disk
@@ -44,4 +44,4 @@ Each notebook prints the relevant paths as it goes. By default:
   `~/Downloads/Troi-Tmp/...`
 
 To redirect both, set `out_dir` / `tmp_dir` in `~/.config/Troi.json`
-before running. See [Getting Started → Configure](https://thestochasticman.github.io/paddocktimeseries/getting-started/#configure).
+before running. See [Getting Started → Configure](https://johnburley3000.github.io/paddocktimeseries/getting-started/#configure).

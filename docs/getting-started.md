@@ -18,38 +18,47 @@ running the full pipeline, and the layout of the outputs on disk.
 - **GPU (optional):** SAM segmentation auto-detects CUDA; everything
   else is CPU.
 - **`ffmpeg`** with the `libopenh264` encoder for the MP4 outputs
-  (bundled by the conda install).
+  (installed by `environment.yml`).
 
 ## Install
 
-### Conda (recommended)
+### Conda + pip (recommended)
 
-A single environment file installs the geospatial native stack (GDAL,
-PROJ, GEOS), the ML stack (PyTorch, TensorFlow), and PaddockTS itself.
+The conda environment provides the native and ML stack (GDAL, PROJ,
+GEOS, PyTorch, TensorFlow, Segment Anything, ffmpeg); `pip install .`
+then pulls the lab packages — the shared
+[`troi`](https://github.com/thestochasticman/troi) core (the `Troi` /
+`Config` primitives) and the five machine-wide data stores
+([`pysentinel2`](https://github.com/thestochasticman/pysentinel2),
+[`pysilo`](https://github.com/thestochasticman/pysilo),
+[`pyozwald`](https://github.com/thestochasticman/pyozwald),
+[`pycopdem`](https://github.com/thestochasticman/pycopdem),
+[`pyslga`](https://github.com/thestochasticman/pyslga)) — straight
+from their GitHub repositories:
 
-PaddockTS depends on the shared
-[`troi`](https://github.com/thestochasticman/troi)
-core package (the `Troi` / `Config` primitives) — clone it alongside
-and install it first.
+```bash
+git clone https://github.com/johnburley3000/paddocktimeseries.git
+cd paddocktimeseries
+conda env update -n paddockts -f environment.yml   # creates the env if missing
+conda activate paddockts
+pip install .
+```
+
+### From source (development)
+
+To hack on the lab packages themselves, clone them alongside and
+install everything editable (`--no-deps` stops pip re-fetching the git
+pins over your local checkouts):
 
 ```bash
 git clone https://github.com/thestochasticman/troi.git
-git clone https://github.com/thestochasticman/paddocktimeseries.git
+git clone https://github.com/thestochasticman/pysentinel2.git
+# ... and the other stores you plan to touch
+git clone https://github.com/johnburley3000/paddocktimeseries.git
 cd paddocktimeseries
-conda env update -n troi -f environment.yml
-conda activate troi
-pip install -e ../troi
-pip install -e .
-```
-
-### pip
-
-If you already have GDAL, PROJ, GEOS, and (optionally) CUDA installed
-system-wide:
-
-```bash
-pip install -e ../troi
-pip install -e .
+conda env update -n paddockts -f environment.yml
+conda activate paddockts
+pip install --no-deps -e ../troi -e ../pysentinel2 -e .
 ```
 
 Confirm the install:
@@ -227,25 +236,37 @@ the cache; you can call any subset, in any order.
 
 ## Outputs
 
-Per-troi outputs land under `out_dir/<stub>/` and intermediates under
-`tmp_dir/<stub>/`. Final outputs include:
+Final outputs land under `out_dir/<stub>/`. Products derived from the
+paddock polygons are keyed by the polygons' file stem —
+`sam_paddocks_*` for the SAM segmentation, or your own file's stem
+when you pass `paddocks_filepath` — so a SAM run and a user-paddocks
+run over the same troi never collide:
 
 | File | What's in it |
 |---|---|
-| `{stub}_paddocks.gpkg` | Segmented paddock polygons + `area_ha` + `compactness` |
-| `{stub}_paddockTS.zarr` | Per-paddock medians for every band + index on `(paddock, time)` |
-| `{stub}_paddockTS_<year>.zarr` | Yearly slices with a `doy` coordinate |
+| `{stub}_report.pdf` | Stitched landscape-A4 report combining everything below |
 | `{stub}_sentinel2.mp4` | True-colour Sentinel-2 timeline |
 | `{stub}_fractional_cover.mp4` | Bare / green / non-green RGB timeline |
-| `{stub}_calendar_<year>_p01.png` | Per-paddock thumbnail calendar |
-| `{stub}_phenology_p01.png` | SoS / PoS / EoS curves per paddock per year |
+| `sam_paddocks_sentinel2_paddocks.mp4` | True-colour timeline with paddock boundaries |
+| `sam_paddocks_fractional_cover_paddocks.mp4` | Fractional-cover timeline with paddock boundaries |
+| `sam_paddocks_calendar_p<NN>.png` | Per-paddock thumbnail calendar, one paddock per page |
+| `sam_paddocks_phenology_p<NN>.png` | SoS / PoS / EoS curves per paddock per year |
+| `sam_paddocks_phenology.csv` | All phenology metrics, one row per paddock per year |
 | `{stub}_topography.png` | Elevation, slope, aspect, flow accumulation |
 | `{stub}_silo_*.png`, `{stub}_ozwald_daily_*.png` | Climate diagnostic panels |
-| `{stub}.pdf` | Stitched report combining all of the above |
 
-Intermediate artefacts (raw S2 zarr, presegmentation tif, SAM masks)
-in `tmp_dir/<stub>/` can be safely deleted between runs without losing
-your final outputs.
+Intermediates live in two places, both safe to delete between runs:
+
+- `tmp_dir/<stub>/` — the per-paddock time-series Zarrs
+  (`sam_paddocks_timeseries.zarr`, the smoothed variant, and one Zarr
+  per year with a `doy` coordinate).
+- `tmp_dir/paddockts/<bbox_hash>/<time_hash>/` — the region × time
+  cache (fractional-cover Zarr, presegmentation image, SAM masks and
+  polygons), shared by every stub over the same bbox and dates.
+
+Sentinel-2 imagery itself is not stored per-troi at all: it lives in
+the machine-wide `pysentinel2` cube, and overlapping troi windows
+re-download nothing.
 
 ## Caching contract
 
@@ -259,6 +280,19 @@ On startup each stage checks for both the data file and the marker. A
 data file without its marker means a previous run was killed mid-write
 (OOM, kill -9, network drop) and the stage refetches/recomputes. Pass
 `reload=True` to `get_outputs` to force a clean rebuild.
+
+## Tests
+
+The automated offline suite (synthetic inputs, no network or
+credentials) runs with pytest and on every push via GitHub Actions:
+
+```bash
+pip install -e '.[tests]'
+pytest
+```
+
+End-to-end acceptance scripts against the live data services live in
+[`test/`](https://github.com/johnburley3000/paddocktimeseries/tree/main/test).
 
 ## Next steps
 

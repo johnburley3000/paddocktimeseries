@@ -64,9 +64,9 @@ viewer = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/thestochasticman/paddocktimeseries"
-Repository = "https://github.com/thestochasticman/paddocktimeseries"
-Issues = "https://github.com/thestochasticman/paddocktimeseries/issues"
+Homepage = "https://github.com/johnburley3000/paddocktimeseries"
+Repository = "https://github.com/johnburley3000/paddocktimeseries"
+Issues = "https://github.com/johnburley3000/paddocktimeseries/issues"
 
 [tool.pytest.ini_options]
 # The offline unit suite lives in tests/. The scripts in test/ are

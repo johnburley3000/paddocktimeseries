@@ -9,12 +9,12 @@ and remote-sensing researchers who want a reproducible path from raw
 Sentinel-2 imagery to per-paddock greenness, ground cover, and
 phenology.
 
-[![Tests](https://github.com/thestochasticman/paddocktimeseries/actions/workflows/tests.yml/badge.svg)](https://github.com/thestochasticman/paddocktimeseries/actions/workflows/tests.yml)
-[![Docs](https://img.shields.io/badge/docs-thestochasticman.github.io-2ea44f)](https://thestochasticman.github.io/paddocktimeseries/)
+[![Tests](https://github.com/johnburley3000/paddocktimeseries/actions/workflows/tests.yml/badge.svg)](https://github.com/johnburley3000/paddocktimeseries/actions/workflows/tests.yml)
+[![Docs](https://img.shields.io/badge/docs-johnburley3000.github.io-2ea44f)](https://johnburley3000.github.io/paddocktimeseries/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 
-📚 **Documentation:** <https://thestochasticman.github.io/paddocktimeseries/>
+📚 **Documentation:** <https://johnburley3000.github.io/paddocktimeseries/>
 
 ---
 
@@ -66,7 +66,7 @@ lab packages — the `troi` core and the five data stores — straight
 from their GitHub repositories:
 
 ```bash
-git clone https://github.com/thestochasticman/paddocktimeseries.git
+git clone https://github.com/johnburley3000/paddocktimeseries.git
 cd paddocktimeseries
 conda env update -n paddockts -f environment.yml   # creates the env if missing
 conda activate paddockts
@@ -98,7 +98,7 @@ git clone https://github.com/thestochasticman/pysilo.git
 git clone https://github.com/thestochasticman/pyozwald.git
 git clone https://github.com/thestochasticman/pycopdem.git
 git clone https://github.com/thestochasticman/pyslga.git
-git clone https://github.com/thestochasticman/paddocktimeseries.git
+git clone https://github.com/johnburley3000/paddocktimeseries.git
 cd paddocktimeseries
 conda env update -n paddockts -f environment.yml   # native + scientific stack
 conda activate paddockts
@@ -134,7 +134,7 @@ Settings can also come from environment variables
 The Sentinel-2 → PaddockTS chain itself works without any credentials.
 
 You can also pass configuration directly to `Troi` via a `Config`
-object — see the [Getting started](https://thestochasticman.github.io/paddocktimeseries/getting-started/)
+object — see the [Getting started](https://johnburley3000.github.io/paddocktimeseries/getting-started/)
 page.
 
 ---
@@ -300,7 +300,7 @@ The table below is the same chain, stage by stage:
 
 Every stage is a standalone function — pick any subset, swap in your
 own segmentation, plug in your own phenology library. See the
-[pipeline page](https://thestochasticman.github.io/paddocktimeseries/pipeline/)
+[pipeline page](https://johnburley3000.github.io/paddocktimeseries/pipeline/)
 for the full call-graph and per-stage caching behaviour.
 
 ---
@@ -385,9 +385,9 @@ relevant to your work:
 ## Contributing & support
 
 - **Bug reports / feature requests:**
-  [GitHub Issues](https://github.com/thestochasticman/paddocktimeseries/issues)
+  [GitHub Issues](https://github.com/johnburley3000/paddocktimeseries/issues)
 - **Documentation:**
-  <https://thestochasticman.github.io/paddocktimeseries/>
+  <https://johnburley3000.github.io/paddocktimeseries/>
 - **Known failure modes:** [`diagnostics.md`](diagnostics.md) (DEA STAC
   cold-start, GDAL HTTP auth)
 - **Maintainers:** Borevitz Lab, Australian National University
