@@ -103,9 +103,9 @@ stages, or no `paddocks_filepath` skips the user stages).
 
 Sentinel-2 comes from the machine-wide
 [`pysentinel2`](https://github.com/thestochasticman/pysentinel2) cube:
-`Cube.get_ds_troi(troi, clean=True)` downloads only the (day × chunk)
-cells no previous troi has fetched, then applies cloud masking **on
-read**. Cleaning dilates the fmask cloud/shadow (and snow) mask by
+`Cube.get_ds_troi(troi, clean=True)` downloads only the pixels no
+previous read has fetched (coverage is tracked per day as exact pixel
+rectangles), then applies cloud masking **on read**. Cleaning dilates the fmask cloud/shadow (and snow) mask by
 `buffer_px` to catch cloud-edge halos, and gates frames on
 `max_cloud_fraction` (contamination over *valid* pixels) and
 `min_valid_fraction` (swath coverage) — per-frame `cloud_fraction` /
@@ -116,6 +116,9 @@ Failure modes specific to DEA's STAC are documented in pysentinel2's
 [`diagnostics.md`](https://github.com/thestochasticman/pysentinel2/blob/main/diagnostics.md).
 
 ### Stage 5: Paddock segmentation (SAM)
+
+![SAM-segmented paddocks over Sentinel-2 imagery](assets/segmentation.png)
+*Automatically segmented paddocks over the true-colour Sentinel-2 window.*
 
 Three internal steps:
 
@@ -144,8 +147,9 @@ The final filtered GeoPackage lives at `Paths(troi).sam_paddocks`.
 `make_paddock_time_series` is the pivot from pixel-space to
 paddock-space. It:
 
-1. Computes the five spectral indices and adds them to the Sentinel-2
-   dataset (cached via `compute_indices`).
+1. Computes the five spectral indices transiently, one at a time
+   (never materialised for the whole window — they are on-read
+   derivatives from `pysentinel2.derive`).
 2. Rasterises paddock polygons onto the Sentinel-2 grid using integer
    IDs.
 3. For every data variable, in parallel across processes, computes the
@@ -156,6 +160,10 @@ paddock-space. It:
 `make_yearly_paddock_time_series` then splits the cube by calendar year
 and attaches a `doy` (day-of-year, 1–366) coordinate, so seasonal
 curves from different years align on a common DOY axis.
+
+![Per-paddock thumbnail calendar](assets/calendar.png)
+*One page per paddock: each cell is the paddock's true-colour thumbnail
+at that point in the season; red boxes mark interpolated (cloudy) slots.*
 
 ### Stages 15–16: Phenology
 
@@ -173,29 +181,41 @@ Paddocks with fewer than `min_observations` (default 25) valid points
 in a year are skipped for that year. The result is one tidy
 `pandas.DataFrame` per year, returned as `{year: DataFrame}`.
 
+![Phenology curves with SoS / PoS / EoS markers](assets/phenology.png)
+*Smoothed NDVI with detected start / peak / end of season, per paddock per year.*
+
 ## Environmental data pipeline
 
-| # | Stage | Module | Output |
+Environmental data comes from the machine-wide store packages —
+each caches downloads across every troi on the machine, so
+overlapping regions and repeat runs re-fetch nothing:
+
+| # | Stage | Store / module | Output |
 |---|---|---|---|
-| 1 | Download terrain (Copernicus DEM) | `Environmental.TerrainTiles.download_terrain_tiles` | AOI-keyed `terrain.tif` |
-| 2 | Download OzWALD daily | `Environmental.OzWALD.download_ozwald_daily` | `{stub}_ozwald_daily.csv` |
-| 3 | Download SILO climate | `Environmental.SILO.download_silo` | `{stub}_silo.csv` |
-| 4 | Download SLGA soils | `Environmental.SLGASoils.download_slgasoils` | `{stub}_{var}_{depth}.tif` × N |
-| 5 | OzWALD plot | `Plotting.ozwald_plot.ozwald_daily_plot` | `{stub}_ozwald_daily_*.png` |
-| 6 | SILO plot | `Plotting.silo_plot` | `{stub}_silo_*.png` |
-| 7 | Terrain plot | `Plotting.terrain_tiles_plot` | `{stub}_topography.png` |
+| 1 | Download terrain (Copernicus DEM) | [`pycopdem`](https://github.com/thestochasticman/pycopdem) | elevation window (machine-wide store) |
+| 2 | Download OzWALD daily | [`pyozwald`](https://github.com/thestochasticman/pyozwald) | daily meteorology (machine-wide store) |
+| 3 | Download SILO climate | [`pysilo`](https://github.com/thestochasticman/pysilo) | daily climate (machine-wide store) |
+| 4 | Download SLGA soils | [`pyslga`](https://github.com/thestochasticman/pyslga) | soil properties (machine-wide store) |
+| 5 | DAESim forcing | `PaddockTS.daesim_forcing` | `{stub}_DAESim_forcing.csv` |
+| 6 | OzWALD plot | `Plotting.ozwald_plot` | `{stub}_ozwald_daily_*.png` |
+| 7 | SILO plot | `Plotting.silo_plot` | `{stub}_silo_*.png` |
+| 8 | Terrain plot | `Plotting.terrain_tiles_plot` | `{stub}_topography.png` |
 
-Stage 7 (terrain plot) waits for the cleaned Sentinel-2 cube
-(`sentinel2_clean.zarr`) to be produced because it overlays the
-terrain rendering on the S2 grid extent.
+The terrain plot reprojects onto the Sentinel-2 pixel grid, which it
+reconstructs deterministically from the troi bbox — it does not wait
+on (or read) the Sentinel-2 data itself.
 
-Stages 3 and 6 are **silently skipped** (status: `skipped`, not
-`error`) if `config.email` is unset; stage 4 is skipped the same way
-if `config.tern_api_key` is unset. Terrain and OzWALD work without
-any credentials.
+The SILO stages are **silently skipped** (status: `skipped`, not
+`error`) if `config.email` is unset; the SLGA stage is skipped the
+same way if `config.tern_api_key` is unset. Terrain and OzWALD work
+without any credentials.
 
-The SLGA stage caches each `(var, depth)` TIF with a sibling
-`._SUCCESS` marker, so a re-run with the same vars/depths is a no-op.
+![Topography panel](assets/topography.png)
+*Elevation, flow accumulation, aspect, and slope derived from the
+Copernicus DEM, reprojected onto the Sentinel-2 grid.*
+
+![Daily precipitation panel](assets/climate.png)
+*OzWALD daily climate diagnostic (one of several panels).*
 
 ## Skipping the dashboard
 

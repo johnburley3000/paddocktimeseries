@@ -30,6 +30,25 @@ Given a `Troi` (a bounding box + date range), PaddockTS produces:
 | **Environmental context** | Copernicus 30 m DEM (with derived slope, aspect, flow accumulation, TWI), [OzWALD](https://www.wenfo.org/ozwald/) and [SILO](https://www.longpaddock.qld.gov.au/silo/) daily climate, and [SLGA](https://esoil.io/TERNLandscapes/Public/Pages/SLGA/index.html) 90 m soil texture / properties, all clipped to the same AOI. |
 | **Plots & videos** | True-colour and false-colour MP4 timelines, per-paddock thumbnail calendars, phenology curves with SoS / PoS / EoS markers, climate diagnostic panels, and a stitched PDF report. |
 
+<div class="grid" markdown>
+
+<figure markdown>
+  ![Sentinel-2 timeline with paddock boundaries](assets/sentinel2_paddocks.gif)
+  <figcaption>True-colour Sentinel-2 timeline with SAM paddock boundaries</figcaption>
+</figure>
+
+<figure markdown>
+  ![Fractional-cover timeline with paddock boundaries](assets/fractional_cover_paddocks.gif)
+  <figcaption>Fractional cover (red = bare, green = growing, blue = dry) over the same window</figcaption>
+</figure>
+
+</div>
+
+<figure markdown>
+  ![Per-paddock thumbnail calendar](assets/calendar.png)
+  <figcaption>Eight seasons of one paddock at a glance — red boxes mark interpolated (cloudy) slots</figcaption>
+</figure>
+
 ---
 
 ## Quick example
