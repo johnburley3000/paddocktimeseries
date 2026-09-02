@@ -1,5 +1,14 @@
 # About testing
-Each .py script creates a troi and runs get_outputs()
+
+Two layers:
+
+- **`tests/` (repo root)** — the automated offline unit suite (pytest,
+  synthetic inputs, no network). Runs in CI on every push:
+  `pip install -e '.[tests]' && pytest`.
+- **`test/` (this directory)** — end-to-end acceptance scripts against
+  the live data services (DEA, SILO, OzWALD, …), run manually.
+
+Each .py script here creates a troi and runs get_outputs()
 
 ## First, test mode 1: user provided AOI and date range
 ```

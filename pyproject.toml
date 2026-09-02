@@ -50,6 +50,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+tests = [
+  "pytest",
+]
 docs = [
   "mkdocs",
   "mkdocs-material",
@@ -64,6 +67,16 @@ viewer = [
 Homepage = "https://github.com/thestochasticman/paddocktimeseries"
 Repository = "https://github.com/thestochasticman/paddocktimeseries"
 Issues = "https://github.com/thestochasticman/paddocktimeseries/issues"
+
+[tool.pytest.ini_options]
+# The offline unit suite lives in tests/. The scripts in test/ are
+# end-to-end acceptance runs against live services (see
+# test/about_testing.md) and are run manually, never collected.
+testpaths = ["tests"]
+markers = [
+  "network: needs internet access to live data services (deselect with -m 'not network')",
+  "slow: takes more than a minute",
+]
 
 [tool.setuptools.packages.find]
 include = ["PaddockTS", "PaddockTS.*"]

@@ -9,6 +9,7 @@ and remote-sensing researchers who want a reproducible path from raw
 Sentinel-2 imagery to per-paddock greenness, ground cover, and
 phenology.
 
+[![Tests](https://github.com/thestochasticman/paddocktimeseries/actions/workflows/tests.yml/badge.svg)](https://github.com/thestochasticman/paddocktimeseries/actions/workflows/tests.yml)
 [![Docs](https://img.shields.io/badge/docs-thestochasticman.github.io-2ea44f)](https://thestochasticman.github.io/paddocktimeseries/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
@@ -150,6 +151,25 @@ common workflows:
 ```bash
 jupyter lab demo/
 ```
+
+---
+
+## Tests
+
+The offline unit suite under [`tests/`](tests/) verifies the index
+math, fractional-cover unmixing, per-paddock median aggregation,
+smoothing, phenology metrics, and the caching contract — all against
+synthetic inputs, with no network access or credentials. It runs on
+every push via [GitHub Actions](.github/workflows/tests.yml):
+
+```bash
+pip install -e '.[tests]'
+pytest
+```
+
+End-to-end acceptance scripts that exercise the full pipeline against
+the live data services live in [`test/`](test/) — see
+[`test/about_testing.md`](test/about_testing.md).
 
 ---
 

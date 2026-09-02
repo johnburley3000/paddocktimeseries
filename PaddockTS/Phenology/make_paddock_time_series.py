@@ -72,6 +72,7 @@ def make_paddock_time_series(troi: Troi, ds_sentinel2=None, paddocks_filepath=No
         index. Also persisted to ``{paddocks_filepath stem}_timeseries.zarr``.
     """
     import rasterio.features
+    import rioxarray  # noqa: F401 — registers the .rio accessor used below
     from affine import Affine
     import pandas as pd
     from datetime import datetime

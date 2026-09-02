@@ -1,0 +1,29 @@
+name: tests
+
+on:
+  push:
+    branches: [main, refactor/move-query-to-borevitz-lab]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  offline-suite:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build conda environment (native + scientific stack)
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: environment.yml
+          environment-name: paddockts
+          cache-environment: true
+
+      - name: Install PaddockTS + lab packages (from GitHub)
+        run: pip install . pytest
+
+      - name: Run offline test suite
+        run: pytest -m "not network" -v
