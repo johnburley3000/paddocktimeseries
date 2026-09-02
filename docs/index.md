@@ -33,20 +33,20 @@ Given a `Troi` (a bounding box + date range), PaddockTS produces:
 <div class="grid" markdown>
 
 <figure markdown>
-  ![Sentinel-2 timeline with paddock boundaries](assets/sentinel2_paddocks.gif)
-  <figcaption>True-colour Sentinel-2 timeline with SAM paddock boundaries</figcaption>
+  ![Eight years of Sentinel-2 over the Milgadara farm](assets/milgadara_sentinel2.gif)
+  <figcaption>Eight years (2018–2025) of true-colour Sentinel-2 over the Milgadara farm, with its 60+ SAM-segmented paddocks</figcaption>
 </figure>
 
 <figure markdown>
-  ![Fractional-cover timeline with paddock boundaries](assets/fractional_cover_paddocks.gif)
-  <figcaption>Fractional cover (red = bare, green = growing, blue = dry) over the same window</figcaption>
+  ![Eight years of fractional cover over the Milgadara farm](assets/milgadara_fractional_cover.gif)
+  <figcaption>The same eight seasons as fractional cover — red = bare ground, green = growing, blue = dry vegetation</figcaption>
 </figure>
 
 </div>
 
 <figure markdown>
   ![Per-paddock thumbnail calendar](assets/calendar.png)
-  <figcaption>Eight seasons of one paddock at a glance — red boxes mark interpolated (cloudy) slots</figcaption>
+  <figcaption>Eight seasons of one Milgadara paddock at a glance — red boxes mark interpolated (cloudy) slots</figcaption>
 </figure>
 
 ---
