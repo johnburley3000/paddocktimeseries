@@ -227,7 +227,9 @@ Outputs land under `~/Documents/Troi-Outputs/<stub>/`:
 ## Bring your own paddocks
 
 If you already have field boundaries (QGIS export, cadastral layer,
-previous run), skip SAM segmentation and use them directly:
+previous run), skip SAM segmentation and use them directly.
+
+Importantly, tell build_from_paddocks() which column of your .gpkg specifies paddock name using label_col="".
 
 ```python
 from datetime import date
