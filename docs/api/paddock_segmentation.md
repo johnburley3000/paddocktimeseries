@@ -97,7 +97,7 @@ gdf = get_paddocks(
 
 ## Example: visual sanity check against NDVI
 
-A useful eyeball test: overlay the polygons on the median NDVI of the
+To check segmentation quality, overlay the polygons on the median NDVI of the
 AOI to confirm boundaries follow real field edges.
 
 ```python

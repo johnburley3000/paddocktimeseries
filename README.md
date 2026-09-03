@@ -4,7 +4,7 @@
 end-to-end from a single bounding box.**
 
 Built at the [Borevitz Lab, Australian National
-University](https://borevitzlab.anu.edu.au/) for ecologists, agronomists,
+University](https://biology.anu.edu.au/research/research-groups/borevitz-group-plant-genomics-climate-adaption) for ecologists, agronomists,
 and remote-sensing researchers who want a reproducible pipeline for
 Sentinel-2 imagery to paddock (or field) boundaries and paddock-level
 summaries of greenness, ground cover, and phenology.

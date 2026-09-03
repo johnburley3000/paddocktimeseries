@@ -1,8 +1,9 @@
 # API reference
 
 Public API for the PaddockTS package. Each page below covers one
-stage of the pipeline plus its supporting types — prose, example
-usage, and auto-generated signatures from the source docstrings.
+stage of the pipeline plus its supporting types — a description,
+example usage, and auto-generated signatures from the source
+docstrings.
 
 | Module | What it does |
 |---|---|
@@ -21,7 +22,7 @@ usage, and auto-generated signatures from the source docstrings.
 
 Each page combines:
 
-- hand-written prose explaining the *what* and *why* of each module,
+- a description of what each module does and why,
 - runnable examples showing a typical call,
 - auto-generated reference rendered by
   [mkdocstrings](https://mkdocstrings.github.io/) from the Python
