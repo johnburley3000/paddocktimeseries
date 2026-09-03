@@ -42,16 +42,17 @@ classifiers = [
 ]
 # The scientific / geospatial / ML stack (GDAL, rasterio, samgeo, torch,
 # tensorflow, datacube, …) is provided by conda via environment.yml.
-# Only the lab packages are declared here, pinned to their GitHub
-# repositories so a plain `pip install .` pulls them without any extra
-# channel or checkout.
+# Lab packages are installed directly from GitHub. The auxiliary data-store
+# packages are pinned to exact revisions tested with this PaddockTS release.
+# Troi remains unpinned because the downstream lab packages currently
+# declare it from the repository default branch.
 dependencies = [
   "pytroi @ git+https://github.com/thestochasticman/troi.git",
-  "pysentinel2 @ git+https://github.com/thestochasticman/pysentinel2.git",
-  "pysilo @ git+https://github.com/thestochasticman/pysilo.git",
-  "pyozwald @ git+https://github.com/thestochasticman/pyozwald.git",
-  "pycopdem @ git+https://github.com/thestochasticman/pycopdem.git",
-  "pyslga @ git+https://github.com/thestochasticman/pyslga.git",
+  "pysentinel2 @ git+https://github.com/thestochasticman/pysentinel2.git@d6c931e0fa3d60ce15f289e3f5495f6917793c94",
+  "pysilo @ git+https://github.com/thestochasticman/pysilo.git@1b1d106cc47f68d59cb3a0ce5bdc3a9fd840c00a",
+  "pyozwald @ git+https://github.com/thestochasticman/pyozwald.git@0e6e8323a04cb8d5566a4c3bda8b7f1d2ec5338f",
+  "pycopdem @ git+https://github.com/thestochasticman/pycopdem.git@7e74bbfe273762cef8de4e4a52419145cf1fbedd",
+  "pyslga @ git+https://github.com/thestochasticman/pyslga.git@a51f5824502300bc324ec4625b8dcbd7873d7dcf",
 ]
 
 [project.optional-dependencies]

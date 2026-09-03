@@ -39,7 +39,7 @@ dependencies:
   - pysheds
   - cvxpy
   - ecos
-  - tensorflow
+  - tensorflow<2.20
   - datacube
   - netcdf4
   - statsmodels
