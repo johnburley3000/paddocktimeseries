@@ -128,6 +128,13 @@ def make_pdf(troi: Troi, paddocks_filepath: str | None = None,
     pdf_path = f'{out_dir}/{troi.stub}_report.pdf'
     os.makedirs(out_dir, exist_ok=True)
 
+    # Write to a local temp file and move into place at the end: out_dir
+    # defaults to ~/Documents, which iCloud may be syncing — incremental
+    # writes there can stall with ETIMEDOUT mid-build.
+    import tempfile
+    tmp_pdf = os.path.join(tempfile.mkdtemp(prefix='paddockts_pdf_'),
+                           os.path.basename(pdf_path))
+
     # Derive stems for SAM and user paddocks
     # Must match how the plotting stages name their outputs: they stem the
     # paddocks file they were given (get_outputs passes the sam_paddocks
@@ -141,7 +148,7 @@ def make_pdf(troi: Troi, paddocks_filepath: str | None = None,
     else:
         user_stem = ''  # Will result in no matches for user sections
 
-    with PdfPages(pdf_path) as pdf:
+    with PdfPages(tmp_pdf) as pdf:
         # PDF document metadata — shows up in viewer tabs, file properties,
         # and search indexes. Cheap to set; helpful for users juggling many
         # reports across queries.
@@ -207,6 +214,8 @@ def make_pdf(troi: Troi, paddocks_filepath: str | None = None,
             for path in section_files:
                 _add_image_page(pdf, path)
 
+    import shutil
+    shutil.move(tmp_pdf, pdf_path)
     print(f'PDF report saved to {pdf_path}')
     return pdf_path
 
