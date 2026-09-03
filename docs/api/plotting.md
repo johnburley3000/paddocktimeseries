@@ -5,7 +5,7 @@ review-grade output PaddockTS produces.
 
 <figure markdown>
   ![Per-paddock thumbnail calendar — red boxes mark interpolated slots](../assets/calendar.png)
-  <figcaption>Per-paddock thumbnail calendar — red boxes mark interpolated slots</figcaption>
+  <figcaption>Per-paddock thumbnail calendar; red = interpolated, orange = cloud gaps filled</figcaption>
 </figure>
 
 

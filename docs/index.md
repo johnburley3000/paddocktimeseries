@@ -104,11 +104,12 @@ are returned as DataFrames and written to a CSV covering all years.
 
 Calendar plots show one page per paddock, one row per year, and 48
 thumbnail slots across the season. Slots without a clear observation
-are interpolated and outlined in red.
+are interpolated and outlined in red; mostly-clear slots whose
+cloud-masked pixels were gap-filled are outlined in orange.
 
 <figure markdown>
   ![Per-paddock thumbnail calendar](assets/calendar.png)
-  <figcaption>Calendar page for one paddock over eight years; red boxes mark interpolated slots</figcaption>
+  <figcaption>Calendar page for one paddock over eight years; red = interpolated, orange = cloud gaps filled</figcaption>
 </figure>
 
 ### Environmental context

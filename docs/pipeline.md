@@ -163,7 +163,8 @@ curves from different years align on a common DOY axis.
 
 ![Per-paddock thumbnail calendar](assets/calendar.png)
 *One page per paddock: each cell is the paddock's true-colour thumbnail
-at that point in the season; red boxes mark interpolated (cloudy) slots.*
+at that point in the season. Red outlines mark fully interpolated slots;
+orange outlines mark observations whose cloud-masked pixels were gap-filled.*
 
 ### Stages 15–16: Phenology
 
