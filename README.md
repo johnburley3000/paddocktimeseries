@@ -82,7 +82,7 @@ from their GitHub repositories:
 ```bash
 git clone https://github.com/johnburley3000/paddocktimeseries.git
 cd paddocktimeseries
-conda env update -n paddockts -f environment.yml   # creates the env if missing
+conda env update -n paddockts -f environment.yml
 conda activate paddockts
 pip install .
 ```
