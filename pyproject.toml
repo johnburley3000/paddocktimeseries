@@ -46,7 +46,7 @@ classifiers = [
 # repositories so a plain `pip install .` pulls them without any extra
 # channel or checkout.
 dependencies = [
-  "troi @ git+https://github.com/thestochasticman/troi.git",
+  "pytroi @ git+https://github.com/thestochasticman/troi.git",
   "pysentinel2 @ git+https://github.com/thestochasticman/pysentinel2.git",
   "pysilo @ git+https://github.com/thestochasticman/pysilo.git",
   "pyozwald @ git+https://github.com/thestochasticman/pyozwald.git",
