@@ -26,15 +26,22 @@ python test/test_mode2_milgadara.py # provides a .json from Agriweb for milgadar
 python test/slow.py # for this, I used milgadara paddocks .gpkg and 2018-2025.
 ```
 
+## Fourth, do the full Milgadara demo, replicating the outputs shown in manuscript.
+This will take ~2 hrs or so to run the pipeline, then run the jupyter notebook 
+'''
+python demo/Milgadara_2018-25_case_study.py
+jupyter lab demo/Milgadara_demonstration.ipynb
+'''
+
 ## Results
-### jtb June 5 2026 on Mac
+### jtb Sept 3 2026 on Mac
 test/test_mode1.py -- works
 
-test/test_mode2.py -- cant download S2
+test/test_mode2.py -- works
 
-test/test_mode2_milgadara.py -- cant download S2
+test/test_mode2_milgadara.py -- works
 
-python test/slow.py -- finished running when copy-pasted into python.
+python test/slow.py -- finished running when copy-pasted into python. (waiting retest)
 
-
+demo/Milgadara_2018-25_case_study.py -- (waiting retest)
 
