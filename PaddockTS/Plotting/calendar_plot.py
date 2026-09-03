@@ -8,10 +8,11 @@ paddock at the observation closest to the slot's day-of-year, with
 non-paddock pixels masked black.
 
 Thumbnails are contrast-stretched (2–98 percentile per scene). Cells
-whose nearest observation is mostly cloud-masked are filled with a
+whose nearest observation is mostly cloud-masked are replaced by a
 time-weighted blend of the nearest clear observations either side and
-outlined in red; every page carries a legend marking them as
-interpolated.
+outlined in red ("interpolated"); mostly-clear cells whose masked
+pixels are gap-filled from that same blend are outlined in orange
+("cloud gaps filled"). Every page carries the two-entry legend.
 
 Each page is a matplotlib :class:`~matplotlib.figure.Figure` so that
 when it's written into a PDF report by :mod:`PaddockTS.Plotting.make_pdf`,
@@ -55,7 +56,8 @@ from PaddockTS.paths import Paths
 # outlined (see _build_paddock_figure).
 _VALID_FRAC_THRESH = 0.6
 _CLEAR_FULL_THRESH = 0.98
-_INTERP_COLOR = 'red'
+_INTERP_COLOR = 'red'       # whole tile synthesized from neighbouring dates
+_PARTIAL_COLOR = 'orange'   # real observation, masked pixels gap-filled
 
 
 def _to_rgb(ds, time_idx):
@@ -308,13 +310,16 @@ def _build_paddock_figure(stub: str, paddock_id: int, label_text: str,
 
     Cells whose nearest observation was mostly cloud-masked are filled
     with a time-weighted blend of the nearest clear observations and
-    outlined in red; every page carries a matching legend.
+    outlined in red (fully interpolated); mostly-clear cells whose
+    masked pixels were gap-filled are outlined in orange. Every page
+    carries a matching two-entry legend.
     """
     n_rows = len(years_sorted)
     grid_h = n_rows * thumb_size
     grid_w = n_slots * thumb_size
     grid = np.zeros((grid_h, grid_w, 3), dtype=np.uint8)
     interp_cells: list[tuple[int, int]] = []
+    partial_cells: list[tuple[int, int]] = []
     for i, year in enumerate(years_sorted):
         obs_thumbs, slot_specs = years_data[year]
         specs = slot_specs[paddock_id]
@@ -335,7 +340,7 @@ def _build_paddock_figure(stub: str, paddock_id: int, label_text: str,
                 _, k, p, n, w = spec
                 base, valid = obs_thumbs[k][paddock_id]
                 tile = np.where(valid[..., None], base, _blend(p, n, w))
-                interp_cells.append((i, j))
+                partial_cells.append((i, j))
             else:
                 _, p, n, w = spec
                 tile = _blend(p, n, w)
@@ -370,18 +375,22 @@ def _build_paddock_figure(stub: str, paddock_id: int, label_text: str,
     for spine in grid_ax.spines.values():
         spine.set_visible(False)
 
-    # Outline interpolated cells; the legend appears on every page so a
-    # reader landing mid-report knows what an outlined cell means.
+    # Outline gap-filled and fully interpolated cells in different
+    # colours; the legend appears on every page so a reader landing
+    # mid-report knows what an outlined cell means.
     from matplotlib.patches import Rectangle
-    for i, j in interp_cells:
-        grid_ax.add_patch(Rectangle(
-            (j * thumb_size - 0.5, i * thumb_size - 0.5), thumb_size, thumb_size,
-            fill=False, edgecolor=_INTERP_COLOR, linewidth=1.0,
-        ))
-    proxy = Rectangle((0, 0), 1, 1, fill=False,
-                      edgecolor=_INTERP_COLOR, linewidth=1.2)
-    fig.legend([proxy], ['interpolated (no clear observation)'],
-               loc='lower center', frameon=False, fontsize=9)
+    for cells, colour in ((interp_cells, _INTERP_COLOR),
+                          (partial_cells, _PARTIAL_COLOR)):
+        for i, j in cells:
+            grid_ax.add_patch(Rectangle(
+                (j * thumb_size - 0.5, i * thumb_size - 0.5),
+                thumb_size, thumb_size,
+                fill=False, edgecolor=colour, linewidth=1.0,
+            ))
+    proxies = [Rectangle((0, 0), 1, 1, fill=False, edgecolor=c, linewidth=1.2)
+               for c in (_INTERP_COLOR, _PARTIAL_COLOR)]
+    fig.legend(proxies, ['interpolated', 'cloud gaps filled'],
+               loc='lower center', ncols=2, frameon=False, fontsize=9)
 
     # Title: "Paddock 1, 32 ha, 2018 – 2025" (single-year drops the range)
     if len(years_sorted) == 1:
