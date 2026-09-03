@@ -406,7 +406,7 @@ relevant to your work:
   Qiusheng Wu — MIT. Wraps Segment Anything for geospatial use; drives
   the paddock segmentation stage. Cite:
   [Wu & Osco (2023), J. Open Source Software](https://joss.theoj.org/papers/10.21105/joss.05663).
-- [Segment Anything Model](https://segment-anything.com/) (SAM) by
+- [`Segment Anything Model (SAM)`](https://arxiv.org/abs/2304.02643) by
   Meta AI Research — Apache 2.0. The underlying segmentation model.
 
 ---
