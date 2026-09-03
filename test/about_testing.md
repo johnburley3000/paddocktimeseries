@@ -28,10 +28,10 @@ python test/slow.py # for this, I used milgadara paddocks .gpkg and 2018-2025.
 
 ## Fourth, do the full Milgadara demo, replicating the outputs shown in manuscript.
 This will take ~2 hrs or so to run the pipeline, then run the jupyter notebook 
-'''
+```
 python demo/Milgadara_2018-25_case_study.py
 jupyter lab demo/Milgadara_demonstration.ipynb
-'''
+```
 
 ## Results
 ### jtb Sept 3 2026 on Mac
