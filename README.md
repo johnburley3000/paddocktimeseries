@@ -1,13 +1,4 @@
-# PaddockTimeSeries (PaddockTS)
-
-**Paddock-scale time-series analysis of Australian agricultural land,
-end-to-end from a single bounding box.**
-
-Built at the [Borevitz Lab, Australian National
-University](https://biology.anu.edu.au/research/research-groups/borevitz-group-plant-genomics-climate-adaption) for ecologists, agronomists,
-and remote-sensing researchers who want a reproducible pipeline for
-Sentinel-2 imagery to paddock (or field) boundaries and paddock-level
-summaries of greenness, ground cover, and phenology.
+# PaddockTS: paddock-level satellite time series analysis of agroecosystem dynamics
 
 [![Tests](https://github.com/johnburley3000/paddocktimeseries/actions/workflows/tests.yml/badge.svg)](https://github.com/johnburley3000/paddocktimeseries/actions/workflows/tests.yml)
 [![Docs](https://img.shields.io/badge/docs-johnburley3000.github.io-2ea44f)](https://johnburley3000.github.io/paddocktimeseries/)
@@ -15,11 +6,17 @@ summaries of greenness, ground cover, and phenology.
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![EarthArXiv preprint](https://img.shields.io/badge/EarthArXiv-10.31223%2FX5821Z-b31b1b)](https://doi.org/10.31223/X5821Z)
 
-📚 **Documentation:** <https://johnburley3000.github.io/paddocktimeseries/>
-
 **Preprint:** [Burley et al. (2026), EarthArXiv](https://doi.org/10.31223/X5821Z)
 
+**Documentation:** <https://johnburley3000.github.io/paddocktimeseries/>
+
 **Code-free web tool:** [paddocktimeseries.net](https://paddocktimeseries.net) by Yasar Adeel Ansari
+
+Built at the [Borevitz Lab, Australian National
+University](https://biology.anu.edu.au/research/research-groups/borevitz-group-plant-genomics-climate-adaption) for ecologists, agronomists,
+and remote-sensing researchers who want a reproducible pipeline for
+Sentinel-2 imagery to paddock (or field) boundaries and paddock-level
+summaries of greenness, ground cover, and phenology.
 
 ---
 
