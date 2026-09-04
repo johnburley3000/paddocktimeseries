@@ -185,6 +185,12 @@ End-to-end acceptance scripts that exercise the full pipeline against
 the live data services live in [`test/`](test/) — see
 [`test/about_testing.md`](test/about_testing.md).
 
+Reproduce the demonstration analysis from Burley et al., 2026:
+Run
+[`demo/Milgadara_2018-25_case_study.py`](demo/Milgadara_2018-25_case_study.py)
+Followed by
+[`demo/Milgadara_demonstration.ipynb`](demo/Milgadara_demonstration.ipynb)
+
 ---
 
 ## Quick example
