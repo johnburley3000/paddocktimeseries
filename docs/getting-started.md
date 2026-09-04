@@ -33,8 +33,8 @@ then pulls the lab packages — the shared
 [`pysilo`](https://github.com/thestochasticman/pysilo),
 [`pyozwald`](https://github.com/thestochasticman/pyozwald),
 [`pycopdem`](https://github.com/thestochasticman/pycopdem),
-[`pyslga`](https://github.com/thestochasticman/pyslga)) — straight
-from their GitHub repositories:
+[`pyslga`](https://github.com/thestochasticman/pyslga)) — from PyPI,
+pinned to the releases tested with this version:
 
 ```bash
 git clone https://github.com/johnburley3000/paddocktimeseries.git

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paddocktimeseries"
-version = "0.8.0"
+version = "1.0.0"
 description = "Paddock segmentation and time-series analysis from Sentinel-2 imagery"
 readme = "README.md"
 authors = [
@@ -42,17 +42,16 @@ classifiers = [
 ]
 # The scientific / geospatial / ML stack (GDAL, rasterio, samgeo, torch,
 # tensorflow, datacube, …) is provided by conda via environment.yml.
-# Lab packages are installed directly from GitHub. The auxiliary data-store
-# packages are pinned to exact revisions tested with this PaddockTS release.
-# Troi remains unpinned because the downstream lab packages currently
-# declare it from the repository default branch.
+# Lab packages come from PyPI, pinned to the exact releases tested with
+# this PaddockTS release (PyPI releases are immutable, so these pins are
+# as reproducible as git SHAs).
 dependencies = [
-  "troi-core @ git+https://github.com/thestochasticman/troi.git",
-  "pysentinel2 @ git+https://github.com/thestochasticman/pysentinel2.git@d6c931e0fa3d60ce15f289e3f5495f6917793c94",
-  "pysilo-store @ git+https://github.com/thestochasticman/pysilo.git@e2250bb1d1c31c98dcdfe761eae8a3f4d67fc22b",
-  "pyozwald @ git+https://github.com/thestochasticman/pyozwald.git@0e6e8323a04cb8d5566a4c3bda8b7f1d2ec5338f",
-  "pycopdem @ git+https://github.com/thestochasticman/pycopdem.git@7e74bbfe273762cef8de4e4a52419145cf1fbedd",
-  "pyslga @ git+https://github.com/thestochasticman/pyslga.git@a51f5824502300bc324ec4625b8dcbd7873d7dcf",
+  "troi-core==0.1.0",
+  "pysentinel2==0.1.0",
+  "pysilo-store==0.1.0",
+  "pyozwald==0.1.0",
+  "pycopdem==0.1.0",
+  "pyslga==0.1.0",
 ]
 
 [project.optional-dependencies]

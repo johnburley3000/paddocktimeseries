@@ -76,8 +76,8 @@ and rebuilt on the next run.
 
 The conda environment provides the native stack (GDAL/PROJ/GEOS,
 PyTorch, TensorFlow, Segment Anything); `pip install .` then pulls the
-lab packages — the `troi` core and the five data stores — straight
-from their GitHub repositories:
+lab packages — the `troi` core and the five data stores — from PyPI,
+pinned to the releases tested with this version:
 
 ```bash
 git clone https://github.com/johnburley3000/paddocktimeseries.git
