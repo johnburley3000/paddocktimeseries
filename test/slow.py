@@ -14,7 +14,7 @@ q = Troi.build_from_paddocks(
     paddocks_filepath=paddocks_fp,
     start=date(2018, 1, 1),
     end=date(2025, 12, 31),
-    stub="Migadara_2018-25",
+    stub="Milgadara_2018-25",
     label_col="title",
 )
 
