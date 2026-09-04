@@ -45,4 +45,9 @@ test/test_mode2_milgadara.py -- works
 python test/slow.py -- works
 
 demo/Milgadara_2018-25_case_study.py -- works
+**Possible issues with case_study**
+ - may require pip install contextily
+ - depends on an aerial imagery download from https://maps.six.nsw.gov.au for Figure 2
+ - runs an ozwald download from pyozwald that seems like it could be from a temperamental server.
+
 
