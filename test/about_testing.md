@@ -20,7 +20,7 @@ python test/test_mode1.py
 This depends on artifacts/*.gpkg as specified in Troi.build_from_paddocks() 
 ```
 python test/test_mode2.py # provides .gpkg from hand-drawn polygons somewhere in WA. 
-python test/test_mode2_milgadara.py # provides a .json from Agriweb for milgadara
+python test/test_mode2_milgadara.py # provides a .json from Agriweb for Milgadara, NSW
 ```
 ## Third, test with user-provided paddocks but run functions individally i.e. don't use get_outputs()
 ```
@@ -46,7 +46,7 @@ python test/slow.py -- works
 
 demo/Milgadara_2018-25_case_study.py -- works
 **Possible issues with case_study**
- - may require pip install contextily
+ - may require pip install contextily adjustText
  - depends on an aerial imagery download from https://maps.six.nsw.gov.au for Figure 2
  - runs an ozwald download from pyozwald that seems like it could be from a temperamental server.
 
