@@ -7,6 +7,7 @@ Two layers:
   `pip install -e '.[tests]' && pytest`.
 - **`test/` (this directory)** — end-to-end acceptance scripts against
   the live data services (DEA, SILO, OzWALD, …), run manually.
+  If test/test_mode1.py and test/test_mode2.py, then you should be all set.  
 
 Each .py script here creates a troi and runs get_outputs()
 
@@ -41,7 +42,7 @@ test/test_mode2.py -- works
 
 test/test_mode2_milgadara.py -- works
 
-python test/slow.py -- finished running when copy-pasted into python. (waiting retest)
+python test/slow.py -- works
 
-demo/Milgadara_2018-25_case_study.py -- (waiting retest)
+demo/Milgadara_2018-25_case_study.py -- works
 
