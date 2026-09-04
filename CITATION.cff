@@ -20,6 +20,7 @@ authors:
     given-names: Justin
     orcid: "https://orcid.org/0000-0001-8408-3699"
 version: 1.0.0
+date-released: 2026-09-04
 license: MIT
 repository-code: "https://github.com/johnburley3000/paddocktimeseries"
 url: "https://www.paddocktimeseries.net/"
