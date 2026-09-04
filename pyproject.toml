@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "Paddock segmentation and time-series analysis from Sentinel-2 imagery"
 readme = "README.md"
 authors = [
-  { name = "John Burley", email = "john.burley@anu.edu.au" },
+  { name = "John T. Burley", email = "john.burley@anu.edu.au" },
   { name = "Yasar Adeel Ansari", email = "u6737670@anu.edu.au" },
 ]
 maintainers = [
