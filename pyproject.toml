@@ -49,7 +49,7 @@ classifiers = [
 dependencies = [
   "troi-core @ git+https://github.com/thestochasticman/troi.git",
   "pysentinel2 @ git+https://github.com/thestochasticman/pysentinel2.git@d6c931e0fa3d60ce15f289e3f5495f6917793c94",
-  "pysilo @ git+https://github.com/thestochasticman/pysilo.git@1b1d106cc47f68d59cb3a0ce5bdc3a9fd840c00a",
+  "pysilo-store @ git+https://github.com/thestochasticman/pysilo.git@e2250bb1d1c31c98dcdfe761eae8a3f4d67fc22b",
   "pyozwald @ git+https://github.com/thestochasticman/pyozwald.git@0e6e8323a04cb8d5566a4c3bda8b7f1d2ec5338f",
   "pycopdem @ git+https://github.com/thestochasticman/pycopdem.git@7e74bbfe273762cef8de4e4a52419145cf1fbedd",
   "pyslga @ git+https://github.com/thestochasticman/pyslga.git@a51f5824502300bc324ec4625b8dcbd7873d7dcf",
