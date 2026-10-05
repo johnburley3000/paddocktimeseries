@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paddocktimeseries"
-version = "1.0.1"
+version = "1.1.0+gadi"
 description = "Paddock segmentation and time-series analysis from Sentinel-2 imagery"
 readme = "README.md"
 authors = [
@@ -46,12 +46,15 @@ classifiers = [
 # this PaddockTS release (PyPI releases are immutable, so these pins are
 # as reproducible as git SHAs).
 dependencies = [
-  "troi-core==0.1.1",
-  "pysentinel2==0.1.0",
-  "pysilo-store==0.1.0",
-  "pyozwald==0.1.0",
-  "pycopdem==0.1.0",
-  "pyslga==0.1.0",
+  # gadi branch: the lab stores from their gadi branches (filesystem
+  # ledgers safe across Gadi nodes, raster SILO/OzWALD, gaps() audits).
+  "troi-core @ git+https://github.com/thestochasticman/troi.git@gadi",
+  "pysentinel2 @ git+https://github.com/thestochasticman/pysentinel2.git@gadi",
+  "pysilo-store @ git+https://github.com/thestochasticman/pysilo.git@gadi",
+  "pyozwald @ git+https://github.com/thestochasticman/pyozwald.git@gadi",
+  "pycopdem @ git+https://github.com/thestochasticman/pycopdem.git@gadi",
+  "pyslga @ git+https://github.com/thestochasticman/pyslga.git@gadi",
+  "pysmips @ git+https://github.com/thestochasticman/pysmips.git@gadi",
 ]
 
 [project.optional-dependencies]

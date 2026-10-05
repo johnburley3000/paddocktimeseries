@@ -1,44 +1,29 @@
 """Topography figure: elevation, flow accumulation, aspect, and slope.
 
-Loads the elevation window from the machine-wide pycopdem store,
-applies a Gaussian smoother before flow analysis (sharp DEMs cause flow
-algorithms to produce striped artefacts), and derives:
+Asks the machine-wide pycopdem store for the elevation window and its
+derivatives -- computed there on the native 30 m grid, on a window
+buffered by a kilometre so edge pixels see their real neighbours, with
+a Gaussian smoother applied before flow analysis (sharp DEMs give flow
+algorithms striped artefacts):
 
 - elevation (m)
 - D8 flow accumulation (cells)
-- aspect (cardinal direction)
+- aspect (degrees clockwise from north)
 - slope (degrees)
 - topographic wetness index (TWI; computed but not plotted)
 
-The four panels are reprojected to EPSG:4326 and the Sentinel-2 grid for
-easy overlay against other PaddockTS outputs, and saved as a single PNG.
+The four panels are reprojected onto the Sentinel-2 grid for easy
+overlay against other PaddockTS outputs (display only; the store never
+resamples), then to EPSG:4326 for plotting, and saved as a single PNG.
 """
 
 from matplotlib import pyplot as plt
 from matplotlib import colors
 import numpy as np
 import xarray as xr
-import rioxarray as rxr
-import rasterio
 from rasterio.enums import Resampling
-from scipy.ndimage import gaussian_filter
-from PaddockTS.Plotting.terrain_derivatives import pysheds_accumulation, calculate_slope, calculate_twi
 from troi import Troi
 from os import makedirs
-import tempfile
-import os
-
-
-def _array_to_tif(array, ref_path, out_path, dtype=None):
-    """Write a numpy array to a GeoTIFF using another tif as the spatial reference."""
-    with rasterio.open(ref_path) as src:
-        profile = src.profile.copy()
-    if dtype:
-        profile['dtype'] = dtype
-    else:
-        profile['dtype'] = array.dtype
-    with rasterio.open(out_path, 'w', **profile) as dst:
-        dst.write(array, 1)
 
 
 def terrain_tiles_plot(troi: Troi, ds_sentinel2=None, sigma: int = 10):
@@ -61,51 +46,14 @@ def terrain_tiles_plot(troi: Troi, ds_sentinel2=None, sigma: int = 10):
     """
     makedirs(troi.out_dir, exist_ok=True)
 
-    # Elevation window from the machine-wide pycopdem store, materialised to
-    # a temp GeoTIFF so the pysheds flow-analysis chain (which reads rasters)
-    # is unchanged.
+    # Native 30 m elevation + derivatives from the store (buffered and
+    # smoothed there), as lat/lon DataArrays with a CRS for reproject_match.
     import rioxarray  # noqa: F401 — registers the .rio accessor
     from pycopdem.store import Store as _DemStore
-    _dem_ds = _DemStore(config=troi.config).get_ds_troi(troi)
-    _dem_tmpdir = tempfile.mkdtemp()
-    terrain_path = os.path.join(_dem_tmpdir, 'terrain.tif')
-    _dem_da = _dem_ds['elevation']
-    _dem_da = _dem_da.rio.write_crs('EPSG:4326').rio.set_spatial_dims(x_dim='lon', y_dim='lat')
-    _dem_da.rio.to_raster(terrain_path)
-
-    with rasterio.open(terrain_path) as src:
-        dem_raw = src.read(1)
-        transform = src.transform
-        crs = src.crs
-        nodata = src.nodata
-        height, width = src.height, src.width
-
-    # Smooth DEM for flow analysis
-    dem_smooth = gaussian_filter(dem_raw.astype(float), sigma=sigma)
-    tmpdir = tempfile.mkdtemp()
-    smooth_path = os.path.join(tmpdir, 'smooth.tif')
-    with rasterio.open(smooth_path, 'w', driver='GTiff', height=height, width=width,
-                       count=1, dtype=dem_smooth.dtype, crs=crs, transform=transform,
-                       nodata=nodata) as dst:
-        dst.write(dem_smooth, 1)
-
-    # Derive topographic variables in native CRS
-    grid, dem, fdir, acc = pysheds_accumulation(smooth_path)
-    slope = calculate_slope(smooth_path)
-    twi = calculate_twi(acc, slope)
-
-    # Write each derived variable as a georeferenced tif
-    derived = {
-        'accumulation': (acc, Resampling.max),
-        'aspect': (fdir.astype('float64'), Resampling.nearest),
-        'slope': (slope, Resampling.average),
-        'twi': (twi, Resampling.average),
-    }
-    tif_paths = {}
-    for name, (arr, _) in derived.items():
-        path = os.path.join(tmpdir, f'{name}.tif')
-        _array_to_tif(arr, smooth_path, path)
-        tif_paths[name] = path
+    native = _DemStore(config=troi.config).get_ds_troi(
+        troi, derivatives=('slope', 'aspect', 'accumulation', 'twi'),
+        buffer_m=1000, smooth_sigma=sigma)
+    native = native.rename({'lat': 'y', 'lon': 'x'}).rio.write_crs('EPSG:4326')
 
     # Reference grid: the S2 pixel grid, reconstructed deterministically
     # from the troi bbox on pysentinel2's fixed global grid. No cube
@@ -124,15 +72,20 @@ def terrain_tiles_plot(troi: Troi, ds_sentinel2=None, sigma: int = 10):
     else:
         ds_ref = ds_sentinel2.isel(time=0) if 'time' in ds_sentinel2.dims else ds_sentinel2
 
-    # Load terrain and derived tifs, reproject each to match sentinel2
-    ds_terrain = rxr.open_rasterio(smooth_path).isel(band=0).drop_vars('band')
-    ds = ds_terrain.rio.reproject_match(ds_ref, resampling=Resampling.average).to_dataset(name='terrain')
+    # Put each layer on the Sentinel-2 grid for display.
+    resampling = {
+        'elevation': Resampling.average,
+        'accumulation': Resampling.max,
+        'aspect': Resampling.nearest,
+        'slope': Resampling.average,
+        'twi': Resampling.average,
+    }
+    ds = xr.Dataset({
+        name: native[name].rio.reproject_match(ds_ref, resampling=resamp)
+        for name, resamp in resampling.items()
+    }).rename({'elevation': 'terrain'})
 
-    for name, (_, resamp) in derived.items():
-        da = rxr.open_rasterio(tif_paths[name]).isel(band=0).drop_vars('band')
-        ds[name] = da.rio.reproject_match(ds_ref, resampling=resamp)
-
-    # Clip 1 cell border (edge artifacts from flow algorithms)
+    # Clip 1 cell border (edge artifacts from reprojection)
     ds = ds.isel(y=slice(1, -1), x=slice(1, -1))
 
     # Reproject to EPSG:4326 for plotting
@@ -143,14 +96,7 @@ def terrain_tiles_plot(troi: Troi, ds_sentinel2=None, sigma: int = 10):
     dem_plot = ds_4326['terrain'].values
     acc_plot = ds_4326['accumulation'].values
     slope_plot = ds_4326['slope'].values
-
-    # Map ArcGIS flow directions to sequential for aspect
-    arcgis_dirs = np.array([1, 2, 4, 8, 16, 32, 64, 128])
-    sequential_dirs = np.array([1, 2, 3, 4, 5, 6, 7, 8])
-    fdir_raw = ds_4326['aspect'].values
-    fdir_seq = np.zeros_like(fdir_raw)
-    for a, s in zip(arcgis_dirs, sequential_dirs):
-        fdir_seq[fdir_raw == a] = s
+    aspect_plot = ds_4326['aspect'].values
 
     # Plot
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
@@ -173,12 +119,12 @@ def terrain_tiles_plot(troi: Troi, ds_sentinel2=None, sigma: int = 10):
     ax2.set_title('Flow Accumulation')
     fig.colorbar(im, ax=ax2, label='upstream cells')
 
-    # Aspect
-    im = ax3.imshow(fdir_seq, cmap='hsv', extent=extent, origin='upper')
+    # Aspect (degrees clockwise from north; hsv wraps so N and N meet)
+    im = ax3.imshow(aspect_plot, cmap='hsv', vmin=0, vmax=360, extent=extent, origin='upper')
     ax3.set_title('Aspect')
     cbar = fig.colorbar(im, ax=ax3)
-    cbar.set_ticks(sequential_dirs)
-    cbar.set_ticklabels(['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'])
+    cbar.set_ticks([0, 90, 180, 270, 360])
+    cbar.set_ticklabels(['N', 'E', 'S', 'W', 'N'])
 
     # Slope
     im = ax4.imshow(slope_plot, cmap='Purples', extent=extent, origin='upper')

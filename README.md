@@ -132,6 +132,21 @@ pip install --no-deps -e ../troi -e ../pysentinel2 -e ../pysilo \
             -e ../pyozwald -e ../pycopdem -e ../pyslga -e .
 ```
 
+### On Gadi: the `gadi` branches
+
+This branch (`gadi`) pins every store to its `gadi` branch. There the
+stores keep filesystem ledgers that are safe for many PBS jobs on many
+nodes sharing one store on Lustre (SQLite is not: Gadi mounts Lustre
+`localflock`, so file locks are node-local), `pysilo` and `pyozwald`
+return real `(time, lat, lon)` rasters for the whole bbox, and every
+store answers `gaps(bbox, start, end)` with what is missing and why.
+Check out `gadi` in each repo before the editable install above, and
+audit a troi's stores with:
+
+```bash
+python -m PaddockTS.status --gaps      # one line per store: present/expected, and why not
+```
+
 ### Configure (optional)
 
 Default output and cache directories are `~/Documents/Troi-Outputs`
