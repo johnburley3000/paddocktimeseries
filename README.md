@@ -147,6 +147,30 @@ audit a troi's stores with:
 python -m PaddockTS.status --gaps      # one line per store: present/expected, and why not
 ```
 
+How the pipeline uses the stores on Gadi:
+
+```mermaid
+flowchart LR
+    T["Troi<br/>bbox · dates · stub"] --> F["fill_troi / get_ds_troi<br/>one call per store"]
+    subgraph stores ["lab stores on /g/data · gadi branches"]
+        direction TB
+        S2["pysentinel2"]
+        CD["pycopdem"]
+        OZ["pyozwald"]
+        SI["pysilo"]
+        SL["pyslga"]
+    end
+    F --> stores
+    stores -->|"native pixels + crs · transform attrs"| PL["time series · plots · PDF<br/>reproject_match for display only"]
+    T --> ST["python -m PaddockTS.status --gaps"] --> stores
+    ST --> R["one GapReport per store:<br/>present / expected, and why not"]
+```
+
+Each store fills only what its ledger says is missing, under a claim so
+many jobs can share it, and never resamples. The structure every store
+shares is explained with diagrams in
+[troi/docs/ledger.md](https://github.com/thestochasticman/troi/blob/gadi/docs/ledger.md).
+
 ### Configure (optional)
 
 Default output and cache directories are `~/Documents/Troi-Outputs`
