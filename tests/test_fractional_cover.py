@@ -1,7 +1,11 @@
-"""Fractional-cover unmixing against the bundled TFLite models.
+"""Fractional-cover unmixing against the bundled MLP weights.
 
-Fully offline: the model files ship inside the package.
+Fully offline: the weight files ship inside the package. The regression
+test compares the NumPy forward pass with outputs recorded from the
+original TensorFlow Lite models (``tests/data/fc_tflite_reference.npz``).
 """
+
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -57,3 +61,19 @@ def test_all_four_models_load_and_run():
         fractions = unmix_fractional_cover(ref, fc_model=get_model(n=n))
         assert fractions.shape == (3, 2, 2)
         assert np.all(np.isfinite(fractions))
+
+
+def test_matches_tflite_reference():
+    """The NumPy forward pass reproduces the original TFLite models."""
+    ref = np.load(Path(__file__).parent / 'data' / 'fc_tflite_reference.npz')
+    reflectance = ref['reflectance']
+    for n in (1, 2, 3, 4):
+        fractions = unmix_fractional_cover(reflectance, fc_model=get_model(n=n))
+        np.testing.assert_allclose(fractions, ref[f'model{n}'], rtol=1e-5, atol=1e-5)
+
+
+def test_model_structure():
+    model = get_model(n=4)
+    assert model.n_inputs == 5
+    assert [W.shape for W, _ in model.layers] == [(256, 5), (128, 256), (256, 128), (3, 256)]
+    assert all(W.dtype == np.float32 and b.dtype == np.float32 for W, b in model.layers)

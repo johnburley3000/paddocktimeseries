@@ -10,7 +10,7 @@ docstrings.
 | [Troi & Config](troi.md) | The bbox + date-range object every stage consumes, plus runtime configuration. |
 | [Sentinel-2 download](sentinel2.md) | STAC fetch, cloud mask, scene drop, and Zarr write. |
 | [Spectral indices](spectral_indices.md) | NDVI, CFI, NIRv, NDTI, CAI from S2 reflectance. |
-| [Fractional cover](fractional_cover.md) | bg / pv / npv unmixing via TFLite MLP. |
+| [Fractional cover](fractional_cover.md) | bg / pv / npv unmixing via a small MLP. |
 | [Paddock segmentation](paddock_segmentation.md) | SAM-based field boundary extraction. |
 | [Paddock time series](paddock_time_series.md) | Per-paddock medians + yearly split + smoothing. |
 | [Phenology](phenology.md) | Per-paddock seasonal metrics (SoS / PoS / EoS / amplitudes). |

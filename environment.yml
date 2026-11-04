@@ -1,6 +1,6 @@
 # Augments (or creates) the paddockts conda environment with
 # PaddockTS's full stack (geospatial natives, SAM/samgeo, PyTorch,
-# TensorFlow, ffmpeg):
+# ffmpeg):
 #
 #   conda env update -n paddockts -f environment.yml
 #   conda activate paddockts
@@ -39,7 +39,6 @@ dependencies:
   - pysheds
   - cvxpy
   - ecos
-  - tensorflow<2.20
   - datacube
   - netcdf4
   - statsmodels

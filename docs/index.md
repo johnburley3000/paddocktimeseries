@@ -82,7 +82,7 @@ Savitzky–Golay-smoothed variant is used for phenology and plotting.
 
 Sentinel-2 reflectance is unmixed per pixel into bare ground (`bg`),
 green vegetation (`pv`), and non-green vegetation (`npv`) fractions,
-using a TFLite model adapted from
+using a multilayer-perceptron model adapted from
 [`fractionalcover3`](https://github.com/jrsrp/fractionalcover3). These
 fractions underlie the false-colour timelines above and are included
 in the per-paddock time series.

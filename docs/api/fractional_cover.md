@@ -15,13 +15,16 @@ three ground-cover fractions:
 | `pv`  | green (photosynthetic) vegetation |
 | `npv` | non-green (non-photosynthetic) vegetation — senescent crop, stubble, woody material |
 
-The model is a small TFLite MLP adapted from
+The model is a small multilayer perceptron (5 inputs, three ReLU hidden
+layers, a linear 3-output layer) adapted from
 [`fractionalcover3`](https://github.com/jrsrp/fractionalcover3) by
 Robert Denham (MIT-licensed; see
 `PaddockTS/LICENSES/fractionalcover3.LICENSE`). Four model variants
-ship inside the package as bundled `.tflite` files at
+ship inside the package as `.npz` weight archives at
 `PaddockTS/FractionalCover/_models/`, indexed `n=1..4` from least to
-most complex. `n=4` is the default and most accurate.
+most complex. `n=4` is the default and most accurate. The weights were
+extracted from the upstream TensorFlow Lite files; inference is a NumPy
+forward pass, so the step has no deep-learning framework dependency.
 
 Output is per-pixel per-timestep, persisted to
 `troi.fractional_cover_path` as Zarr v2 (guarded by a `_SUCCESS`

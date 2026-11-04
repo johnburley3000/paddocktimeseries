@@ -40,8 +40,8 @@ Give PaddockTS a time and region of interest ([`troi`](https://github.com/thesto
   produces resampled, gap-filled, and smoothed time series.
 - **Spectral indices and fractional cover** — PaddockTS computes NDVI,
   CFI, NIRv, NDTI, and CAI. It also estimates bare ground (`bg`), green
-  vegetation (`pv`), and non-green vegetation (`npv`) using a TFLite
-  model adapted from
+  vegetation (`pv`), and non-green vegetation (`npv`) using a
+  multilayer-perceptron model adapted from
   [`fractionalcover3`](https://github.com/jrsrp/fractionalcover3).
 - **Phenology metrics** — start, peak, and end of season, together with
   seasonal amplitudes and integrals, calculated for each paddock and
@@ -72,7 +72,7 @@ and rebuilt on the next run.
 ### Conda + pip (recommended)
 
 The conda environment provides the native stack (GDAL/PROJ/GEOS,
-PyTorch, TensorFlow, Segment Anything); `pip install .` then pulls the
+PyTorch, Segment Anything); `pip install .` then pulls the
 lab packages — the `troi` core and the five data stores — from PyPI,
 pinned to the releases tested with this version:
 
@@ -85,20 +85,6 @@ pip install .
 ```
 
 PaddockTS targets Python ≥ 3.11.
-
-> **Hardened-kernel note (Fedora / recent glibc).** If `import
-> tensorflow` fails with *"cannot enable executable stack as shared
-> object requires"*, your kernel enforces non-executable stacks and
-> conda-forge's TensorFlow libraries request one. Clear the flag once
-> (the libraries are in your env, so no root needed):
->
-> ```bash
-> conda install -n paddockts -c conda-forge patchelf   # or use execstack
-> find "$CONDA_PREFIX" -name '*.so*' -exec sh -c \
->   'execstack -c "$1" 2>/dev/null || true' _ {} \;
-> ```
->
-> Most Linux systems don't hit this.
 
 ### Conda only
 
@@ -401,7 +387,7 @@ Third-party code shipped inside the package; see
 [`PaddockTS/LICENSES/`](PaddockTS/LICENSES/) for full license texts:
 
 - [`fractionalcover3`](https://gitlab.com/jrsrp/themes/cover/fractionalcover3) by
-  Robert Denham — MIT. The TFLite unmixing models and the unmixing
+  Robert Denham — MIT. The unmixing model weights and the unmixing
   routine in `PaddockTS.FractionalCover._unmix` are adapted from this
   work.
 - [`phenolopy`](https://github.com/lewistrotter/phenolopy) by

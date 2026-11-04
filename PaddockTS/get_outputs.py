@@ -107,7 +107,7 @@ def _terminal_dashboard():
 
     On entry: replaces sys.stdout / sys.stderr with line-buffered ring sinks,
     duplicates fd 2 so rich can write to the real terminal, and pipes the
-    original fd 2 into the same ring buffer (catches GDAL/PROJ/TFLite C-level
+    original fd 2 into the same ring buffer (catches GDAL/PROJ C-level
     chatter). All three are restored on exit.
 
     Yields (console, log_buf) — Console writes to the terminal directly; the
@@ -542,7 +542,7 @@ def get_outputs(troi: Troi, reload: bool = False, show_log: bool = False,
     (terrain / OzWALD / SILO / SLGA) and one for the
     Sentinel-2 → PaddockTS chain — and renders a live two-column
     status table while they run. All stdout, stderr, Python ``logging``,
-    ``warnings.warn``, and even C-level fd 2 writes from GDAL/PROJ/TFLite
+    ``warnings.warn``, and even C-level fd 2 writes from GDAL/PROJ
     are captured into a bounded ring buffer and (optionally) shown in a
     log panel below the tables.
 
