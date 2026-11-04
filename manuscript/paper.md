@@ -228,14 +228,19 @@ of season (SoS), peak of season (PoS), and end of season (EoS) indicated.
 
 # Research impact statement
 
-PaddockTS is being used to characterise vegetation dynamics across Australian cropping regions
-and investigate how management and environmental variation influence productivity and
-resilience to climatic extremes. Its standardised paddock-level time series support comparisons
-within and among years across broad bioclimatic gradients, provide imagery and structured
+PaddockTS supports the characterisation of vegetation dynamics across Australian cropping regions
+and invesestigations into how management and environmental variation influence productivity and
+resilience to climatic extremes. The pipeline has been applied at continental scale to generate 
+paddock-year datasets across Australia
+([Bradley, ongoing work](https://github.com/ChristopherBradley/paddock-species)), with ongoing efforts 
+to develop derived products for broader research use. Its standardised paddock-level time series support 
+comparisons within and among years across broad bioclimatic gradients, provide imagery and structured
 inputs for machine-learning applications, and are being integrated with the DAESim
-process-based agroecosystem model [@taghikhah2022]. This integration enables
+process-based agroecosystem model [@taghikhah2022; @norton2026]. This integration enables
 satellite-observed vegetation trajectories to be compared with modelled dynamics and supports
-efforts to distinguish environmental constraints from management-related effects.
+efforts to distinguish environmental constraints from management-related effects. PaddockTS is also 
+being combined with the Shelterbelts software [@bradley2026] to investigate the effects of farmland 
+trees on agricultural productivity at the paddock scale.
 
 At smaller spatial scales, PaddockTS has been applied with Australian land-management
 organisations, including the Mulloon Institute and Soils For Life, to examine vegetation
@@ -259,6 +264,6 @@ submitted work.
 This work was supported by the National Environmental Science Program and computational
 resources provided by the National Computational Infrastructure (NCI Australia). We thank
 Geoscience Australia, Digital Earth Australia, and the developers of the open-source software
-used in this work.
+used in this work. We also thank Taia Artemov, Tim Brown, Dmitry Grishin, Kevin Murray, Margaret MacKinnon, 
 
 # References
