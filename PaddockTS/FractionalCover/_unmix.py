@@ -1,27 +1,58 @@
 """Fractional cover unmixing.
 
-Inference logic and the bundled tflite model files in `_models/` are adapted
+The bundled model weights in `_models/` and the unmixing logic are adapted
 from the fractionalcover3 package by Robert Denham, distributed under the
 MIT License. See PaddockTS/LICENSES/fractionalcover3.LICENSE.
+
+Each model is a four-layer multilayer perceptron (5 inputs, three ReLU
+hidden layers, a linear 3-output layer). The weights were extracted from
+the original TensorFlow Lite files and are stored as ``.npz`` archives,
+so inference needs only NumPy.
 """
 from importlib import resources
 
 import numpy as np
-from tensorflow import lite as tflite
 
 
 _MODELS = (
-    "fcModel_32x32x32.tflite",
-    "fcModel_64x64x64.tflite",
-    "fcModel_256x64x256.tflite",
-    "fcModel_256x128x256.tflite",
+    "fcModel_32x32x32.npz",
+    "fcModel_64x64x64.npz",
+    "fcModel_256x64x256.npz",
+    "fcModel_256x128x256.npz",
 )
 
 
-def get_model(n: int = 2):
-    """Load the n-th bundled fractional cover tflite model (1-indexed, 1-4)."""
+class FractionalCoverModel:
+    """A fractional cover MLP: ``layers`` is a list of ``(W, b)`` pairs with
+    ``W`` of shape ``(out, in)``. ReLU follows every layer but the last."""
+
+    def __init__(self, layers):
+        self.layers = [(np.asarray(W, dtype=np.float32), np.asarray(b, dtype=np.float32))
+                       for W, b in layers]
+
+    @property
+    def n_inputs(self) -> int:
+        return self.layers[0][0].shape[1]
+
+    def __call__(self, x):
+        """Apply the network to ``x`` of shape ``(n_pixels, n_inputs)``."""
+        h = np.asarray(x, dtype=np.float32)
+        last = len(self.layers) - 1
+        for i, (W, b) in enumerate(self.layers):
+            h = h @ W.T
+            h += b
+            if i < last:
+                np.maximum(h, 0, out=h)
+        return h
+
+
+def get_model(n: int = 2) -> FractionalCoverModel:
+    """Load the n-th bundled fractional cover model (1-indexed, 1-4)."""
     path = resources.files(__package__) / "_models" / _MODELS[n - 1]
-    return tflite.Interpreter(model_path=str(path))
+    with resources.as_file(path) as p, np.load(p) as z:
+        n_layers = sum(1 for k in z.files if k.startswith("W"))
+        layers = [(z[f"W{i}"], z[f"b{i}"]) for i in range(n_layers)]
+    return FractionalCoverModel(layers)
 
 
 def unmix_fractional_cover(surface_reflectance, fc_model, in_null=0, out_null=0):
@@ -32,14 +63,7 @@ def unmix_fractional_cover(surface_reflectance, fc_model, in_null=0, out_null=0)
     """
     inshape = surface_reflectance[1:].shape
     ref_data = np.reshape(surface_reflectance[1:], (inshape[0], -1)).T
-
-    input_details = fc_model.get_input_details()
-    output_details = fc_model.get_output_details()
-    fc_model.resize_tensor_input(input_details[0]["index"], ref_data.shape)
-    fc_model.allocate_tensors()
-    fc_model.set_tensor(input_details[0]["index"], ref_data.astype(np.float32))
-    fc_model.invoke()
-    fc_layers = fc_model.get_tensor(output_details[0]["index"]).T
+    fc_layers = fc_model(ref_data).T
     output_fc = np.reshape(fc_layers, (3, inshape[1], inshape[2]))
     output_fc[output_fc == in_null] = out_null
     return output_fc

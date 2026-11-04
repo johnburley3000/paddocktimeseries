@@ -6,7 +6,7 @@ OzWALD, SILO, SLGA) and one for the Sentinel-2 → PaddockTS chain —
 and renders a live two-column status dashboard while they run.
 
 All stdout, stderr, Python `logging`, `warnings.warn`, and even
-C-level fd 2 writes from GDAL / PROJ / TFLite are captured into a
+C-level fd 2 writes from GDAL / PROJ are captured into a
 bounded ring buffer and (optionally) shown in a log panel below the
 tables. The captured output is restored after the dashboard tears
 down, so anything written during the run is preserved in the parent

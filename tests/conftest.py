@@ -1,7 +1,7 @@
 """Shared fixtures: an isolated Troi and synthetic inputs.
 
 Every fixture is offline — no network, no credentials, no model
-checkpoints beyond the TFLite files bundled in the package. The
+checkpoints beyond the model weight files bundled in the package. The
 ``tmp_troi`` fixture points the Troi registry and all output/cache
 directories at a per-test temporary directory, so tests never touch
 ``~/.config/Troi.json``, the machine-wide registry, or real data roots.

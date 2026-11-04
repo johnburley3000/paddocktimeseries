@@ -25,7 +25,7 @@ running the full pipeline, and the layout of the outputs on disk.
 ### Conda + pip (recommended)
 
 The conda environment provides the native and ML stack (GDAL, PROJ,
-GEOS, PyTorch, TensorFlow, Segment Anything, ffmpeg); `pip install .`
+GEOS, PyTorch, Segment Anything, ffmpeg); `pip install .`
 then pulls the lab packages — the shared
 [`troi`](https://github.com/thestochasticman/troi) core (the `Troi` /
 `Config` primitives) and the five machine-wide data stores

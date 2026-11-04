@@ -1,6 +1,6 @@
 """Spectral unmixing of Sentinel-2 reflectance into bg / pv / npv fractions.
 
-The model is a small TFLite MLP adapted from
+The model is a small multilayer perceptron adapted from
 `fractionalcover3 <https://github.com/jrsrp/fractionalcover3>`_ by
 Robert Denham (MIT-licensed; see
 ``PaddockTS/LICENSES/fractionalcover3.LICENSE``). Four model variants
@@ -19,12 +19,6 @@ from the machine-wide pysentinel2 cube (cloud-masked, on read).
 """
 
 import os
-import warnings
-
-os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '3')
-warnings.filterwarnings('ignore', module='tensorflow')
-warnings.filterwarnings('ignore', module='keras')
-
 import numpy as np
 import xarray as xr
 from os import makedirs
@@ -40,7 +34,7 @@ BANDS = ['nbart_blue', 'nbart_green', 'nbart_red', 'nbart_nir_1', 'nbart_swir_2'
 
 
 def compute_fractional_cover(troi: Troi, ds_sentinel2=None, model_n: int = 4, correction: bool = False):
-    """Run the TFLite unmixing model over every Sentinel-2 timestep.
+    """Run the unmixing model over every Sentinel-2 timestep.
 
     Stacks the six Sentinel-2 SR bands into a ``(time, band, y, x)``
     tensor, scales reflectance, and invokes the chosen model variant
@@ -96,11 +90,11 @@ def compute_fractional_cover(troi: Troi, ds_sentinel2=None, model_n: int = 4, co
     # 8 GB machines; a 32-frame batch stays around 200 MB regardless of
     # the time range. The model is loaded once, not per timestep.
     #
-    # Unmixing runs serially on purpose: 4 threads with per-thread
-    # interpreters measured 615.2 s vs 618.3 s serial on an 8-year window
-    # (340% CPU for zero wall gain — the matmul is memory-bandwidth
-    # bound). If this step ever needs to be faster, batch several frames
-    # into one Invoke rather than adding threads.
+    # Unmixing runs one frame at a time: each call is four BLAS matmuls
+    # over the frame's pixels and the step is memory-bandwidth bound (the
+    # earlier TFLite path measured zero wall gain from 4 threads). If it
+    # ever needs to be faster, pass several frames to one model call
+    # rather than adding threads.
     model = get_model(n=model_n)
     makedirs(os.path.dirname(fractional_cover_path), exist_ok=True)
     timestamp = datetime.utcnow().isoformat() + 'Z'
