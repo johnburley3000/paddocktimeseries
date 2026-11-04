@@ -228,28 +228,30 @@ of season (SoS), peak of season (PoS), and end of season (EoS) indicated.
 
 # Research impact statement
 
-PaddockTS supports the characterisation of vegetation dynamics across Australian cropping regions
-and invesestigations into how management and environmental variation influence productivity and
-resilience to climatic extremes. The pipeline has been applied at continental scale to generate 
-paddock-year datasets across Australia
+PaddockTS facilitates large-scale analysis of vegetation dynamics and their relationships with 
+agricultural management and environmental variation. Using automated paddock segmentaiton, 
+PaddockTS has been applied to generate paddock-year datasets across Australia
 ([Bradley, ongoing work](https://github.com/ChristopherBradley/paddock-species)), with ongoing efforts 
-to develop derived products for broader research use. Its standardised paddock-level time series support 
-comparisons within and among years across broad bioclimatic gradients, provide imagery and structured
-inputs for machine-learning applications, and are being integrated with the DAESim
-process-based agroecosystem model [@taghikhah2022; @norton2026]. This integration enables
-satellite-observed vegetation trajectories to be compared with modelled dynamics and supports
-efforts to distinguish environmental constraints from management-related effects. PaddockTS is also 
-being combined with the Shelterbelts software [@bradley2026] to investigate the effects of farmland 
+to develop derived products for broader research use. 
+Standardised paddock-level time series provide inputs for machine-learning predictions of crop type, yield, 
+and vegetation phenology, while PaddockTS also generates visualisations to support data interpretation and labelling.
+Paddock-level time series are also being integrated with the DAESim process-based agroecosystem model 
+[@taghikhah2022; @norton2026], enabling comparisons between observed and simulated vegetation dynamics and 
+supporting future investigations of management and climate scenarios.
+PaddockTS is also being combined with the Shelterbelts software [@bradley2026] to investigate the effects of farmland 
 trees on agricultural productivity at the paddock scale.
 
 At smaller spatial scales, PaddockTS has been applied with Australian land-management
-organisations, including the Mulloon Institute and Soils For Life, to examine vegetation
-responses where novel management practices and paddock configurations are being trialled to
-improve climate resilience. In these applications, user-provided paddock boundaries are used to
+organisations using user-supplied polygons to define management units. At Milgadara, satellite-derived vegetation
+dynamics were analysed alongside paddock management histories, with the
+results featured in a [public case study by Soils for Life](https://soilsforlife.org.au/milgadara/).
+In collaboration with the Mulloon Institute, PaddockTS has been used to
+generate remote-sensing data for a catchment-scale study of landscape
+rehydration, supporting comparisons between treatment and reference areas.
+In these applications, user-provided paddock boundaries are used to
 compare vegetation dynamics in treatment and reference areas while controlling for
-environmental variation. Together, these applications demonstrate the utility of PaddockTS for
-large-scale comparative research and for complementing experimental research involving
-paddock-level treatments.
+environmental variation. These applications demonstrate how PaddockTS supports applied research on 
+land-management interventions and communicates satellite-based insights to practitioners.
 
 # AI usage disclosure
 
