@@ -101,6 +101,41 @@ conda activate paddockts
 ([conda-forge/staged-recipes#34735](https://github.com/conda-forge/staged-recipes/pull/34735));
 once merged, `-c thestochasticman` can be dropped.)
 
+### Into an existing environment
+
+PaddockTS can be added to an environment you already use, for example
+one with JupyterLab. Activate it, then install:
+
+```bash
+conda activate myenv
+conda install -c conda-forge -c thestochasticman paddocktimeseries
+```
+
+The solver adds the full stack (about 500 packages, PyTorch and OpenCV
+among them) and may change versions of packages already present to
+satisfy the lower bounds; conda prints the plan before making changes.
+This works best in an environment built from conda-forge alone.
+Environments that mix the `defaults` channel with conda-forge solve
+slowly and often conflict, which is why a dedicated environment is the
+recommended route.
+
+### Install location
+
+`conda create -n paddockts` places the environment in conda's default
+`envs` directory. To install into a chosen directory, give a path with
+`--prefix` and activate by that path:
+
+```bash
+conda create --prefix /data/envs/paddockts -c conda-forge -c thestochasticman paddocktimeseries
+conda activate /data/envs/paddockts
+```
+
+Activate the environment before running PaddockTS. PROJ and GDAL set
+their data paths (`PROJ_DATA`, `GDAL_DATA`) in activation scripts;
+running the environment's `python` by its path without activating
+leaves PROJ without its database and the first coordinate operation
+fails with `no database context specified`.
+
 ### From source (development)
 
 ```bash
@@ -135,7 +170,13 @@ creating `~/.config/Troi.json`:
 
 Settings can also come from environment variables
 (`TROI_OUTDIR`, `TROI_TMPDIR`, `TROI_EMAIL`,
-`TROI_TERN_KEY`).
+`TROI_TERN_KEY`). When `~/.config/Troi.json` exists it is used on its
+own and the variables are not read, so a file must contain every
+setting you rely on; keys left out take the defaults. `TROI_CONFIG`
+points to a file at another path. Both directories are created on
+first use; `tmp_dir` holds the machine-wide data stores shared by every
+run and grows with each new area and year, so it is the one to put on
+a large disk.
 
 **Credentials:**
 
@@ -143,7 +184,9 @@ Settings can also come from environment variables
 - `tern_api_key` is required only by the SLGA soils stage — generate
   one at <https://account.tern.org.au/>
 
-The Sentinel-2 → PaddockTS chain itself works without any credentials.
+When either is unset the corresponding stages are skipped and reported
+as such in the run dashboard. The Sentinel-2 → PaddockTS chain itself
+works without any credentials.
 
 You can also pass configuration directly to `Troi` via a `Config`
 object — see the [Getting started](https://johnburley3000.github.io/paddocktimeseries/getting-started/)
