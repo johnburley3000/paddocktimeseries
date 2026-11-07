@@ -229,7 +229,7 @@ of season (SoS), peak of season (PoS), and end of season (EoS) indicated.
 # Research impact statement
 
 PaddockTS facilitates large-scale analysis of vegetation dynamics and their relationships with 
-agricultural management and environmental variation. Using automated paddock segmentaiton, 
+agricultural management and environmental variation. Using automated paddock segmentation, 
 PaddockTS has been applied to generate paddock-year datasets across Australia
 ([Bradley, ongoing work](https://github.com/ChristopherBradley/paddock-species)), with ongoing efforts 
 to develop derived products for broader research use. 
