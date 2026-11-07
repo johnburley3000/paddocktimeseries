@@ -238,7 +238,7 @@ and vegetation phenology, while PaddockTS also generates visualisations to suppo
 Paddock-level time series are also being integrated with the DAESim process-based agroecosystem model 
 [@taghikhah2022; @norton2026], enabling comparisons between observed and simulated vegetation dynamics and 
 supporting future investigations of management and climate scenarios.
-PaddockTS is also being combined with the Shelterbelts software [@bradley2026] to investigate the effects 
+PaddockTS is also being combined with the Shelterbelts software [@bradley2026] to investigate effects of 
 farmland trees on agricultural productivity at the paddock scale.
 
 At smaller spatial scales, PaddockTS has been applied with Australian land-management
