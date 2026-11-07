@@ -238,8 +238,8 @@ and vegetation phenology, while PaddockTS also generates visualisations to suppo
 Paddock-level time series are also being integrated with the DAESim process-based agroecosystem model 
 [@taghikhah2022; @norton2026], enabling comparisons between observed and simulated vegetation dynamics and 
 supporting future investigations of management and climate scenarios.
-PaddockTS is also being combined with the Shelterbelts software [@bradley2026] to investigate the effects of farmland 
-trees on agricultural productivity at the paddock scale.
+PaddockTS is also being combined with the Shelterbelts software [@bradley2026] to investigate the effects 
+farmland trees on agricultural productivity at the paddock scale.
 
 At smaller spatial scales, PaddockTS has been applied with Australian land-management
 organisations using user-supplied polygons to define management units. At Milgadara, satellite-derived vegetation
@@ -248,9 +248,7 @@ results featured in a [public case study by Soils for Life](https://soilsforlife
 In collaboration with the Mulloon Institute, PaddockTS has been used to
 generate remote-sensing data for a catchment-scale study of landscape
 rehydration, supporting comparisons between treatment and reference areas.
-In these applications, user-provided paddock boundaries are used to
-compare vegetation dynamics in treatment and reference areas while controlling for
-environmental variation. These applications demonstrate how PaddockTS supports applied research on 
+These applications demonstrate how PaddockTS supports applied research on 
 land-management interventions and communicates satellite-based insights to practitioners.
 
 # AI usage disclosure
@@ -266,6 +264,6 @@ submitted work.
 This work was supported by the National Environmental Science Program and computational
 resources provided by the National Computational Infrastructure (NCI Australia). We thank
 Geoscience Australia, Digital Earth Australia, and the developers of the open-source software
-used in this work. We also thank Taia Artemov, Tim Brown, Dmitry Grishin, Kevin Murray, Margaret MacKinnon, 
+used in this work. We also thank Taia Artemov, Tim Brown, Dmitry Grishin, Margaret MacKinnon, Kevin Murray and Bridget Elliott-Rudder for providing testing and feedback.
 
 # References
