@@ -236,7 +236,7 @@ to develop derived products for broader research use.
 Standardised paddock-level time series provide inputs for machine-learning predictions of crop type, yield, 
 and vegetation phenology, while PaddockTS also generates visualisations to support data interpretation and labelling.
 Paddock-level time series are also being integrated with the DAESim process-based agroecosystem model 
-[@taghikhah2022; @norton2026], enabling comparisons between observed and simulated vegetation dynamics and 
+[@taghikhah2022; @norton2025; @norton2026], enabling comparisons between observed and simulated vegetation dynamics and 
 supporting future investigations of management and climate scenarios.
 PaddockTS is also being combined with the Shelterbelts software [@bradley2026] to investigate effects of 
 farmland trees on agricultural productivity at the paddock scale.
